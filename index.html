@@ -266,6 +266,14 @@ select.field{appearance:none;background:var(--base) url("data:image/svg+xml,%3Cs
 @media (max-width:560px){.tab span{display:none}.tab[aria-selected="true"] span{display:inline}.tab[aria-selected="true"]{flex:1.8}}
 @media (max-width:330px){.tab[aria-selected="true"] span{display:none}.tab[aria-selected="true"]{flex:1}}
 [hidden]{display:none!important}
+
+/* update notice: shown above the status bar when version.json on GitHub is newer than this panel */
+.update{display:none;align-items:center;gap:10px;padding:8px 12px;background:var(--s2);border-top:1px solid var(--line);font:500 12px var(--sans);color:var(--text)}
+.update[data-on]{display:flex}
+.update span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.update small{color:var(--dim);font-weight:400}
+.update button{height:28px;padding:0 10px;border-radius:7px;border:1px solid var(--line2);background:var(--signal);color:#fff;font:500 12px var(--sans);cursor:pointer;white-space:nowrap}
+.update button.quiet{background:transparent;color:var(--dim);border-color:transparent}
 </style>
 </head>
 <body>
@@ -550,6 +558,7 @@ select.field{appearance:none;background:var(--base) url("data:image/svg+xml,%3Cs
       </div>
     </div>
 
+<div class="update" id="updateBox"><span>Update available <small id="updateVer"></small></span><button id="updateCopy" title="Copies the install line; paste it into Terminal and restart">Copy install line</button><button class="quiet" id="updateNotes" title="Opens the change list on GitHub">What's new</button><button class="quiet" id="updateLater" title="Hide until next time">Later</button></div>
     <footer class="status" id="status"><i></i><span id="statusTxt" role="status">Ready. Select keyframes, pick a curve, press a step.</span><button class="ghost" id="openBar" title="Open Nscale Bar, the compact toolbar">Bar</button><button class="ghost" id="feedback">Bugs / feature request</button></footer>
   </section>
 
@@ -1226,6 +1235,32 @@ $('#sPreview').onclick = () => soRun('preview');
 $('#sApply').onclick = () => soRun('apply');
 $('#sGo').onclick = () => soRun('render');
 renderSocial();
+
+/* ---------- update check: compares this panel's version with version.json on GitHub, once per open ---------- */
+(function () {
+  var REPO = 'dougturnerct-droid/nscale-motion', KEY = 'ae', EXT = 'com.nscale.motion.panel';
+  var URL = 'https://raw.githubusercontent.com/' + REPO + '/main/version.json?t=' + Date.now();
+  var BUILT = '2.5.2';   // written by build/sign.sh from the manifest
+  function mine() { try { var l = JSON.parse(window.__adobe_cep__.getExtensions(JSON.stringify([EXT]))); return (l && l[0] && l[0].version) || BUILT; } catch (e) { return BUILT; } }
+  function newer(a, b) { var x = String(a).split('.').map(Number), y = String(b).split('.').map(Number); for (var i = 0; i < 3; i++) { if ((x[i] || 0) > (y[i] || 0)) return true; if ((x[i] || 0) < (y[i] || 0)) return false; } return false; }
+  var cur = mine(); if (!window.fetch) { console.log('update check: no fetch'); return; }
+  console.log('update check: have ' + cur + ', asking ' + URL);
+  fetch(URL, { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (v) {
+    var latest = v && v[KEY]; console.log('update check: latest ' + latest); if (!latest || !newer(latest, cur)) return;
+    var line = v.install || ('curl -fsSL https://raw.githubusercontent.com/' + REPO + '/main/install.sh | sh');
+    var box = document.getElementById('updateBox'); if (!box) return;
+    document.getElementById('updateVer').textContent = latest + ' (you have ' + cur + ')';
+    box.setAttribute('data-on', '1');
+    document.getElementById('updateCopy').onclick = function () {
+      var done = function () { document.getElementById('updateCopy').textContent = 'Copied \u2014 paste into Terminal'; };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(line).then(done, function () { window.prompt('Copy this line, paste it into Terminal:', line); });
+      else window.prompt('Copy this line, paste it into Terminal:', line);
+    };
+    var notes = v.notes || ('https://github.com/' + REPO + '/blob/main/CHANGELOG.md');
+    document.getElementById('updateNotes').onclick = function () { if (window.cep && cep.util) cep.util.openURLInDefaultBrowser(notes); else window.open(notes, '_blank', 'noopener'); };
+    document.getElementById('updateLater').onclick = function () { box.removeAttribute('data-on'); };
+  }).catch(function (e) { console.log('update check failed: ' + e); });
+})();
 </script>
 </body>
 </html>

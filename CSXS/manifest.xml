@@ -7,12 +7,12 @@
 <ExtensionManifest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    Version="7.0"
                    ExtensionBundleId="com.nscale.motion"
-                   ExtensionBundleVersion="2.5.1"
+                   ExtensionBundleVersion="2.5.2"
                    ExtensionBundleName="Nscale Motion">
 
   <ExtensionList>
-    <Extension Id="com.nscale.motion.panel" Version="2.5.1"/>
-    <Extension Id="com.nscale.motion.bar" Version="2.5.1"/>
+    <Extension Id="com.nscale.motion.panel" Version="2.5.2"/>
+    <Extension Id="com.nscale.motion.bar" Version="2.5.2"/>
   </ExtensionList>
 
   <ExecutionEnvironment>

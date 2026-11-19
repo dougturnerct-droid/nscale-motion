@@ -1,0 +1,101 @@
+{
+  "_note": "The panel first uses the Mogrts folder shipped next to this file. mogrtFolders are fallbacks on Google Drive.",
+  "mogrtFolders": [
+    "~/Library/CloudStorage/GoogleDrive-*/My Drive/Motion/Nscale Motion plugins/Mogrts",
+    "~/Library/CloudStorage/GoogleDrive-*/Shared drives/*/Motion/Nscale Motion plugins/Mogrts"
+  ],
+  "formats": [
+    {
+      "id": "16x9",
+      "label": "16:9",
+      "w": 1920,
+      "h": 1080
+    },
+    {
+      "id": "16x9 4K",
+      "label": "16:9 4K",
+      "w": 3840,
+      "h": 2160
+    },
+    {
+      "id": "1x1",
+      "label": "1:1",
+      "w": 1080,
+      "h": 1080
+    },
+    {
+      "id": "4x5",
+      "label": "4:5",
+      "w": 1080,
+      "h": 1350
+    },
+    {
+      "id": "9x16",
+      "label": "9:16",
+      "w": 1080,
+      "h": 1920
+    }
+  ],
+  "templates": [
+    {
+      "id": "lower-third",
+      "name": "Lower third",
+      "use": "A speaker's name and role, with an optional second role line. The bar and line widen to fit the text.",
+      "file": "Nscale - Lower third - {format}.mogrt",
+      "match": "Lower third",
+      "fields": [
+        {
+          "label": "Name",
+          "param": "Name",
+          "placeholder": "Nidhi Chappell"
+        },
+        {
+          "label": "Role",
+          "param": "Role",
+          "placeholder": "President of AI infrastructure"
+        },
+        {
+          "label": "Role line 2",
+          "param": "Role line 2",
+          "placeholder": "",
+          "optional": true
+        },
+        {
+          "label": "Gradient opacity",
+          "param": "Gradient opacity",
+          "type": "slider",
+          "min": 0,
+          "max": 100,
+          "default": 78
+        },
+        {
+          "label": "Midnight gradient",
+          "param": "Midnight gradient",
+          "type": "checkbox",
+          "default": false
+        }
+      ]
+    },
+    {
+      "id": "title",
+      "name": "Title",
+      "use": "A centred title on one or two lines. The lines above and below follow the text.",
+      "file": "Nscale - Title - {format}.mogrt",
+      "match": "Title",
+      "fields": [
+        {
+          "label": "Line 1",
+          "param": "Line 1",
+          "placeholder": "Building the engine of"
+        },
+        {
+          "label": "Line 2",
+          "param": "Line 2",
+          "placeholder": "superintelligence",
+          "optional": true
+        }
+      ]
+    }
+  ],
+  "_fields": "Field types: text (default), slider (min/max/default) and checkbox (default). param must match the Essential Graphics name exactly."
+}

@@ -1,7 +1,12 @@
-# Nscale Motion — After Effects panel
+# Nscale Motion — After Effects and Premiere Pro panels
 
-A CEP extension for After Effects: the Nscale Motion panel plus the compact Nscale Bar.
-Two panels, one install. Mac only for now.
+Two CEP extensions, one install. Mac only for now.
+
+- **After Effects** (`com.nscale.motion`): the Nscale Motion panel plus the compact Nscale Bar.
+- **Premiere Pro** (`com.nscale.motion.ppro`): places the Nscale .mogrt templates (Lower third,
+  Title, five sizes each) on the timeline with the editor's text. The templates ship inside
+  the panel, so no Drive access is needed. After Effects must be installed on the same machine
+  (the templates are AE-built).
 
 **Status:** the real panel (2.5.x, from the Drive folder) on a signed, one-line install:
 no admin password, no debug-mode flags, no third-party installer. The build notes for the
@@ -17,10 +22,11 @@ Open **Terminal** (Spotlight → "Terminal"), paste this, press Return:
 curl -fsSL https://raw.githubusercontent.com/dougturnerct-droid/nscale-motion/main/install.sh | sh
 ```
 
-Restart After Effects → **Window → Extensions → Nscale Motion** (and **Nscale Bar**).
+Restart After Effects and Premiere → **Window → Extensions → Nscale Motion** in each.
 
-Updating is the same line. Uninstall by deleting
-`~/Library/Application Support/Adobe/CEP/extensions/com.nscale.motion`.
+Updating is the same line. Each panel checks `version.json` in this repo when it opens and shows
+"Update available" with a Copy-install-line button when a newer release exists. Uninstall by deleting `com.nscale.motion` and
+`com.nscale.motion.ppro` from `~/Library/Application Support/Adobe/CEP/extensions/`.
 
 > Replace `dougturnerct-droid/nscale-motion` here and at the top of `install.sh` once the repo exists on GitHub.
 > The repo must be **public** for the bare `curl` to work (the code is just HTML/JS; the
@@ -46,16 +52,24 @@ Updating is the same line. Uninstall by deleting
 
 ```
 nscale-motion/
-├─ CSXS/manifest.xml     what AE reads: two panels, their sizes, Node on, host script path
-├─ index.html            the main panel: markup, styles and script in one file
-├─ bar.html              the compact bar
-├─ jsx/host.jsx          runs inside After Effects — every tool, dispatcher nsm_run at the end
-├─ library/index.html    the motion library, shown in the Library tab
-├─ scripts/*.jsx         the two Premiere template builders, run from the Text tab
-├─ install.sh            the one-liner installer (Nscale side)
-├─ build/sign.sh         fetches ZXPSignCmd, makes the cert once, signs → dist/*.zxp
-├─ build/release.sh      sign + tag + upload to GitHub Releases
-└─ dist/                 built packages (gitignored)
+├─ CSXS/manifest.xml       After Effects bundle: two panels, Node on, host script path
+├─ index.html              the main AE panel: markup, styles and script in one file
+├─ bar.html                the compact bar
+├─ jsx/host.jsx            runs inside After Effects — every tool, dispatcher nsm_run at the end
+├─ library/index.html      the motion library, shown in the Library tab
+├─ scripts/*.jsx           the two Premiere template builders, run from the Text tab
+├─ premiere/               the Premiere Pro extension, packaged separately
+│  ├─ CSXS/manifest.xml    Premiere bundle, host PPRO 22+
+│  ├─ ppro/index.html      the panel, draws itself from templates.json
+│  ├─ ppro/jsx/host.jsx    runs inside Premiere, entry point nsp_run
+│  ├─ templates.json       which templates exist, their fields, file names
+│  └─ Mogrts/              the ten .mogrt files, shipped with the panel
+├─ version.json            latest versions; panels read this to offer updates (release.sh writes it)
+├─ CHANGELOG.md            what changed per release; linked from the update notice
+├─ install.sh              the one-liner installer (installs both)
+├─ build/sign.sh           fetches ZXPSignCmd, makes the cert once, signs both → dist/*.zxp
+├─ build/release.sh        sign + tag + upload both to GitHub Releases
+└─ dist/                   built packages (gitignored)
 ```
 
 In Webflow terms: `index.html` is the page, `jsx/host.jsx` is the custom code that
@@ -80,10 +94,13 @@ its status bar.
 
 ## Releasing a new version
 
-1. Bump the version in `CSXS/manifest.xml` — three places: `ExtensionBundleVersion` and
-   both `Extension … Version="…"` lines. Keep them identical.
-2. Commit.
-3. `./build/release.sh`
+1. Add a `## <version> — <date>` section at the top of `CHANGELOG.md` saying what changed. The
+   panels link to it from the update notice, and it becomes the GitHub release notes.
+2. Bump the version in `CSXS/manifest.xml` — three places: `ExtensionBundleVersion` and
+   both `Extension … Version="…"` lines. Keep them identical. This is the release tag.
+   If the Premiere files changed, also bump `premiere/CSXS/manifest.xml` (two places).
+3. Commit.
+4. `./build/release.sh`
 
 That signs, tags `v<version>`, and publishes a GitHub Release marked *latest*. The
 installer always pulls `…/releases/latest/download/nscale-motion.zxp`, so everyone gets
@@ -92,7 +109,7 @@ the new build next time they run the line.
 ## Testing on your own machine
 
 ```sh
-./build/sign.sh && NSM_ZXP=dist/nscale-motion.zxp sh install.sh
+./build/sign.sh && NSM_ZXP=dist/nscale-motion.zxp NSM_PPRO_ZXP=dist/nscale-motion-ppro.zxp sh install.sh
 ```
 
 Restart After Effects. The status bar at the bottom of the panel should read
@@ -120,6 +137,20 @@ machine only. Not set up yet — say the word.
 Adobe's 17 Nov 2026 note: UXP for After Effects is public beta only (AE Beta 27.1). CEP
 is disabled by default from **Dec 2028** (re-enableable) and removed from **Dec 2029**.
 This panel has about three years before it needs a UXP port.
+
+## Premiere: updating the templates
+
+The panel uses `premiere/Mogrts/` first; the Google Drive paths in `templates.json` are only
+fallbacks, and Choose in the panel overrides both. To ship new templates:
+
+1. Export from After Effects. AE often writes `<name>.mogrt` as a *folder* with the real file
+   inside — take the file out.
+2. Save it into `premiere/Mogrts/` under the name `templates.json` expects:
+   `Nscale - Lower third - 16x9.mogrt`, `Nscale - Title - 9x16.mogrt`, and so on
+   (plain hyphens, format ids `16x9`, `16x9 4K`, `1x1`, `4x5`, `9x16`).
+3. Bump the version in `premiere/CSXS/manifest.xml` (two places), commit, release.
+
+Premiere doesn't update clips already on a timeline when a template changes; only new ones.
 
 ## Still a per-machine step
 
