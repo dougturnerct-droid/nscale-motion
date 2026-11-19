@@ -28,7 +28,7 @@ say() { printf '\033[1;34m▸\033[0m %s\n' "$*"; }
 die() { printf '\033[1;31m✖\033[0m %s\n' "$*" >&2; exit 1; }
 
 [ "$(uname -s)" = "Darwin" ] || die "This installer is for macOS."
-[ "$REPO" != "dougturnerct-droid/nscale-motion" ] || [ -n "${NSM_ZXP:-}" ] || die "This installer hasn't been pointed at a repo yet (dougturnerct-droid/nscale-motion)."
+case "$REPO" in */*) ;; *) die "NSM_REPO must look like owner/repo (got '$REPO').";; esac
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
@@ -38,7 +38,7 @@ if [ -n "${NSM_ZXP:-}" ]; then
   say "Using local build: $NSM_ZXP"
   cp "$NSM_ZXP" "$TMP/nscale-motion.zxp"
 else
-  say "Downloading the latest Nscale Motion"
+  say "Downloading the latest Nscale Motion from $REPO"
   curl -fsSL -o "$TMP/nscale-motion.zxp" "$URL" || die "Download failed. Check the link, or that the repo is public."
 fi
 
