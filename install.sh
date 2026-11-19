@@ -3,7 +3,7 @@
 #
 # Paste this one line into Terminal (no admin password, no extra apps):
 #
-#   curl -fsSL https://raw.githubusercontent.com/yourname/nscale-motion/main/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/dougturnerct-droid/nscale-motion/main/install.sh | sh
 #
 # What it does:
 #   • downloads the latest signed build from GitHub Releases
@@ -19,7 +19,7 @@
 
 set -eu
 
-REPO="${NSM_REPO:-yourname/nscale-motion}"
+REPO="${NSM_REPO:-dougturnerct-droid/nscale-motion}"
 ID="com.nscale.motion"
 DEST="$HOME/Library/Application Support/Adobe/CEP/extensions/$ID"
 URL="https://github.com/$REPO/releases/latest/download/nscale-motion.zxp"
@@ -28,7 +28,7 @@ say() { printf '\033[1;34m▸\033[0m %s\n' "$*"; }
 die() { printf '\033[1;31m✖\033[0m %s\n' "$*" >&2; exit 1; }
 
 [ "$(uname -s)" = "Darwin" ] || die "This installer is for macOS."
-[ "$REPO" != "yourname/nscale-motion" ] || [ -n "${NSM_ZXP:-}" ] || die "This installer hasn't been pointed at a repo yet (yourname/nscale-motion)."
+[ "$REPO" != "dougturnerct-droid/nscale-motion" ] || [ -n "${NSM_ZXP:-}" ] || die "This installer hasn't been pointed at a repo yet (dougturnerct-droid/nscale-motion)."
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT

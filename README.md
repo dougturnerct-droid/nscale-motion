@@ -14,7 +14,7 @@ one line, with no admin password, no debug-mode flags and no third-party install
 Open **Terminal** (Spotlight → "Terminal"), paste this, press Return:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/yourname/nscale-motion/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/dougturnerct-droid/nscale-motion/main/install.sh | sh
 ```
 
 Restart After Effects → **Window → Extensions → Nscale Motion** (and **Nscale Bar**).
@@ -22,7 +22,7 @@ Restart After Effects → **Window → Extensions → Nscale Motion** (and **Nsc
 Updating is the same line. Uninstall by deleting
 `~/Library/Application Support/Adobe/CEP/extensions/com.nscale.motion`.
 
-> Replace `yourname/nscale-motion` here and at the top of `install.sh` once the repo exists on GitHub.
+> Replace `dougturnerct-droid/nscale-motion` here and at the top of `install.sh` once the repo exists on GitHub.
 > The repo must be **public** for the bare `curl` to work (the code is just HTML/JS; the
 > certificate and password are gitignored). If Nscale wants it private, the installer needs
 > a GitHub token — say so and I'll add that path.
@@ -68,7 +68,7 @@ its status bar.
 ## Set-up (what you do, once)
 
 1. Put this folder in a GitHub repo (public) and push it.
-2. Replace `yourname/nscale-motion` in `install.sh` and in this README. Commit.
+2. Replace `dougturnerct-droid/nscale-motion` in `install.sh` and in this README. Commit.
 3. Install the GitHub CLI if you don't have it: `brew install gh` then `gh auth login`.
 4. On Apple Silicon make sure Rosetta is installed (Adobe's signer is Intel-only):
    `softwareupdate --install-rosetta --agree-to-license`
