@@ -1,0 +1,8 @@
+# signing certificate + password: never commit
+build/cert/
+# Adobe's signer binary: fetched by build/sign.sh
+build/ZXPSignCmd
+# built packages: published to GitHub Releases, not git
+dist/
+.DS_Store
+__MACOSX/

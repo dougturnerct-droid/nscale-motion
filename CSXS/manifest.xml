@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Nscale Motion — After Effects CEP extension bundle.
+  One bundle, two panels: the main panel and the compact bar.
+  Bump ExtensionBundleVersion and both Extension Version values for each release.
+-->
+<ExtensionManifest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   Version="7.0"
+                   ExtensionBundleId="com.nscale.motion"
+                   ExtensionBundleVersion="0.1.0"
+                   ExtensionBundleName="Nscale Motion">
+
+  <ExtensionList>
+    <Extension Id="com.nscale.motion" Version="0.1.0"/>
+    <Extension Id="com.nscale.motion.bar" Version="0.1.0"/>
+  </ExtensionList>
+
+  <ExecutionEnvironment>
+    <HostList>
+      <!-- AEFT = After Effects. 22.0 = AE 2022; 99.9 = any future version. -->
+      <Host Name="AEFT" Version="[22.0,99.9]"/>
+    </HostList>
+    <LocaleList>
+      <Locale Code="All"/>
+    </LocaleList>
+    <RequiredRuntimeList>
+      <RequiredRuntime Name="CSXS" Version="11.0"/>
+    </RequiredRuntimeList>
+  </ExecutionEnvironment>
+
+  <DispatchInfoList>
+
+    <!-- Main panel: Window > Extensions > Nscale Motion -->
+    <Extension Id="com.nscale.motion">
+      <DispatchInfo>
+        <Resources>
+          <MainPath>./panel/index.html</MainPath>
+          <ScriptPath>./host/nsm.jsx</ScriptPath>
+          <CEFCommandLine>
+            <!-- Node.js inside the panel: file reads/writes happen here, so users never
+                 have to tick "Allow Scripts to Write Files and Access Network" in AE. -->
+            <Parameter>--enable-nodejs</Parameter>
+          </CEFCommandLine>
+        </Resources>
+        <Lifecycle>
+          <AutoVisible>true</AutoVisible>
+        </Lifecycle>
+        <UI>
+          <Type>Panel</Type>
+          <Menu>Nscale Motion</Menu>
+          <Geometry>
+            <Size><Height>760</Height><Width>380</Width></Size>
+            <MinSize><Height>400</Height><Width>300</Width></MinSize>
+            <MaxSize><Height>2000</Height><Width>900</Width></MaxSize>
+          </Geometry>
+        </UI>
+      </DispatchInfo>
+    </Extension>
+
+    <!-- Compact bar: Window > Extensions > Nscale Bar -->
+    <Extension Id="com.nscale.motion.bar">
+      <DispatchInfo>
+        <Resources>
+          <MainPath>./bar/index.html</MainPath>
+          <ScriptPath>./host/nsm.jsx</ScriptPath>
+          <CEFCommandLine>
+            <Parameter>--enable-nodejs</Parameter>
+          </CEFCommandLine>
+        </Resources>
+        <Lifecycle>
+          <AutoVisible>true</AutoVisible>
+        </Lifecycle>
+        <UI>
+          <Type>Panel</Type>
+          <Menu>Nscale Bar</Menu>
+          <Geometry>
+            <Size><Height>60</Height><Width>520</Width></Size>
+            <MinSize><Height>48</Height><Width>240</Width></MinSize>
+            <MaxSize><Height>200</Height><Width>2000</Width></MaxSize>
+          </Geometry>
+        </UI>
+      </DispatchInfo>
+    </Extension>
+
+  </DispatchInfoList>
+</ExtensionManifest>
