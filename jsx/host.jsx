@@ -19,6 +19,9 @@
 
 // Where this content lives (set while the file loads): <version>/ae/jsx/host.jsx, so the version root is three levels up.
 var NSM_ROOT = (function () { try { return File($.fileName).parent.parent.parent; } catch (e) { return null; } })();
+// The extension folder itself (CSXS, jsx, assets ...). The panel sends it as p.root from CEP; $.fileName is the fallback.
+var NSM_EXT = (function () { try { var f = File($.fileName); return f.exists ? f.parent.parent : null; } catch (e) { return null; } })();
+function nsmSetExt(p) { if (p && p.root) { var d = new Folder(String(p.root).replace(/[\/\\]+$/, "")); if (d.exists) NSM_EXT = d; } }
 // Run one of the scripts that ship with the panel (content/scripts). Names are fixed: letters, digits, _ and - only.
 function runBundled(name) {
     if (!/^[A-Za-z0-9_\-]+\.jsx$/.test(String(name))) return "WARN:That isn't one of the panel's scripts.";
@@ -1380,12 +1383,13 @@ function socialRun(p) {
     function has(c) { try { return !!(c.layer("Theme \u00b7 controls") && c.layer("Heading")); } catch (e) { return false; } }
 
     // ----- the comp: the open one if it is a social comp, otherwise the one called "social-asset"
-    var comp = app.project.activeItem;
-    if (!(comp instanceof CompItem && has(comp))) {
+    var comp = app.project.activeItem, wantName = p.template || SOCIAL.comp;
+    if (p.template || !(comp instanceof CompItem && has(comp))) {
         comp = null;
-        for (i = 1; i <= app.project.numItems; i++) { var it = app.project.item(i); if (it instanceof CompItem && it.name === SOCIAL.comp && has(it)) { comp = it; break; } }
+        for (i = 1; i <= app.project.numItems; i++) { var it = app.project.item(i); if (it instanceof CompItem && it.name === wantName && has(it)) { comp = it; break; } }
+        if (!comp && !p.template) for (i = 1; i <= app.project.numItems; i++) { var it2 = app.project.item(i); if (it2 instanceof CompItem && has(it2)) { comp = it2; break; } }
     }
-    if (!comp) return "WARN:Open the project with the \u201c" + SOCIAL.comp + "\u201d comp (it needs the \u201cTheme \u00b7 controls\u201d and \u201cHeading\u201d layers).";
+    if (!comp) return "WARN:No template comp called \u201c" + wantName + "\u201d here (it needs the \u201cTheme \u00b7 controls\u201d and \u201cHeading\u201d layers).";
 
     var dark = null;
     try { dark = comp.layer("Theme \u00b7 controls").property("ADBE Effect Parade").property("Dark mode").property(1); } catch (e0) {}
@@ -1430,7 +1434,7 @@ function socialRun(p) {
     }
 
     var outFolder = null;
-    if (what === "render") {
+    if (what === "render" || what === "ame") {
         outFolder = p.folder ? new Folder(p.folder) : socialFolder();
         if (!outFolder) return "WARN:Choose a save folder first.";
         if (!outFolder.exists && !outFolder.create()) return "WARN:Couldn't create " + outFolder.fsName;
@@ -1626,6 +1630,23 @@ function socialRun(p) {
     }
     if (what === "render") for (r = 1; r <= rq.numItems; r++) { var ri = rq.item(r); if (ri.status === RQItemStatus.QUEUED) { try { ri.render = false; parked.push(ri); } catch (e4) {} } }
 
+    // Media Encoder: save this (temporary) project with the filled comp and one queued item, hand it to AME, carry on.
+    // AME takes its own copy of the project at hand-off, so the next job can change the comp straight away.
+    function queueOne(fileName) {
+        var item = rq.items.add(comp), om = item.outputModule(1), names = om.templates, pick = null, a, b, prefs = [/H\.264.*15 ?Mbps/i, /H\.264.*40 ?Mbps/i, /H\.264/i];
+        for (a = 0; a < prefs.length && !pick; a++) for (b = 0; b < names.length; b++) if (prefs[a].test(names[b])) { pick = names[b]; break; }
+        if (!pick) { item.remove(); throw new Error("No H.264 output template in this After Effects."); }
+        om.applyTemplate(pick);
+        item.timeSpanStart = comp.workAreaStart; item.timeSpanDuration = comp.workAreaDuration;
+        om.file = new File(outFolder.fsName + "/" + fileName + ".mp4");
+        var proj = new File(p.ameDir + "/" + fileName + ".aep");
+        app.project.save(proj);
+        var err = null;
+        try { rq.queueInAME(true); } catch (e) { err = e; }
+        try { item.remove(); } catch (e6) {}
+        if (err) throw new Error("Media Encoder didn't take the job: " + err.toString());
+    }
+
     var made = [], files = [], notes = [], failed = "", list = what === "preview" ? [jobs[0]] : jobs, used = {};
     try {
         for (var j = 0; j < list.length && !failed; j++) {
@@ -1638,6 +1659,7 @@ function socialRun(p) {
                 var fn = job.name + MODES[m2].suffix;
                 try {
                     if (what === "preview") { var pf = new File(outFolder.fsName + "/" + fn + ".png"); if (pf.exists) pf.remove(); comp.saveFrameToPng(h.at, pf); files.push(pf.fsName); }
+                    else if (what === "ame") { queueOne(fn); made.push(fn + ".mp4"); }
                     else { renderOne(fn); made.push(fn + ".mp4"); }
                 } catch (eR) { failed = fn + ": " + eR.toString(); break; }
             }
@@ -1647,6 +1669,123 @@ function socialRun(p) {
     restoreAll();
     for (r = 0; r < parked.length; r++) try { parked[r].render = true; } catch (e7) {}
     return "SOCIAL:" + js({ what: what, notes: notes, made: made, files: files, failed: failed, folder: outFolder ? outFolder.fsName : "", total: list.length * MODES.length });
+}
+
+// ---------- Social via Media Encoder: works in a temp copy of the bundled template project, then reopens yours ----------
+// Why a copy: After Effects writes Auto-Save files next to whatever it opens, and nothing may be written inside
+// the signed extension folder. Why reopen: AME reads the project from disk, so the filled comp has to be saved
+// somewhere, and that somewhere should never be the user's own project.
+function socialTemplateFile(p) {
+    if (p.templateFile) { var f0 = new File(p.templateFile); if (f0.exists) return f0; }
+    if (!NSM_EXT) return null;
+    var f = new File(NSM_EXT.fsName + "/assets/social-templates.aep");
+    return f.exists ? f : null;
+}
+function socialListTemplates() {
+    var out = [];
+    for (var i = 1; i <= app.project.numItems; i++) {
+        var it = app.project.item(i); if (!(it instanceof CompItem)) continue;
+        try { if (it.layer("Theme \u00b7 controls")) out.push(it.name); } catch (e) {}
+    }
+    return out;
+}
+function socialInTemplate(p, body) {
+    var tpl = socialTemplateFile(p);
+    if (!tpl) return "WARN:The social template project isn't in this panel (assets/social-templates.aep). Reinstall, or Choose a template file.";
+
+    // the user's project: save it so we can come back to it
+    var mine = app.project.file, hadItems = app.project.numItems > 0;
+    if (!mine && hadItems) return "WARN:Save your project first, so it can be reopened after the hand-off.";
+    if (mine) { try { app.project.save(); } catch (eS) { return "WARN:Couldn't save your project: " + eS.toString(); } }
+
+    // a working copy of the template, in the temp folder
+    var work = new Folder(Folder.temp.fsName + "/nscale-social-ame"); if (!work.exists) work.create();
+    var copy = new File(work.fsName + "/template-" + Date.now() + ".aep");
+    if (!tpl.copy(copy)) return "WARN:Couldn't copy the template project to " + work.fsName;
+    p.ameDir = work.fsName;
+
+    var result;
+    try {
+        app.open(copy);
+        result = body(p);
+    } catch (eR) { result = "WARN:" + eR.toString() + (eR.line ? " (line " + eR.line + ")" : ""); }
+    // back to the user's project (a new empty one if they had none)
+    try { if (mine) app.open(mine); else app.newProject(); } catch (eB) { result += " \u00b7 and your project didn't reopen: " + eB.toString(); }
+    return result;
+}
+function socialScan(p) {
+    nsmSetExt(p);
+    return socialInTemplate(p, function () {
+        var names = socialListTemplates();
+        setSetting("socialTemplates", names.join("|"));
+        return "SOCIAL:" + js({ what: "scan", templates: names });
+    });
+}
+// Generic template comp: every job field is set on the text layer of the same name; "Dark mode" is the light/dark switch.
+// Used for any template comp that doesn't have the event layout (Heading + two Subheadings + chips).
+function socialIsEventComp(c) { try { return !!(c.layer("Heading") && c.layer("chip-date")); } catch (e) { return false; } }
+function socialGenericRun(p) {
+    var jobs = p.jobs || [], i, j, m;
+    var MODES = []; if (p.light) MODES.push({ suffix: "_light", dark: 0 }); if (p.dark) MODES.push({ suffix: "_dark", dark: 1 });
+    if (!MODES.length) return "WARN:Tick Light, Dark or both.";
+    var comp = null;
+    for (i = 1; i <= app.project.numItems; i++) { var it = app.project.item(i); if (it instanceof CompItem && it.name === p.template) { comp = it; break; } }
+    if (!comp) return "WARN:No comp called \u201c" + p.template + "\u201d in the template project.";
+    var dark = null; try { dark = comp.layer("Theme \u00b7 controls").property("ADBE Effect Parade").property("Dark mode").property(1); } catch (e0) {}
+    var outFolder = p.folder ? new Folder(p.folder) : socialFolder();
+    if (!outFolder) return "WARN:Choose a save folder first.";
+    if (!outFolder.exists && !outFolder.create()) return "WARN:Couldn't create " + outFolder.fsName;
+    function slug(s) { return String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "post"; }
+    function setText(L, text) { var tp = L.property("ADBE Text Properties").property("ADBE Text Document"); var d = tp.value; d.text = String(text).replace(/\r\n|\n/g, "\r"); tp.setValue(d); }
+    var rq = app.project.renderQueue, made = [], notes = [], failed = "", used = {};
+    for (j = 0; j < jobs.length && !failed; j++) {
+        var job = jobs[j], fields = job.fields || {}, name = slug(job.name || job.label || job.hero || "post");
+        if (used[name]) { var n = 2; while (used[name + "-" + n]) n++; name = name + "-" + n; } used[name] = true;
+        var unset = [];
+        for (var k in fields) { if (!fields.hasOwnProperty(k)) continue; var L = null; try { L = comp.layer(k); } catch (eL) {} if (L && L instanceof TextLayer) setText(L, fields[k]); else unset.push(k); }
+        if (unset.length) notes.push(name + ": no text layer called " + unset.join(", ") + " in " + comp.name);
+        for (m = 0; m < MODES.length; m++) {
+            if (dark) dark.setValue(MODES[m].dark);
+            var fn = name + MODES[m].suffix;
+            try {
+                var item = rq.items.add(comp), om = item.outputModule(1), names = om.templates, pick = null, a, b, prefs = [/H\.264.*15 ?Mbps/i, /H\.264.*40 ?Mbps/i, /H\.264/i];
+                for (a = 0; a < prefs.length && !pick; a++) for (b = 0; b < names.length; b++) if (prefs[a].test(names[b])) { pick = names[b]; break; }
+                if (!pick) { item.remove(); throw new Error("No H.264 output template in this After Effects."); }
+                om.applyTemplate(pick); item.timeSpanStart = comp.workAreaStart; item.timeSpanDuration = comp.workAreaDuration;
+                om.file = new File(outFolder.fsName + "/" + fn + ".mp4");
+                app.project.save(new File(p.ameDir + "/" + fn + ".aep"));
+                var err = null; try { rq.queueInAME(true); } catch (eQ) { err = eQ; }
+                try { item.remove(); } catch (e6) {}
+                if (err) throw new Error("Media Encoder didn't take the job: " + err.toString());
+                made.push(fn + ".mp4");
+            } catch (eR) { failed = fn + ": " + eR.toString(); break; }
+        }
+    }
+    return "SOCIAL:" + js({ what: "ame", notes: notes, made: made, files: [], failed: failed, folder: outFolder.fsName, total: jobs.length * MODES.length });
+}
+function socialAME(p) {
+    nsmSetExt(p);
+    return socialInTemplate(p, function (q) {
+        var names = socialListTemplates(); setSetting("socialTemplates", names.join("|"));
+        if (!names.length) return "WARN:The template project has no comp with a \u201cTheme \u00b7 controls\u201d layer.";
+        if (q.template && !has(names, q.template)) q.template = names[0];
+        if (!q.template) q.template = names[0];
+        q.what = "ame";
+        // group the jobs by the template comp they ask for (a Notion row can name one); one socialRun per group
+        var groups = {}, order = [], gi;
+        for (gi = 0; gi < q.jobs.length; gi++) { var tn = (q.jobs[gi].template && has(names, q.jobs[gi].template)) ? q.jobs[gi].template : q.template; if (!groups[tn]) { groups[tn] = []; order.push(tn); } groups[tn].push(q.jobs[gi]); }
+        var all = { what: "ame", notes: [], made: [], files: [], failed: "", folder: "", total: 0, templates: names, template: q.template };
+        for (gi = 0; gi < order.length && !all.failed; gi++) {
+            var sub = {}; for (var k in q) if (q.hasOwnProperty(k)) sub[k] = q[k];
+            sub.template = order[gi]; sub.jobs = groups[order[gi]];
+            var tc = null; for (var ci = 1; ci <= app.project.numItems; ci++) { var cit = app.project.item(ci); if (cit instanceof CompItem && cit.name === sub.template) { tc = cit; break; } }
+            var r = (tc && socialIsEventComp(tc)) ? socialRun(sub) : socialGenericRun(sub);
+            if (r.indexOf("SOCIAL:") !== 0) { all.failed = r.replace(/^WARN:/, ""); break; }
+            try { var o = eval("(" + r.slice(7) + ")"); all.notes = all.notes.concat(o.notes || []); all.made = all.made.concat(o.made || []); all.folder = o.folder || all.folder; all.total += o.total || 0; if (o.failed) all.failed = o.failed; } catch (eJ) { all.failed = "couldn't read the result"; }
+        }
+        return "SOCIAL:" + js(all);
+    });
+    function has(arr, v) { for (var i = 0; i < arr.length; i++) if (arr[i] === v) return true; return false; }
 }
 
 // ---------- Dispatcher: the HTML panel calls nsm_run(action, payload) ----------
@@ -1659,6 +1798,10 @@ function nsm_run(action, p) {
         if (action === "buildMogrts") return nsmBuildPremiereTemplates(true);
         if (action === "runBundled") return runBundled(p.name);
         if (action === "social") return socialRun(p);
+        if (action === "chooseFile") { var cf = File.openDialog(p.title || "Choose a file"); return cf ? "PATH:" + cf.fsName : "WARN:No file chosen."; }
+        if (action === "socialAME") return socialAME(p);
+        if (action === "socialScan") return socialScan(p);
+        if (action === "socialTemplates") { var st = getSetting("socialTemplates", ""); return "SOCIAL:" + js({ what: "list", templates: st ? st.split("|") : [] }); }
         if (action === "chooseInbox") { var fd = Folder.selectDialog("Choose the Claude inbox folder in Google Drive"); return fd ? "PATH:" + fd.fsName : "WARN:No folder chosen."; }
         if (action === "chooseFolder") return chooseFolder(p.title);
         if (action === "activeComp") return activeCompId();

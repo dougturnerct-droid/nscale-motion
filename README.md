@@ -58,6 +58,7 @@ nscale-motion/
 ├─ jsx/host.jsx            runs inside After Effects — every tool, dispatcher nsm_run at the end
 ├─ library/index.html      the motion library, shown in the Library tab
 ├─ scripts/*.jsx           the two Premiere template builders, run from the Text tab
+├─ assets/                 shipped with the AE panel: social-templates.aep (+ its footage)
 ├─ premiere/               the Premiere Pro extension, packaged separately
 │  ├─ CSXS/manifest.xml    Premiere bundle, host PPRO 22+
 │  ├─ ppro/index.html      the panel, draws itself from templates.json
@@ -137,6 +138,59 @@ machine only. Not set up yet — say the word.
 Adobe's 17 Nov 2026 note: UXP for After Effects is public beta only (AE Beta 27.1). CEP
 is disabled by default from **Dec 2028** (re-enableable) and removed from **Dec 2029**.
 This panel has about three years before it needs a UXP port.
+
+## Social: the template project
+
+`assets/social-templates.aep` ships inside the After Effects panel. Any comp in it with a
+`Theme · controls` layer (with the `Dark mode` checkbox) and a `Heading` text layer is offered
+in the Social tab's Template picker. To change templates: edit the file, Collect Files into
+`assets/` so footage comes along, bump the AE version, changelog, release. Third-party effects
+used in the comps (Deep Glow, Shadow Studio, ...) must be installed on every machine that
+renders, or those layers render wrong; prefer built-in effects where you can.
+
+"Send to Media Encoder" never opens that file in place: it copies it to the system temp folder,
+works there, and reopens your project. Temp copies live in `~/…/TemporaryItems/nscale-social-ame`.
+
+## Social: Notion
+
+Posts are queued in the Notion database **Social posts** (under *Motion System*). A row is a
+page: the **page body** carries the copy, the columns carry metadata. New → pick the template
+for the post type (Event post, Quote post, …); it lays out a `###` heading per field with the
+copy typed underneath. Set Status to **Ready**. In the panel, Social → Notion → **Pull Ready
+rows** loads them into the batch; **Send to Media Encoder** renders them and writes Status,
+Output, Rendered by and Rendered at back to each row.
+
+How a page maps to a comp:
+
+- The Template option names the comp (`TEMPLATE_COMP` in `index.html` maps option → comp name;
+  an unlisted option is used as the comp name as-is).
+- Each `###` heading is a field; the paragraphs under it, up to the next heading or a divider,
+  are its value (line breaks kept). Text outside a heading is ignored, so notes are fine.
+- In the comp, a field fills the **text layer with the same name**. `Dark mode` on
+  `Theme · controls` is the light/dark switch. The event comp (`social-asset`) keeps its special
+  handling (hero line-split, glass clearance); every other comp uses the plain name match.
+- Rows whose title starts with `TEMPLATE` are never rendered.
+
+Adding a post type: build the comp (text layers named as the fields; a `Theme · controls`
+layer with `Dark mode`), save into `assets/social-templates.aep`, add the option to the
+Template select in Notion, make a page template for it (below), add the option → comp name to
+`TEMPLATE_COMP`, release.
+
+Making a page template in Notion (the API can't): open the database → the arrow next to
+**New** → **New template** → name it after the Template option → set Template, Light and
+Dark on it → copy the body from the matching `TEMPLATE · …` row. Then the `TEMPLATE · …`
+rows can be deleted.
+
+Access is a Notion *internal integration* shared with that database. Its token is pasted once per
+Mac under Social → Notion → Connection and saved to
+`~/Library/Application Support/Nscale Motion/notion.json` (never in this repo). Setting up the
+integration, once:
+
+1. notion.so/profile/integrations → New integration → name "Nscale Motion panel", workspace Nscale,
+   type Internal. Capabilities: read and update content. Copy the token (`ntn_…`).
+2. Open the Social posts database → ··· menu → Connections → add "Nscale Motion panel".
+3. Give the token to editors directly (Slack DM, not a public channel). Anyone with it can read
+   and edit whatever the integration is connected to, which is only that database.
 
 ## Premiere: updating the templates
 

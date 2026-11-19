@@ -8,3 +8,6 @@ dist/
 __MACOSX/
 # stub panels from the packaging pass, kept locally for reference only
 _old/
+# After Effects writes these next to any project it opens
+assets/Auto-Save/
+assets/*.aep_AME/

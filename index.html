@@ -398,7 +398,11 @@ select.field{appearance:none;background:var(--base) url("data:image/svg+xml,%3Cs
 
     <!-- ===== Event social ===== -->
     <div class="body" id="tab-social" hidden>
-      <div class="card"><div class="label">Event post <span class="hint">fills the social-asset comp</span></div>
+      <div class="card"><div class="label">Template <span class="hint" id="sTplHint">from the bundled project</span></div>
+        <div class="path"><select class="field" id="sTpl" aria-label="Template comp"><option value="">social-asset</option></select><button class="btn" id="sScan" title="Opens the template project for a moment, lists its template comps, and reopens your project.">Scan</button></div>
+        <div class="path" style="margin-top:6px"><code id="sTplFile">Built-in template project</code><button class="btn" id="sTplChoose" title="Use another .aep instead of the bundled one">Choose</button><button class="btn" id="sTplBuiltin" title="Back to the bundled template project">Built-in</button></div>
+      </div>
+      <div class="card"><div class="label">Event post <span class="hint">fills the template comp</span></div>
         <div class="sfields">
           <div><div class="flabel">Top line</div><input class="field" id="sTop" placeholder="Gold Sponsor" aria-label="Top line"></div>
           <div><div class="flabel">Event name · press return to choose the line break; one long line is split for you</div><textarea class="field short" id="sHero" placeholder="NVIDIA GTC&#10;Washington, D.C." aria-label="Event name"></textarea></div>
@@ -416,6 +420,15 @@ select.field{appearance:none;background:var(--base) url("data:image/svg+xml,%3Cs
       <div class="card" id="sPrevCard" hidden><div class="label">Preview <span class="hint" id="sPrevHint"></span></div><div class="sprev" id="sPrev"></div></div>
       <div class="card" id="sNotesCard" hidden><div class="label">From the last run</div><ul class="snotes" id="sNotes"></ul></div>
       <div class="row"><button class="btn" id="sPreview" title="Saves a still of each version at the moment the glass element comes closest to the event name. The comp is put back afterwards.">Preview stills</button><button class="btn" id="sApply" title="Leaves this post in the comp so you can adjust it by hand. One undo puts it back.">Apply to comp</button></div>
+      <div class="card"><div class="label">Notion <span class="hint" id="nHint">rows marked Ready in Social posts</span></div>
+        <div class="row"><button class="btn" id="nPull" title="Loads every row with Status = Ready into the batch">Pull Ready rows</button><button class="btn" id="nOpen" title="Opens the Social posts database">Open database</button></div>
+        <div class="flabel" id="nState" style="margin:6px 0 0"></div>
+        <details id="nSetup" style="margin-top:8px"><summary class="flabel" style="cursor:pointer">Connection</summary>
+          <div class="flabel" style="margin:6px 0 4px">Integration token · shared by Doug, paste once. Stored on this Mac only.</div>
+          <input class="field" id="nToken" type="password" placeholder="ntn_…" autocomplete="off">
+          <div class="row" style="margin-top:6px"><button class="btn" id="nSave">Save</button><button class="btn" id="nTest">Test</button></div>
+        </details>
+      </div>
       <div class="card"><div class="label">Batch <span class="hint">Render takes these plus the form</span></div>
         <div class="sbatch" id="sBatch"></div>
         <div class="row" style="margin-top:8px"><button class="btn" id="sAdd">Add this post to the batch</button><button class="btn" id="sClearBatch">Empty the batch</button></div>
@@ -424,7 +437,8 @@ select.field{appearance:none;background:var(--base) url("data:image/svg+xml,%3Cs
         <div class="path"><code id="sFolder"></code><button class="btn" id="sChoose">Choose</button></div>
         <div class="flabel" style="margin:6px 0 0">Not set: Drive › Motion › motion finals › socials. H.264, work area.</div>
       </div>
-      <button class="btn primary" id="sGo">Render</button>
+      <button class="btn primary" id="sAME" title="Saves your project, fills the template in a temporary copy, hands each file to Media Encoder, reopens your project. After Effects is free while Media Encoder renders.">Send to Media Encoder</button>
+      <button class="btn" id="sGo" title="Renders in After Effects' own queue from the comp that is open in this project. After Effects is busy until it finishes.">Render here instead</button>
     </div>
 
     <!-- ===== Send to Claude ===== -->
@@ -1158,7 +1172,8 @@ $('#feedback').onclick = () => {
 };
 
 /* ---------- event social ---------- */
-const SO = Object.assign({ top: '', hero: '', date: '', loc: '', name: '', light: true, dark: true, clear: true, minDrop: 0, folder: '', batch: [] }, store.get('social', {}));
+const SO = Object.assign({ top: '', hero: '', date: '', loc: '', name: '', light: true, dark: true, clear: true, minDrop: 0, folder: '', batch: [], template: '', templateFile: '', templates: [] }, store.get('social', {}));
+const EXT_ROOT = (() => { try { return window.__adobe_cep__ ? window.__adobe_cep__.getSystemPath('extension') : ''; } catch (e) { return ''; } })();
 const saveSO = () => store.set('social', SO);
 const soText = (el, v) => { el.textContent = v; return el; };
 const soJob = () => ({ name: SO.name.trim(), top: SO.top.trim(), hero: SO.hero.trim(), date: SO.date.trim(), loc: SO.loc.trim() });
@@ -1168,11 +1183,15 @@ function renderSocial() {
   Object.keys(SO_FIELDS).forEach(id => { if ($('#' + id).value !== SO[SO_FIELDS[id]]) $('#' + id).value = SO[SO_FIELDS[id]]; });
   $('#sLight').checked = SO.light; $('#sDark').checked = SO.dark; $('#sClear').checked = SO.clear; $('#sDrop').value = SO.minDrop || 0;
   $('#sFolder').textContent = SO.folder || 'motion finals › socials';
+  const names = SO.templates.length ? SO.templates : ['social-asset'];
+  $('#sTpl').innerHTML = names.map(n => `<option value="${n.replace(/"/g, '&quot;')}" ${n === (SO.template || names[0]) ? 'selected' : ''}>${n.replace(/</g, '&lt;')}</option>`).join('');
+  $('#sTplHint').textContent = SO.templates.length ? `${SO.templates.length} in the project · Scan to refresh` : 'press Scan to list the template comps';
+  $('#sTplFile').textContent = SO.templateFile ? SO.templateFile.split('/').pop() : 'Built-in template project';
   const list = $('#sBatch'); list.innerHTML = '';
   if (!SO.batch.length) list.appendChild(soText(Object.assign(document.createElement('div'), { className: 'empty' }), 'Empty. Add posts here to render several in one go.'));
   SO.batch.forEach((j, i) => {
     const row = Object.assign(document.createElement('div'), { className: 'item' });
-    row.appendChild(soText(document.createElement('b'), j.hero.replace(/\s*\n\s*/g, ' ')));
+    row.appendChild(soText(document.createElement('b'), (j.label || j.hero || '').replace(/\s*\n\s*/g, ' ')));
     row.appendChild(soText(document.createElement('span'), [j.top, j.date, j.loc].filter(Boolean).join(' · ')));
     const edit = soText(document.createElement('button'), 'Edit'); edit.title = 'Move this post back into the form';
     edit.onclick = () => { Object.assign(SO, j); SO.batch.splice(i, 1); saveSO(); renderSocial(); };
@@ -1218,6 +1237,7 @@ function soShow(r) {
     });
     status(r.failed ? 'Preview stopped: ' + r.failed : 'Preview saved. The comp is back as it was.', r.failed ? 'warn' : 'ok');
   } else if (r.what === 'apply') status('In the comp. Undo once to put it back.', 'ok');
+  else if (r.what === 'ame') status(r.failed ? `Sent ${r.made.length} of ${r.total} to Media Encoder, then stopped. See the notes.` : `${r.made.length} file${r.made.length === 1 ? '' : 's'} sent to Media Encoder → ${r.folder.split('/').pop()}. Your project is back; carry on.`, r.failed ? 'warn' : 'ok');
   else status(r.failed ? `Rendered ${r.made.length} of ${r.total}, then stopped. See the notes.` : `Rendered ${r.made.length} file${r.made.length === 1 ? '' : 's'} to ${r.folder.split('/').pop()}. The comp is back as it was.`, r.failed ? 'warn' : 'ok');
 }
 function soRun(what) {
@@ -1231,6 +1251,129 @@ function soRun(what) {
     try { soShow(JSON.parse(body)); } catch (e) { status('After Effects answered, but the panel could not read it.', 'warn'); }
   });
 }
+$('#sTpl').onchange = e => { SO.template = e.target.value; saveSO(); };
+$('#sTplChoose').onclick = () => bridge.run('chooseFile', { title: 'Choose the social template project (.aep)' }, 'Opens a file picker in After Effects.', (k, body) => { if (k === 'PATH') { SO.templateFile = body; SO.templates = []; SO.template = ''; saveSO(); renderSocial(); status('Template project set. Press Scan to list its comps.', 'ok'); } });
+$('#sTplBuiltin').onclick = () => { SO.templateFile = ''; SO.templates = []; SO.template = ''; saveSO(); renderSocial(); status('Using the bundled template project.', 'ok'); };
+$('#sScan').onclick = () => bridge.run('socialScan', { root: EXT_ROOT, templateFile: SO.templateFile }, 'Lists the template comps in the bundled project.', (k, body) => {
+  if (k !== 'SOCIAL') return;
+  try { const r = JSON.parse(body); SO.templates = r.templates || []; if (!SO.templates.includes(SO.template)) SO.template = SO.templates[0] || ''; saveSO(); renderSocial(); status(SO.templates.length ? `${SO.templates.length} template comp${SO.templates.length === 1 ? '' : 's'} found. Your project is back.` : 'No template comps found in that project.', SO.templates.length ? 'ok' : 'warn'); } catch (e) {}
+});
+$('#sAME').onclick = () => {
+  const jobs = soJobs();
+  if (!jobs.length || !jobs[0].hero) { status('Fill in the event name first.', 'warn'); return; }
+  if (!soCount()) { status('Tick Light, Dark or both.', 'warn'); return; }
+  const n = jobs.length * soCount();
+  bridge.run('socialAME', { root: EXT_ROOT, templateFile: SO.templateFile, template: SO.template, jobs, light: SO.light, dark: SO.dark, clear: SO.clear, minDrop: SO.minDrop, folder: SO.folder },
+    `Hands ${n} file${n === 1 ? '' : 's'} to Media Encoder and reopens your project`, (k, body) => {
+      if (k !== 'SOCIAL') return;
+      try { const r = JSON.parse(body); if (r.templates) { SO.templates = r.templates; SO.template = r.template || SO.template; saveSO(); renderSocial(); } soShow(r); notionAfterAME(jobs, r); } catch (e) { status('After Effects answered, but the panel could not read it.', 'warn'); }
+    });
+};
+/* ---------- Notion: Social posts database. Calls go through the panel's Node layer because api.notion.com
+   refuses browser-origin requests. The token lives in a file under the user's Library, never in the repo. ---------- */
+// Notion "Template" option → comp name in assets/social-templates.aep. Unlisted options are used as the comp name as-is.
+const TEMPLATE_COMP = { 'Event post': 'social-asset', 'Quote post': 'quote-post' };
+const NOTION = {
+  dataSource: '41dcaf6b-fadc-81cb-8c96-000bbbbbfd8d',                   // "Social posts" under Motion System
+  dbUrl: 'https://app.notion.com/p/41dcaf6bfadc8135a40df95667d3018d',
+  version: '2025-09-03',
+  node: (() => { try { return typeof require === 'function' ? { fs: require('fs'), path: require('path'), https: require('https'), os: require('os') } : null; } catch (e) { return null; } })(),
+  tokenFile() { return this.node.path.join(this.node.os.homedir(), 'Library', 'Application Support', 'Nscale Motion', 'notion.json'); },
+  token() { try { return JSON.parse(this.node.fs.readFileSync(this.tokenFile(), 'utf8')).token || ''; } catch (e) { return ''; } },
+  saveToken(t) { const f = this.tokenFile(); this.node.fs.mkdirSync(this.node.path.dirname(f), { recursive: true }); this.node.fs.writeFileSync(f, JSON.stringify({ token: t }), { mode: 0o600 }); },
+  call(method, path, body) {
+    return new Promise((resolve, reject) => {
+      const tok = this.token(); if (!tok) return reject(new Error('No Notion token saved. Open Connection below and paste it.'));
+      const data = body ? JSON.stringify(body) : null;
+      const req = this.node.https.request({ hostname: 'api.notion.com', path, method, headers: { 'Authorization': 'Bearer ' + tok, 'Notion-Version': this.version, 'Content-Type': 'application/json', ...(data ? { 'Content-Length': Buffer.byteLength(data) } : {}) } }, res => {
+        let out = ''; res.on('data', c => out += c); res.on('end', () => { let j = {}; try { j = JSON.parse(out); } catch (e) {} if (res.statusCode >= 200 && res.statusCode < 300) resolve(j); else reject(new Error(j.message || ('Notion said ' + res.statusCode))); });
+      });
+      req.on('error', reject); if (data) req.write(data); req.end();
+    });
+  },
+  text(prop) { return (prop && (prop.rich_text || prop.title) || []).map(t => t.plain_text).join(''); },
+  async body(pageId) {
+    // Heading 3 = field name; the paragraphs under it (until the next heading) = value, lines joined with \n
+    const fields = {}; let cur = null, cursor = null;
+    do {
+      const r = await this.call('GET', `/v1/blocks/${pageId}/children?page_size=100${cursor ? '&start_cursor=' + cursor : ''}`);
+      for (const b of r.results || []) {
+        if (b.type === 'heading_3' || b.type === 'heading_2' || b.type === 'heading_1') { cur = this.text(b[b.type]).trim(); if (cur) fields[cur] = fields[cur] || ''; continue; }
+        if (b.type === 'divider') { cur = null; continue; }
+        if (!cur) continue;
+        if (b.type === 'paragraph' || b.type === 'bulleted_list_item' || b.type === 'numbered_list_item' || b.type === 'quote') {
+          const t = this.text(b[b.type]); fields[cur] = fields[cur] ? fields[cur] + '\n' + t : t;
+        }
+      }
+      cursor = r.has_more ? r.next_cursor : null;
+    } while (cursor);
+    Object.keys(fields).forEach(k => { fields[k] = fields[k].replace(/\n+$/, '').replace(/^\n+/, ''); });
+    return fields;
+  },
+  async ready() {
+    const r = await this.call('POST', `/v1/data_sources/${this.dataSource}/query`, { filter: { property: 'Status', status: { equals: 'Ready' } }, page_size: 50 });
+    const rows = [];
+    for (const pg of r.results || []) {
+      const P = pg.properties, title = this.text(P.Post);
+      if (/^TEMPLATE\b/i.test(title)) continue;                                      // the template rows are never rendered
+      const fields = await this.body(pg.id);
+      rows.push({ id: pg.id, title, fields, name: this.text(P['File name']), template: (P.Template && P.Template.select && P.Template.select.name) || '', light: !!(P.Light && P.Light.checkbox), dark: !!(P.Dark && P.Dark.checkbox) });
+    }
+    return rows;
+  },
+  rt(v) { return { rich_text: [{ text: { content: String(v || '').slice(0, 1900) } }] }; },
+  async mark(id, status, extra) {
+    const props = { Status: { status: { name: status } } };
+    if (extra && extra.output !== undefined) props.Output = this.rt(extra.output);
+    if (extra && extra.notes !== undefined) props['Panel notes'] = this.rt(extra.notes);
+    if (extra && extra.by) props['Rendered by'] = this.rt(extra.by);
+    if (status !== 'Ready') props['Rendered at'] = { date: { start: new Date().toISOString() } };
+    return this.call('PATCH', `/v1/pages/${id}`, { properties: props });
+  }
+};
+function nState(msg, kind) { $('#nState').textContent = msg; $('#nState').style.color = kind === 'warn' ? 'var(--c-exit)' : kind === 'ok' ? 'var(--mint)' : ''; }
+if (!NOTION.node) { nState('Notion needs Node in the panel; this build has it off.', 'warn'); }
+else if (!NOTION.token()) nState('No token saved yet. Open Connection, paste the shared token, Save.');
+else nState('Connected (token saved on this Mac).');
+$('#nSave').onclick = () => { const t = $('#nToken').value.trim(); if (!t) { nState('Paste the token first.', 'warn'); return; } try { NOTION.saveToken(t); $('#nToken').value = ''; nState('Token saved. Press Test.', 'ok'); } catch (e) { nState('Could not save: ' + e.message, 'warn'); } };
+$('#nTest').onclick = async () => { nState('Testing…'); try { const rows = await NOTION.ready(); nState(`Connected. ${rows.length} row${rows.length === 1 ? '' : 's'} marked Ready.`, 'ok'); } catch (e) { nState(e.message, 'warn'); } };
+$('#nOpen').onclick = () => { if (window.cep && cep.util) cep.util.openURLInDefaultBrowser(NOTION.dbUrl); else window.open(NOTION.dbUrl, '_blank', 'noopener'); };
+$('#nPull').onclick = async () => {
+  nState('Loading…');
+  try {
+    const rows = await NOTION.ready();
+    if (!rows.length) { nState('Nothing marked Ready in Social posts.'); return; }
+    let added = 0;
+    const miss = [];
+    rows.forEach(r => {
+      if (SO.batch.some(b => b.notion === r.id)) return;
+      const f = r.fields, hero = f.Heading || f.Hero || r.title;
+      if (!Object.keys(f).length) miss.push(r.title);
+      SO.batch.push({ name: r.name, top: f['Top line'] || '', hero, date: f['Date chip'] || '', loc: f['Location chip'] || '', template: TEMPLATE_COMP[r.template] || r.template, fields: f, notion: r.id, label: r.title });
+      added++;
+    });
+    if (miss.length) nState(`No fields found in: ${miss.join(', ')} — the page body needs a ### heading per field.`, 'warn');
+    const anyLight = rows.some(r => r.light), anyDark = rows.some(r => r.dark);
+    if (anyLight || anyDark) { SO.light = anyLight; SO.dark = anyDark; }
+    saveSO(); renderSocial();
+    if (!miss.length) nState(`${added} added to the batch (${rows.length} Ready). Light/Dark set from the rows.`, 'ok');
+  } catch (e) { nState(e.message, 'warn'); }
+};
+// after a Media Encoder hand-off: write back to the rows that came from Notion
+async function notionAfterAME(jobs, r) {
+  const fromNotion = jobs.filter(j => j.notion); if (!fromNotion.length || !NOTION.node || !NOTION.token()) return;
+  const by = (() => { try { return NOTION.node.os.userInfo().username; } catch (e) { return ''; } })();
+  const made = r.made || [], folder = r.folder || '', notes = (r.notes || []).join(' · ');
+  let n = 0;
+  for (const j of fromNotion) {
+    const mine = made.filter(f => f.startsWith((j.name || '').toLowerCase()) || f.includes(j.name || '\u0000'));
+    const ok = mine.length > 0 && !(r.failed && r.failed.startsWith(j.name));
+    try { await NOTION.mark(j.notion, ok ? 'Sent to Media Encoder' : 'Failed', { output: ok ? folder + ' → ' + mine.join(', ') : (r.failed || 'no file made'), notes, by }); n++; } catch (e) {}
+  }
+  if (n) nState(`${n} Notion row${n === 1 ? '' : 's'} updated.`, 'ok');
+  // rows that went out are done: drop them from the batch
+  SO.batch = SO.batch.filter(b => !b.notion); saveSO(); renderSocial();
+}
 $('#sPreview').onclick = () => soRun('preview');
 $('#sApply').onclick = () => soRun('apply');
 $('#sGo').onclick = () => soRun('render');
@@ -1240,7 +1383,7 @@ renderSocial();
 (function () {
   var REPO = 'dougturnerct-droid/nscale-motion', KEY = 'ae', EXT = 'com.nscale.motion.panel';
   var URL = 'https://raw.githubusercontent.com/' + REPO + '/main/version.json?t=' + Date.now();
-  var BUILT = '2.5.2';   // written by build/sign.sh from the manifest
+  var BUILT = '2.6.0';   // written by build/sign.sh from the manifest
   function mine() { try { var l = JSON.parse(window.__adobe_cep__.getExtensions(JSON.stringify([EXT]))); return (l && l[0] && l[0].version) || BUILT; } catch (e) { return BUILT; } }
   function newer(a, b) { var x = String(a).split('.').map(Number), y = String(b).split('.').map(Number); for (var i = 0; i < 3; i++) { if ((x[i] || 0) > (y[i] || 0)) return true; if ((x[i] || 0) < (y[i] || 0)) return false; } return false; }
   var cur = mine(); if (!window.fetch) { console.log('update check: no fetch'); return; }
