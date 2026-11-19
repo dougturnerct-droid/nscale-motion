@@ -7,18 +7,17 @@
 <ExtensionManifest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    Version="7.0"
                    ExtensionBundleId="com.nscale.motion"
-                   ExtensionBundleVersion="0.1.0"
+                   ExtensionBundleVersion="2.5.1"
                    ExtensionBundleName="Nscale Motion">
 
   <ExtensionList>
-    <Extension Id="com.nscale.motion" Version="0.1.0"/>
-    <Extension Id="com.nscale.motion.bar" Version="0.1.0"/>
+    <Extension Id="com.nscale.motion.panel" Version="2.5.1"/>
+    <Extension Id="com.nscale.motion.bar" Version="2.5.1"/>
   </ExtensionList>
 
   <ExecutionEnvironment>
     <HostList>
-      <!-- AEFT = After Effects. 22.0 = AE 2022; 99.9 = any future version. -->
-      <Host Name="AEFT" Version="[22.0,99.9]"/>
+      <Host Name="AEFT" Version="[18.0,99.9]"/>
     </HostList>
     <LocaleList>
       <Locale Code="All"/>
@@ -31,14 +30,14 @@
   <DispatchInfoList>
 
     <!-- Main panel: Window > Extensions > Nscale Motion -->
-    <Extension Id="com.nscale.motion">
+    <Extension Id="com.nscale.motion.panel">
       <DispatchInfo>
         <Resources>
-          <MainPath>./panel/index.html</MainPath>
-          <ScriptPath>./host/nsm.jsx</ScriptPath>
+          <MainPath>./index.html</MainPath>
+          <ScriptPath>./jsx/host.jsx</ScriptPath>
           <CEFCommandLine>
-            <!-- Node.js inside the panel: file reads/writes happen here, so users never
-                 have to tick "Allow Scripts to Write Files and Access Network" in AE. -->
+            <!-- Node.js inside the panel, so file reads/writes can move out of ExtendScript
+                 and users stop needing "Allow Scripts to Write Files and Access Network". -->
             <Parameter>--enable-nodejs</Parameter>
           </CEFCommandLine>
         </Resources>
@@ -49,9 +48,9 @@
           <Type>Panel</Type>
           <Menu>Nscale Motion</Menu>
           <Geometry>
-            <Size><Height>760</Height><Width>380</Width></Size>
-            <MinSize><Height>400</Height><Width>300</Width></MinSize>
-            <MaxSize><Height>2000</Height><Width>900</Width></MaxSize>
+            <Size><Height>760</Height><Width>440</Width></Size>
+            <MinSize><Height>420</Height><Width>320</Width></MinSize>
+            <MaxSize><Height>2400</Height><Width>1000</Width></MaxSize>
           </Geometry>
         </UI>
       </DispatchInfo>
@@ -61,8 +60,8 @@
     <Extension Id="com.nscale.motion.bar">
       <DispatchInfo>
         <Resources>
-          <MainPath>./bar/index.html</MainPath>
-          <ScriptPath>./host/nsm.jsx</ScriptPath>
+          <MainPath>./bar.html</MainPath>
+          <ScriptPath>./jsx/host.jsx</ScriptPath>
           <CEFCommandLine>
             <Parameter>--enable-nodejs</Parameter>
           </CEFCommandLine>
@@ -74,9 +73,9 @@
           <Type>Panel</Type>
           <Menu>Nscale Bar</Menu>
           <Geometry>
-            <Size><Height>60</Height><Width>520</Width></Size>
-            <MinSize><Height>48</Height><Width>240</Width></MinSize>
-            <MaxSize><Height>200</Height><Width>2000</Width></MaxSize>
+            <Size><Height>48</Height><Width>760</Width></Size>
+            <MinSize><Height>40</Height><Width>48</Width></MinSize>
+            <MaxSize><Height>2400</Height><Width>2400</Width></MaxSize>
           </Geometry>
         </UI>
       </DispatchInfo>

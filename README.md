@@ -3,9 +3,9 @@
 A CEP extension for After Effects: the Nscale Motion panel plus the compact Nscale Bar.
 Two panels, one install. Mac only for now.
 
-**Status:** packaging pass. The panels load and talk to After Effects; every tool action is
-a stub that replies "isn't built yet". The point of this version is that the install is
-one line, with no admin password, no debug-mode flags and no third-party installer.
+**Status:** the real panel (2.5.x, from the Drive folder) on a signed, one-line install:
+no admin password, no debug-mode flags, no third-party installer. The build notes for the
+panel itself are in the "Nscale Motion plugins: build notes" doc.
 
 ---
 
@@ -47,17 +47,18 @@ Updating is the same line. Uninstall by deleting
 ```
 nscale-motion/
 ├─ CSXS/manifest.xml     what AE reads: two panels, their sizes, Node on, host script path
-├─ panel/index.html      the main panel (your mockup, bridge wired to After Effects)
-├─ bar/index.html        the compact bar
-├─ library/index.html    placeholder for the bundled motion library (the Library tab)
-├─ host/nsm.jsx          runs inside After Effects — all 21 actions, currently stubs
+├─ index.html            the main panel: markup, styles and script in one file
+├─ bar.html              the compact bar
+├─ jsx/host.jsx          runs inside After Effects — every tool, dispatcher nsm_run at the end
+├─ library/index.html    the motion library, shown in the Library tab
+├─ scripts/*.jsx         the two Premiere template builders, run from the Text tab
 ├─ install.sh            the one-liner installer (Nscale side)
 ├─ build/sign.sh         fetches ZXPSignCmd, makes the cert once, signs → dist/*.zxp
 ├─ build/release.sh      sign + tag + upload to GitHub Releases
 └─ dist/                 built packages (gitignored)
 ```
 
-In Webflow terms: `panel/index.html` is the page, `host/nsm.jsx` is the custom code that
+In Webflow terms: `index.html` is the page, `jsx/host.jsx` is the custom code that
 actually touches the comp, and `manifest.xml` is the site settings. The panel sends a
 message ("apply this curve to the selected keys") and the host replies with a short
 string like `OK:done` or `WARN:select some keyframes first`, which the panel shows in
@@ -95,8 +96,8 @@ the new build next time they run the line.
 ```
 
 Restart After Effects. The status bar at the bottom of the panel should read
-"Nscale Motion 0.1.0 · After Effects 26.x" — that line comes from the host script, so
-seeing it proves the whole chain (signature → panel → ExtendScript) works.
+"Ready" and the tools work on a selected layer — that proves the whole chain
+(signature → panel → ExtendScript).
 
 To see the panel's JS console: add a `.debug` file and turn on PlayerDebugMode on your
 machine only. Not set up yet — say the word.
@@ -108,7 +109,7 @@ machine only. Not set up yet — say the word.
 - **Panel isn't in the Extensions menu** → the signature check failed or the manifest
   didn't parse. Re-run `./build/sign.sh` (it runs `-verify` at the end) and reinstall.
 - **Panel opens but is blank** → almost always a signature problem. Same fix.
-- **Status bar says "Host script did not load"** → `host/nsm.jsx` has a syntax error.
+- **Every tool answers "EvalScript error."** → `jsx/host.jsx` has a syntax error.
   ExtendScript is old JavaScript: no `const`/`let`, no arrow functions, no `JSON`.
 - **Rosetta prompt or "bad CPU type"** when signing → step 4 above.
 - **`permission denied ./ZXPSignCmd`** → `chmod +x build/ZXPSignCmd` (the script does
@@ -120,9 +121,9 @@ Adobe's 17 Nov 2026 note: UXP for After Effects is public beta only (AE Beta 27.
 is disabled by default from **Dec 2028** (re-enableable) and removed from **Dec 2029**.
 This panel has about three years before it needs a UXP port.
 
-## Next
+## Still a per-machine step
 
-Host actions, in the order the mockup leans on them: `curve` / `readCurve` / `step` →
-`stagger` → `null` / `anchor` / `clone` → `textMove` → `review` → `themeToken` /
-`themeMode` / `themeLink` → `renderTemplates` / `render` → `send` → `runLatest`.
-`chooseScripts` / `chooseInbox` / `chooseFolder` already work (folder picker).
+"Allow Scripts to Write Files and Access Network" (After Effects → Settings → Scripting &
+Expressions) must be on, because `host.jsx` writes files from ExtendScript (Send, Notes,
+Render stills). Node is already enabled in the manifest; moving those writes into the
+panel's JS removes this step. Not done yet.

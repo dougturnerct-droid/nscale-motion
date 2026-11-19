@@ -6,3 +6,5 @@ build/ZXPSignCmd
 dist/
 .DS_Store
 __MACOSX/
+# stub panels from the packaging pass, kept locally for reference only
+_old/

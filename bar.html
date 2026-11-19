@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nscale Bar</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+/* Nscale Bar: the compact toolbar in the Nscale Motion extension. Same tokens and settings as the main panel. */
+:root{
+  --sans:'DM Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono:'DM Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --base:#040E27; --s1:#081634; --s2:#0C1D44; --s3:#12285A; --line:#1E2D55; --line2:#2A3B68;
+  --text:#FDFFF8; --muted:#C0C3C9; --dim:#828793; --signal:#0F41F3; --signal2:#3F68FF; --mint:#00DF99; --warn:#FF9A3C;
+  --c-enter:#3FD08A; --c-exit:#F06B5B; --c-move:#6E8DFF; --c-line:#F2C94C; --c-settle:#3CCFE0; --c-prop:#FF9A3C;
+  --hi:inset 0 1px 0 rgba(255,255,255,.06);
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--base);color:var(--text);font-family:var(--sans);font-size:12px;overflow:hidden;user-select:none}
+.bar{display:flex;align-items:center;gap:6px;padding:5px 6px;height:100%;flex-wrap:nowrap;overflow:hidden}
+.grp{display:flex;align-items:center;gap:2px;padding:2px;border-radius:9px;background:var(--s1);border:1px solid var(--line);flex:none}
+.b{height:30px;min-width:30px;padding:0 6px;border:0;border-radius:7px;background:transparent;color:var(--muted);font:500 12px var(--sans);cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05;transition:background-color 133ms cubic-bezier(.7,0,.8,.2),color 133ms cubic-bezier(.7,0,.8,.2)}
+.b small{font:400 9px var(--mono);color:var(--dim)}
+.b:hover{background:rgba(255,255,255,.05);color:var(--text);transition-timing-function:cubic-bezier(.2,.8,.3,1)}
+.b:active{background:rgba(255,255,255,.1)}
+.b[aria-pressed="true"]{background:var(--s3);color:var(--text);box-shadow:var(--hi),0 1px 4px rgba(0,0,0,.35)}
+.b[aria-pressed="true"] small{color:var(--muted)}
+.b svg{display:block}
+.b.mode{width:30px;font:600 12px var(--sans);color:var(--text);position:relative}
+.b.mode::after{content:"";position:absolute;left:8px;right:8px;bottom:4px;height:2px;border-radius:2px;background:var(--signal2)}
+.b.mode.expr::after{background:var(--mint)}
+.b.curve{width:36px;padding:0;position:relative}
+.b.curve i{position:absolute;left:3px;top:7px;bottom:7px;width:2px;border-radius:2px}
+.b.icon{width:34px;padding:0}
+.b.icon svg{width:16px;height:16px;color:var(--signal2)}
+.b.more svg{color:var(--muted)}
+.status{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--dim);font-size:11.5px;padding:0 4px}
+.status.ok{color:var(--muted)} .status.warn{color:var(--warn)}
+:focus-visible{outline:2px solid var(--signal2);outline-offset:1px}
+/* docked tall: a column */
+@media (orientation:portrait){
+  .bar{flex-direction:column;align-items:stretch;height:auto;overflow-y:auto;overflow-x:hidden}
+  .grp{flex-direction:column}
+  .grp .b{width:100%}
+  .status{display:none}
+}
+</style>
+</head>
+<body>
+<div class="bar" id="bar">
+  <div class="grp"><button class="b mode" id="mode" title="Moment: Productive / Expressive. Click to switch.">P</button></div>
+  <div class="grp" id="steps"></div>
+  <div class="grp">
+    <button class="b" id="down" title="One step shorter than the selected keys' current spacing"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8h8"/></svg></button>
+    <button class="b" id="up" title="One step longer"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 8h8M8 4v8"/></svg></button>
+  </div>
+  <div class="grp" id="curves"></div>
+  <div class="grp">
+    <button class="b icon" id="null" title="Null at the centre of the selected layers (options in the main panel)"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="12" height="12" rx="1"/><path d="M10 6v8M6 10h8"/></svg></button>
+    <button class="b icon" id="clone" title="Cloner: copy, mirror or reverse the selected keyframes (set which in the main panel)"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="7" height="7" rx="1"/><rect x="7" y="5" width="7" height="7" rx="1" opacity=".7"/><rect x="11" y="3" width="7" height="7" rx="1" opacity=".45"/></svg></button>
+    <button class="b icon more" id="more" title="Open the Nscale Motion panel"><svg viewBox="0 0 20 20" fill="currentColor"><circle cx="4.5" cy="10" r="1.6"/><circle cx="10" cy="10" r="1.6"/><circle cx="15.5" cy="10" r="1.6"/></svg></button>
+  </div>
+  <div class="status" id="status" role="status">Ready</div>
+</div>
+<script>
+/* ---------- tokens v1.0 (keep in step with index.html and host.jsx) ---------- */
+const STEPS = ['xs', 's', 'm', 'l', 'xl', 'xxl'];
+const FR = { productive: { xs: 3, s: 8, m: 13, l: 21, xl: 34, xxl: 55 }, expressive: { xs: 13, s: 21, m: 34, l: 55, xl: 89, xxl: 144 } };
+const CURVES = {
+  enter:  { role: 'Enter',  col: '--c-enter',  productive: ['Quick settle', [0.2, 0.8, 0.3, 1]],   expressive: ['Float', [0.3, 0.3, 0.15, 1]] },
+  exit:   { role: 'Exit',   col: '--c-exit',   productive: ['Reverse settle', [0.7, 0, 0.8, 0.2]], expressive: ['Reverse float', [0.85, 0, 0.7, 0.7]] },
+  move:   { role: 'Move',   col: '--c-move',   productive: ['Machined', [0.65, 0, 0.35, 1]],       expressive: ['Drift', [0.5, 0.13, 0.3, 1]] },
+  line:   { role: 'Line',   col: '--c-line',   productive: ['Hard stop', [0.55, 0, 0.9, 0.55]],    expressive: ['Momentum', [0.6, 0, 0.8, 0.5]] },
+  settle: { role: 'Settle', col: '--c-settle', productive: ['Carry settle', [0.33, 0.67, 0.67, 1]], expressive: ['Carry settle', [0.33, 0.67, 0.67, 1]] }
+};
+const PROPS = { mScale: ['Mechanic scale', [0.05, 0.1, 0.75, 0.3]], mPush: ['Mechanic push', [0.2, 0, 0.75, 0.15]], mEject: ['Mechanic eject', [0.3, 0.1, 0.8, 0.5]], mSnap: ['Mechanic snap', [0.6, 0.05, 0.9, 0.6]] };
+const LABEL_INDEX = { enter: 9, exit: 1, move: 8, line: 2, settle: 14, prop: 11 };
+
+/* ---------- shared settings: the same ones the main panel uses ---------- */
+const S = { mode: 'productive', curve: 'enter', edits: {}, showProps: false, step: 'l', snap: true, colour: true,
+  st: { step: 'xs', order: 'Selection', spacing: 'Even', apply: 'layers', start: 'first', rev: false },
+  q: { parent: true, count: 4, dx: 100, dy: 0, step: '', live: true }, t: 0 };
+try { Object.assign(S, JSON.parse(localStorage.getItem('nsb.state') || '{}')); } catch (e) {}
+const $ = s => document.querySelector(s);
+const isProp = id => !!PROPS[id];
+const def = id => isProp(id) ? { name: PROPS[id][0], bez: PROPS[id][1], role: 'Proposal', col: '--c-prop' } : { name: CURVES[id][S.mode][0], bez: CURVES[id][S.mode][1], role: CURVES[id].role, col: CURVES[id].col };
+const bez = id => S.edits[S.mode + '.' + id] || def(id).bez;
+const curveLabel = () => def(S.curve).name + (S.edits[S.mode + '.' + S.curve] ? ' (edited)' : '');
+function bezY(b, x) { const cx = 3 * b[0], bx = 3 * (b[2] - b[0]) - cx, ax = 1 - cx - bx, cy = 3 * b[1], by = 3 * (b[3] - b[1]) - cy, ay = 1 - cy - by; let t = x; for (let i = 0; i < 12; i++) { const e = ((ax * t + bx) * t + cx) * t - x, d = (3 * ax * t + 2 * bx) * t + cx; if (Math.abs(e) < 1e-6 || !d) break; t -= e / d; } t = Math.max(0, Math.min(1, t)); return ((ay * t + by) * t + cy) * t; }
+function status(msg, kind) { const el = $('#status'); el.textContent = msg; el.title = msg; el.className = 'status' + (kind ? ' ' + kind : ''); }
+
+/* ---------- talking to After Effects and to the main panel ---------- */
+const CEP = window.__adobe_cep__, SYNC_EVT = 'com.nscale.motion.state', ME = 'bar';
+function run(action, payload, describe) {
+  if (!CEP) { status(describe, 'ok'); return; }
+  status('Working…');
+  CEP.evalScript('nsm_run(' + JSON.stringify(action) + ',' + JSON.stringify(payload) + ')', res => {
+    res = String(res || ''); const i = res.indexOf(':'), kind = res.slice(0, i), body = res.slice(i + 1);
+    if (kind === 'WARN' || res === 'EvalScript error.') { status(body || 'Something went wrong in After Effects.', 'warn'); return; }
+    if (kind === 'STEP') { const [k, m] = body.split('|'); S.step = k; save(); render(); status(m, 'ok'); return; }
+    status(body, 'ok');
+  });
+}
+function save(push = true) {
+  try { localStorage.setItem('nsb.state', JSON.stringify(S)); } catch (e) {}
+  if (!push || !CEP) return;
+  S.t = Date.now();
+  const s = Object.assign({}, S, { from: ME });
+  CEP.evalScript('nsm_stateSet(' + JSON.stringify(JSON.stringify(s)) + ')', () => {});
+  try { const env = JSON.parse(CEP.getHostEnvironment()); CEP.dispatchEvent({ type: SYNC_EVT, scope: 'APPLICATION', appId: env.appId, extensionId: CEP.getExtensionId(), data: JSON.stringify(s) }); } catch (e) {}
+}
+function adopt(s) {
+  if (!s) return;
+  ['mode', 'curve', 'edits', 'showProps', 'step', 'snap', 'colour', 't'].forEach(k => { if (s[k] !== undefined) S[k] = s[k]; });
+  if (s.st) S.st = Object.assign(S.st, s.st); if (s.q) S.q = Object.assign(S.q, s.q);
+  save(false); render();
+}
+if (CEP) {
+  CEP.addEventListener(SYNC_EVT, e => { let d = e.data; try { if (typeof d === 'string') d = JSON.parse(d); } catch (x) { return; } if (d && d.from !== ME) adopt(d); });
+  CEP.evalScript('nsm_stateGet()', r => { try { const s = JSON.parse(r); if (s && s.t > (S.t || 0)) adopt(s); } catch (e) {} });
+}
+const curvePayload = () => ({ mode: S.mode, bez: bez(S.curve), curveName: curveLabel(), snap: S.snap, colour: S.colour, label: LABEL_INDEX[isProp(S.curve) ? 'prop' : S.curve] });
+
+/* ---------- render ---------- */
+function curveIcon(b, col) {
+  let p = ''; for (let i = 0; i <= 20; i++) { const u = i / 20; p += (i ? 'L' : 'M') + (8 + 24 * u).toFixed(1) + ' ' + (24 - 18 * bezY(b, u)).toFixed(1); }
+  return `<i style="background:var(${col})"></i><svg viewBox="0 0 36 30" width="36" height="30"><path d="${p}" fill="none" stroke="var(${col})" stroke-width="1.8" stroke-linecap="round"/></svg>`;
+}
+const MOD = navigator.platform.indexOf('Mac') === 0 ? 'Cmd' : 'Ctrl';
+function render() {
+  const m = $('#mode'), prod = S.mode === 'productive';
+  m.textContent = prod ? 'P' : 'E'; m.classList.toggle('expr', !prod); m.title = `Moment: ${prod ? 'Productive' : 'Expressive'}. Click to switch.`;
+  $('#steps').innerHTML = STEPS.map(k => `<button class="b" data-k="${k}" aria-pressed="${k === S.step}" title="${k} · ${FR[S.mode][k]}f
+Click: retime the selected keys and apply ${curveLabel()}
+Alt-click: add a beat (hold the selected key for ${FR[S.mode][k]}f)
+${MOD}-click: stagger the selected layers by ${FR[S.mode][k]}f">${k}<small>${FR[S.mode][k]}f</small></button>`).join('');
+  $('#steps').querySelectorAll('.b').forEach(b => b.onclick = e => stepClick(b.dataset.k, e));
+  const ids = Object.keys(CURVES).concat(S.showProps ? Object.keys(PROPS) : []);
+  $('#curves').innerHTML = ids.map(id => { const d = def(id); return `<button class="b curve" data-c="${id}" aria-pressed="${id === S.curve}" title="${d.role} · ${d.name}${S.edits[S.mode + '.' + id] ? ' (edited)' : ''}
+${bez(id).map(v => +v.toFixed(2)).join(', ')}
+Click: apply to the selected keys and use for steps
+Shift-click: use for steps without applying">${curveIcon(bez(id), d.col)}</button>`; }).join('');
+  $('#curves').querySelectorAll('.b').forEach(b => b.onclick = e => curveClick(b.dataset.c, e));
+}
+
+/* ---------- actions ---------- */
+function stepClick(k, e) {
+  if (e.altKey) return run('beat', { step: k, mode: S.mode }, `Beat ${k} ${FR[S.mode][k]}f at the selected keys`);
+  if (e.metaKey || e.ctrlKey) {
+    const st = Object.assign({}, S.st, { step: k, mode: S.mode, bez: bez(S.curve) });
+    return run('stagger', st, `Stagger the selected layers ${k} ${FR[S.mode][k]}f apart`);
+  }
+  S.step = k; save(); render();
+  run('step', Object.assign({ step: k }, curvePayload()), `Retime to ${k} ${FR[S.mode][k]}f · ${curveLabel()}`);
+}
+function curveClick(id, e) {
+  S.curve = id; save(); render();
+  if (e.shiftKey) { status(`Steps now use ${curveLabel()}`, 'ok'); return; }
+  run('curve', curvePayload(), `${curveLabel()} on the selected keys`);
+}
+$('#mode').onclick = () => { S.mode = S.mode === 'productive' ? 'expressive' : 'productive'; save(); render(); status(`Moment: ${S.mode === 'productive' ? 'Productive' : 'Expressive'}`, 'ok'); };
+$('#down').onclick = () => run('stepBy', Object.assign({ dir: -1 }, curvePayload()), 'One step shorter');
+$('#up').onclick = () => run('stepBy', Object.assign({ dir: 1 }, curvePayload()), 'One step longer');
+$('#null').onclick = () => run('null', { parent: S.q.parent }, 'Null at the centre of the selection');
+$('#clone').onclick = () => { const q = S.q || {}, k = q.kind || 'simple'; run('clone', { kind: k, place: q.place || 'after', mode: S.mode, step: k === 'mirror' ? (q.mstep || '') : (k === 'simple' && q.place !== 'playhead' ? (q.step || '') : '') }, { simple: 'Selected keys copied', mirror: 'Selected keys mirrored', reverse: 'Selected keys reversed' }[k]); };
+$('#more').onclick = () => { if (CEP) CEP.requestOpenExtension('com.nscale.motion.panel', ''); else status('Opens the Nscale Motion panel.', 'ok'); };
+render();
+</script>
+</body>
+</html>

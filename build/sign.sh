@@ -73,9 +73,13 @@ VERSION="$(sed -n 's/.*ExtensionBundleVersion="\([^"]*\)".*/\1/p' "$ROOT/CSXS/ma
 STAGE="$(mktemp -d)"
 trap 'rm -rf "$STAGE"' EXIT
 say "Staging version $VERSION"
-for d in CSXS panel bar library host; do
+for d in CSXS jsx library scripts; do
   [[ -d "$ROOT/$d" ]] || die "Missing folder: $d"
   rsync -a --exclude '.DS_Store' --exclude '__MACOSX' --exclude '*.map' "$ROOT/$d" "$STAGE/"
+done
+for f in index.html bar.html; do
+  [[ -f "$ROOT/$f" ]] || die "Missing file: $f"
+  cp "$ROOT/$f" "$STAGE/"
 done
 if [[ -f "$ROOT/.debug" ]]; then say "Note: .debug exists in the repo but is NOT packaged (correct for a release)."; fi
 

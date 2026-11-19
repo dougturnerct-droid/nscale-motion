@@ -239,6 +239,16 @@ textarea.field{height:110px;padding:8px 10px;resize:vertical;line-height:1.45}
 .sw2 input{width:100%;min-width:0;border:0;background:none;color:var(--text);font:400 11px var(--mono);padding:0;outline:none;text-transform:uppercase}
 .empty{font:400 12px var(--sans);color:var(--dim);padding:8px 2px;line-height:1.45}
 textarea.field.tall{height:180px}
+.sfields{display:flex;flex-direction:column;gap:10px}.sfields .two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:end}
+textarea.field.short{height:62px;resize:none}
+.pxin{display:flex;align-items:center;gap:6px;flex:none;color:var(--dim)}.sw .pxin input.field{appearance:auto;width:64px;height:28px;border-radius:7px;background:var(--base);padding:0 6px;text-align:right}.sw .pxin input.field::after{content:none}
+.sprev{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.sprev figure{margin:0}.sprev img{display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:var(--base)}.sprev figcaption{font:400 11px var(--sans);color:var(--dim);margin-top:4px}
+.snotes{margin:0;padding-left:16px;color:var(--muted);font-size:12px;line-height:1.5}
+.sbatch{display:flex;flex-direction:column;gap:6px}.sbatch .empty{color:var(--dim);font-size:12px}
+.sbatch .item{display:flex;align-items:center;gap:8px;background:var(--base);border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-width:0}
+.sbatch .item b{font-weight:500;color:var(--text);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sbatch .item span{flex:1;min-width:0;color:var(--dim);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sbatch .item button{flex:none;border:0;background:transparent;color:var(--dim);cursor:pointer;font-size:12px;padding:2px 4px}.sbatch .item button:hover{color:var(--text)}
 .meta{font:400 10.5px var(--mono);color:var(--dim);margin-top:6px}
 .presets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
 .preset{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:9px 10px;border-radius:9px;border:1px solid var(--line);background:var(--base);color:var(--text);cursor:pointer;text-align:left;font:500 12.5px var(--sans);min-width:0}
@@ -253,6 +263,8 @@ select.field{appearance:none;background:var(--base) url("data:image/svg+xml,%3Cs
 .readinfo b{font-weight:500;color:var(--text)}
 .tab{gap:5px;font-size:12px;padding:0 4px;min-width:0}.tab svg{width:15px;height:15px;flex:none}
 @media (max-width:400px){.tab span{display:none}}
+@media (max-width:560px){.tab span{display:none}.tab[aria-selected="true"] span{display:inline}.tab[aria-selected="true"]{flex:1.8}}
+@media (max-width:330px){.tab[aria-selected="true"] span{display:none}.tab[aria-selected="true"]{flex:1}}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -265,6 +277,7 @@ select.field{appearance:none;background:var(--base) url("data:image/svg+xml,%3Cs
       <button class="tab" role="tab" aria-selected="false" data-tab="text"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 5V3.5h12V5M10 3.5v13M7.5 16.5h5"/></svg><span>Text</span></button>
       <button class="tab" role="tab" aria-selected="false" data-tab="notes"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 3h7l3 3v11H5z"/><path d="M8 9h5M8 12h5M8 15h3"/></svg><span>Notes</span></button>
       <button class="tab" role="tab" aria-selected="false" data-tab="render"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="14" height="10" rx="1.5"/><path d="M8.5 8v4l3.5-2z" fill="currentColor"/></svg><span>Render</span></button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="social"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.5" y="3.5" width="13" height="13" rx="1.5"/><path d="M6.5 8h7M6.5 11h4.5"/><rect x="6.5" y="13" width="4" height="1.6" fill="currentColor" stroke="none"/></svg><span>Social</span></button>
       <button class="tab" role="tab" aria-selected="false" data-tab="send"><svg viewBox="0 0 20 20" fill="currentColor" stroke="none" aria-hidden="true"><g transform="translate(10 10)"><path d="M-0.9 -8.2 L0.9 -8.2 L0.45 -1.2 L-0.45 -1.2 Z"/><path d="M-0.9 -8.2 L0.9 -8.2 L0.45 -1.2 L-0.45 -1.2 Z" transform="rotate(40)"/><path d="M-0.8 -7.2 L0.8 -7.2 L0.45 -1.2 L-0.45 -1.2 Z" transform="rotate(78)"/><path d="M-0.9 -8.2 L0.9 -8.2 L0.45 -1.2 L-0.45 -1.2 Z" transform="rotate(118)"/><path d="M-0.8 -7 L0.8 -7 L0.45 -1.2 L-0.45 -1.2 Z" transform="rotate(160)"/><path d="M-0.9 -8.2 L0.9 -8.2 L0.45 -1.2 L-0.45 -1.2 Z" transform="rotate(200)"/><path d="M-0.8 -7.4 L0.8 -7.4 L0.45 -1.2 L-0.45 -1.2 Z" transform="rotate(242)"/><path d="M-0.9 -8.2 L0.9 -8.2 L0.45 -1.2 L-0.45 -1.2 Z" transform="rotate(282)"/><path d="M-0.8 -7.1 L0.8 -7.1 L0.45 -1.2 L-0.45 -1.2 Z" transform="rotate(322)"/><circle r="1.6"/></g></svg><span>Send</span></button>
       <button class="tab" role="tab" aria-selected="false" data-tab="library"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 3.5h3v13H4zM8.5 3.5h3v13h-3z"/><path d="M13 4.2l2.8-.7 2.6 12.6-2.8.7z"/></svg><span>Library</span></button>
     </nav>
@@ -300,6 +313,9 @@ select.field{appearance:none;background:var(--base) url("data:image/svg+xml,%3Cs
       <div class="card"><div class="label">Typing · with cursor <span class="hint">prompts, terminal lines</span></div>
         <label class="sw" style="margin-bottom:10px">Add a cursor <input type="checkbox" id="tmCursor" checked></label>
         <div class="row"><button class="btn" data-tm="type" data-part="in">Type<small> 150f</small></button></div></div>
+      <div class="card"><div class="label">Premiere templates <span class="hint">for Nscale Motion in Premiere</span></div>
+        <p class="hint" style="margin:0 0 10px">Rebuilds the .mogrt files from their comps, in five sizes (16:9, 16:9 4K, 1:1, 4:5, 9:16). Open the project that holds the comp first, then choose the shared Mogrts folder.</p>
+        <div class="row"><button class="btn" data-bundled="nscale_lower_third_to_mogrt.jsx" data-what="lower thirds">Build lower thirds…</button><button class="btn" data-bundled="nscale_title_to_mogrt.jsx" data-what="titles">Build titles…</button></div></div>
       <p class="hint" style="margin:2px 2px 0">Timings are the agreed 60 fps frames, converted to the comp's frame rate. Applying a move again replaces that move's animators. Typing reads the text when you press it: press again after editing the text.</p>
     </div>
 
@@ -358,6 +374,7 @@ select.field{appearance:none;background:var(--base) url("data:image/svg+xml,%3Cs
         <div class="label" style="margin:6px 0 0">Size</div><div class="seg" id="rRes"><button data-v="full">Full</button><button data-v="half">Half</button></div>
         <label class="sw" style="margin-top:4px">Version the file name (_v01, _v02…) <input type="checkbox" id="rVer"></label>
         <label class="sw">Render now (off: add to the Render Queue) <input type="checkbox" id="rNow"></label>
+        <label class="sw" title="The file plays the chosen range four times back to back. The name gets _loop4.">Loop export: play it 4 times <input type="checkbox" id="rLoop"></label>
       </div>
       <div class="card"><div class="label">Save to</div>
         <div class="path"><code id="rFolder"></code><button class="btn" id="rChoose">Choose</button></div>
@@ -369,6 +386,37 @@ select.field{appearance:none;background:var(--base) url("data:image/svg+xml,%3Cs
         <div class="row" style="margin-top:6px"><input class="field" id="rPName" placeholder="Preset name" style="flex:1"><button class="btn" id="rSave">Save preset</button></div>
       </div>
       <button class="btn primary" id="rGo">Render</button>
+    </div>
+
+    <!-- ===== Event social ===== -->
+    <div class="body" id="tab-social" hidden>
+      <div class="card"><div class="label">Event post <span class="hint">fills the social-asset comp</span></div>
+        <div class="sfields">
+          <div><div class="flabel">Top line</div><input class="field" id="sTop" placeholder="Gold Sponsor" aria-label="Top line"></div>
+          <div><div class="flabel">Event name · press return to choose the line break; one long line is split for you</div><textarea class="field short" id="sHero" placeholder="NVIDIA GTC&#10;Washington, D.C." aria-label="Event name"></textarea></div>
+          <div class="two"><div><div class="flabel">Date chip</div><input class="field" id="sDate" placeholder="December 8–10" aria-label="Date chip"></div>
+            <div><div class="flabel">Location chip · blank hides it</div><input class="field" id="sLoc" placeholder="Las Vegas" aria-label="Location chip"></div></div>
+          <div><div class="flabel">File name · blank uses the event name. _light and _dark are added</div><input class="field" id="sName" placeholder="gartner-vegas" aria-label="File name"></div>
+        </div>
+      </div>
+      <div class="card toggles">
+        <label class="sw">Light version <input type="checkbox" id="sLight"></label>
+        <label class="sw">Dark version <input type="checkbox" id="sDark"></label>
+        <label class="sw" title="Looks at the glass element through the whole animation and lowers it until it is clear of the event name.">Keep the glass element clear of the event name <input type="checkbox" id="sClear"></label>
+        <label class="sw" title="Lowers the glass element by at least this much, whatever the check finds.">Lower the glass element by at least <span class="pxin"><input class="field" id="sDrop" type="number" min="0" max="600" step="10" aria-label="Minimum drop in pixels"> px</span></label>
+      </div>
+      <div class="card" id="sPrevCard" hidden><div class="label">Preview <span class="hint" id="sPrevHint"></span></div><div class="sprev" id="sPrev"></div></div>
+      <div class="card" id="sNotesCard" hidden><div class="label">From the last run</div><ul class="snotes" id="sNotes"></ul></div>
+      <div class="row"><button class="btn" id="sPreview" title="Saves a still of each version at the moment the glass element comes closest to the event name. The comp is put back afterwards.">Preview stills</button><button class="btn" id="sApply" title="Leaves this post in the comp so you can adjust it by hand. One undo puts it back.">Apply to comp</button></div>
+      <div class="card"><div class="label">Batch <span class="hint">Render takes these plus the form</span></div>
+        <div class="sbatch" id="sBatch"></div>
+        <div class="row" style="margin-top:8px"><button class="btn" id="sAdd">Add this post to the batch</button><button class="btn" id="sClearBatch">Empty the batch</button></div>
+      </div>
+      <div class="card"><div class="label">Save to</div>
+        <div class="path"><code id="sFolder"></code><button class="btn" id="sChoose">Choose</button></div>
+        <div class="flabel" style="margin:6px 0 0">Not set: Drive › Motion › motion finals › socials. H.264, work area.</div>
+      </div>
+      <button class="btn primary" id="sGo">Render</button>
     </div>
 
     <!-- ===== Send to Claude ===== -->
@@ -547,7 +595,7 @@ const bridge = {
       const kind = res.slice(0, res.indexOf(':')), body = res.slice(res.indexOf(':') + 1);
       if (kind === 'WARN' || res === 'EvalScript error.') status(body || 'Something went wrong in After Effects.', 'warn');
       else if (kind === 'STEP') { const [k, m] = body.split('|'); lastStep = k; store.set('step', k); renderSteps($('#steps'), k, applyStep); if (typeof renderHome === 'function') renderHome(); status(m, 'ok'); }
-      else if (!['PATH', 'SENT', 'THEME', 'NOTES', 'COMP', 'CURVE', 'TEMPLATES'].includes(kind)) status(body, 'ok');
+      else if (!['PATH', 'SENT', 'THEME', 'NOTES', 'COMP', 'CURVE', 'TEMPLATES', 'SOCIAL'].includes(kind)) status(body, 'ok');
       if (done) done(kind, body);
     });
   }
@@ -556,7 +604,7 @@ const LABEL_INDEX = { enter: 9, exit: 1, move: 8, line: 2, settle: 14, prop: 11 
 const curvePayload = () => ({ mode: S.mode, bez: bez(S.curve), curveName: curveLabel(), snap: $('#snap').checked, colour: $('#colour').checked, label: LABEL_INDEX[isProp(S.curve) ? 'prop' : S.curve] });
 
 /* ---------- tabs ---------- */
-const TABS = ['home', 'timing', 'text', 'notes', 'render', 'send', 'library'];
+const TABS = ['home', 'timing', 'text', 'notes', 'render', 'social', 'send', 'library'];
 $$('.tab').forEach(t => t.onclick = () => {
   const tab = t.dataset.tab;
   $$('.tab').forEach(x => x.setAttribute('aria-selected', x === t));
@@ -566,6 +614,7 @@ $$('.tab').forEach(t => t.onclick = () => {
   if (tab === 'timing') readKeys(true);
   if (tab === 'notes') { loadNotes(); startNotesPoll(); } else stopNotesPoll();
   if (tab === 'render') renderRender();
+  if (tab === 'social') renderSocial();
 });
 
 /* ---------- text moves ---------- */
@@ -576,6 +625,7 @@ $$('#tmAt [data-at]').forEach(b => b.onclick = () => { tmAt = b.dataset.at; stor
 $('#tmCursor').checked = store.get('tmCursor', true);
 $('#tmCursor').onchange = () => store.set('tmCursor', $('#tmCursor').checked);
 renderTmAt();
+$$('[data-bundled]').forEach(b => b.onclick = () => bridge.run('runBundled', { name: b.dataset.bundled }, `Builds the ${b.dataset.what} templates in five sizes and exports them to a folder you choose`));
 $$('[data-tm]').forEach(b => b.onclick = () => {
   const id = b.dataset.tm, part = b.dataset.part, cursor = $('#tmCursor').checked;
   bridge.run('textMove', { id, part, at: tmAt, cursor }, `${TM_NAME[id]}${id === 'type' ? (cursor ? ' with cursor' : '') : ' ' + part} added from the ${tmAt === 'inpoint' ? 'layer in point' : 'playhead'}`);
@@ -746,7 +796,7 @@ function pushState() {
   const s = snapshot(); try { localStorage.setItem('nsm.t', String(s.t)); } catch (e) {}
   if (!CEP) return;
   CEP.evalScript('nsm_stateSet(' + JSON.stringify(JSON.stringify(s)) + ')', () => {});
-  try { const env = JSON.parse(CEP.getHostEnvironment()); CEP.dispatchEvent(JSON.stringify({ type: SYNC_EVT, scope: 'APPLICATION', appId: env.appId, extensionId: CEP.getExtensionId(), data: JSON.stringify(s) })); } catch (e) {}
+  try { const env = JSON.parse(CEP.getHostEnvironment()); CEP.dispatchEvent({ type: SYNC_EVT, scope: 'APPLICATION', appId: env.appId, extensionId: CEP.getExtensionId(), data: JSON.stringify(s) }); } catch (e) {}
 }
 function applyState(s) {
   if (!s) return;
@@ -764,12 +814,9 @@ $('#snap').checked = store.get('snap', true); $('#colour').checked = store.get('
 $('#snap').onchange = () => store.set('snap', $('#snap').checked);
 $('#colour').onchange = () => store.set('colour', $('#colour').checked);
 if (CEP) {
-  // The native CEP API hands the event over as a JSON string; unwrap it before reading .data
-  CEP.addEventListener(SYNC_EVT, e => { try { if (typeof e === 'string') e = JSON.parse(e); } catch (x) { return; } let d = e && e.data; try { if (typeof d === 'string') d = JSON.parse(d); } catch (x) { return; } if (d && d.from !== ME) applyState(d); });
+  CEP.addEventListener(SYNC_EVT, e => { let d = e.data; try { if (typeof d === 'string') d = JSON.parse(d); } catch (x) { return; } if (d && d.from !== ME) applyState(d); });
   // start from whichever panel changed something last
   CEP.evalScript('nsm_stateGet()', r => { try { const s = JSON.parse(r); if (s && s.t > +(localStorage.getItem('nsm.t') || 0)) applyState(Object.assign(s, { from: 'saved' })); } catch (e) {} });
-  // install check: confirms the host script loaded and shows the AE version in the status bar
-  CEP.evalScript('nsm_ping()', r => { r = String(r || ''); if (r.indexOf('OK:') === 0) status(r.slice(3), 'ok'); else status('Host script did not load — reinstall the panel.', 'warn'); });
 }
 $('#openBar').onclick = () => { if (CEP) CEP.requestOpenExtension('com.nscale.motion.bar', ''); else status('Opens Nscale Bar in After Effects.'); };
 
@@ -1008,7 +1055,7 @@ const BUILTIN = [
   { id: 'png', name: 'PNG sequence', sub: 'Frames, in their own folder', template: 'PNG Sequence', half: false },
   { id: 'still', name: 'Still', sub: 'PNG of the current frame', still: true, half: false }
 ];
-const R = Object.assign({ preset: 'review', range: 'work', half: true, ver: true, now: true, folder: '', custom: [] }, store.get('render', {}));
+const R = Object.assign({ preset: 'review', range: 'work', half: true, ver: true, now: true, loop: false, folder: '', custom: [] }, store.get('render', {}));
 const saveR = () => store.set('render', R);
 const presets = () => BUILTIN.concat(R.custom);
 const curPreset = () => presets().find(x => x.id === R.preset) || BUILTIN[0];
@@ -1022,7 +1069,7 @@ function renderRender() {
   });
   segBind($('#rRange'), () => R.range, v => { R.range = v; saveR(); renderRender(); });
   segBind($('#rRes'), () => (R.half ? 'half' : 'full'), v => { R.half = v === 'half'; saveR(); renderRender(); });
-  $('#rVer').checked = R.ver; $('#rNow').checked = R.now;
+  $('#rVer').checked = R.ver; $('#rNow').checked = R.now; $('#rLoop').checked = R.loop; $('#rLoop').disabled = !!curPreset().still;
   $('#rFolder').textContent = R.folder || 'Renders, next to the project file';
   const p = curPreset();
   $('#rGo').textContent = p.still ? 'Save still' : (R.now ? 'Render ' : 'Add to queue: ') + p.name;
@@ -1030,6 +1077,7 @@ function renderRender() {
 }
 $('#rVer').onchange = e => { R.ver = e.target.checked; saveR(); };
 $('#rNow').onchange = e => { R.now = e.target.checked; saveR(); renderRender(); };
+$('#rLoop').onchange = e => { R.loop = e.target.checked; saveR(); };
 $('#rChoose').onclick = () => bridge.run('chooseFolder', { title: 'Choose where renders are saved' }, 'Opens a folder picker in After Effects.', (k, body) => { if (k === 'PATH') { R.folder = body; saveR(); renderRender(); status('Render folder set.', 'ok'); } });
 $('#rFolder').title = 'Right-click to go back to the default'; $('#rFolder').addEventListener('contextmenu', e => { e.preventDefault(); R.folder = ''; saveR(); renderRender(); });
 $('#rLoad').onclick = () => bridge.run('renderTemplates', {}, 'Lists the output templates in After Effects', (k, body) => {
@@ -1046,9 +1094,9 @@ $('#rSave').onclick = () => {
 };
 $('#rGo').onclick = () => {
   const p = curPreset();
-  const payload = { template: p.template || '', label: p.name, half: R.half, range: R.range, version: R.ver, now: R.now, still: !!p.still, folder: R.folder, name: $('#rName').value.trim() };
+  const payload = { template: p.template || '', label: p.name, half: R.half, range: R.range, version: R.ver, now: R.now, still: !!p.still, loop: R.loop && !p.still ? 4 : 0, folder: R.folder, name: $('#rName').value.trim() };
   if (R.now && !p.still) status('Rendering… After Effects is busy until it finishes.');
-  bridge.run('render', payload, p.still ? 'Saves a PNG of the current frame' : `${R.now ? 'Renders' : 'Queues'} ${p.name}, ${R.half ? 'half' : 'full'} size, ${R.range === 'work' ? 'work area' : 'whole comp'}`);
+  bridge.run('render', payload, p.still ? 'Saves a PNG of the current frame' : `${R.now ? 'Renders' : 'Queues'} ${p.name}, ${R.half ? 'half' : 'full'} size, ${R.range === 'work' ? 'work area' : 'whole comp'}${R.loop ? ', played 4 times' : ''}`);
 };
 
 render(); renderHist(); renderQ();
@@ -1099,6 +1147,85 @@ $('#feedback').onclick = () => {
   const url = `slack://user?team=${SLACK.team}&id=${SLACK.user}`;
   if (window.cep && cep.util) cep.util.openURLInDefaultBrowser(url); else window.open(url, '_blank', 'noopener');
 };
+
+/* ---------- event social ---------- */
+const SO = Object.assign({ top: '', hero: '', date: '', loc: '', name: '', light: true, dark: true, clear: true, minDrop: 0, folder: '', batch: [] }, store.get('social', {}));
+const saveSO = () => store.set('social', SO);
+const soText = (el, v) => { el.textContent = v; return el; };
+const soJob = () => ({ name: SO.name.trim(), top: SO.top.trim(), hero: SO.hero.trim(), date: SO.date.trim(), loc: SO.loc.trim() });
+const soCount = () => (SO.light ? 1 : 0) + (SO.dark ? 1 : 0);
+const SO_FIELDS = { sTop: 'top', sHero: 'hero', sDate: 'date', sLoc: 'loc', sName: 'name' };
+function renderSocial() {
+  Object.keys(SO_FIELDS).forEach(id => { if ($('#' + id).value !== SO[SO_FIELDS[id]]) $('#' + id).value = SO[SO_FIELDS[id]]; });
+  $('#sLight').checked = SO.light; $('#sDark').checked = SO.dark; $('#sClear').checked = SO.clear; $('#sDrop').value = SO.minDrop || 0;
+  $('#sFolder').textContent = SO.folder || 'motion finals › socials';
+  const list = $('#sBatch'); list.innerHTML = '';
+  if (!SO.batch.length) list.appendChild(soText(Object.assign(document.createElement('div'), { className: 'empty' }), 'Empty. Add posts here to render several in one go.'));
+  SO.batch.forEach((j, i) => {
+    const row = Object.assign(document.createElement('div'), { className: 'item' });
+    row.appendChild(soText(document.createElement('b'), j.hero.replace(/\s*\n\s*/g, ' ')));
+    row.appendChild(soText(document.createElement('span'), [j.top, j.date, j.loc].filter(Boolean).join(' · ')));
+    const edit = soText(document.createElement('button'), 'Edit'); edit.title = 'Move this post back into the form';
+    edit.onclick = () => { Object.assign(SO, j); SO.batch.splice(i, 1); saveSO(); renderSocial(); };
+    const del = soText(document.createElement('button'), '✕'); del.title = 'Remove from the batch';
+    del.onclick = () => { SO.batch.splice(i, 1); saveSO(); renderSocial(); };
+    row.appendChild(edit); row.appendChild(del); list.appendChild(row);
+  });
+  $('#sClearBatch').disabled = !SO.batch.length;
+  soLabel();
+}
+// Render takes the batch plus the post in the form, if the form has an event name
+const soJobs = () => SO.batch.concat(SO.hero.trim() ? [soJob()] : []);
+function soLabel() {
+  const n = Math.max(1, soJobs().length), files = n * soCount();
+  $('#sGo').textContent = `Render ${n === 1 ? 'this post' : n + ' posts'}: ${files} file${files === 1 ? '' : 's'}`;
+}
+Object.keys(SO_FIELDS).forEach(id => $('#' + id).addEventListener('input', e => { SO[SO_FIELDS[id]] = e.target.value; saveSO(); soLabel(); }));
+$('#sLight').onchange = e => { SO.light = e.target.checked; saveSO(); renderSocial(); };
+$('#sDark').onchange = e => { SO.dark = e.target.checked; saveSO(); renderSocial(); };
+$('#sClear').onchange = e => { SO.clear = e.target.checked; saveSO(); };
+$('#sDrop').onchange = e => { SO.minDrop = Math.max(0, Math.min(600, Math.round(+e.target.value || 0))); saveSO(); renderSocial(); };
+$('#sChoose').onclick = () => bridge.run('chooseFolder', { title: 'Choose where the social posts are saved' }, 'Opens a folder picker in After Effects.', (k, body) => { if (k === 'PATH') { SO.folder = body; saveSO(); renderSocial(); status('Folder set.', 'ok'); } });
+$('#sFolder').title = 'Right-click to go back to the default'; $('#sFolder').addEventListener('contextmenu', e => { e.preventDefault(); SO.folder = ''; saveSO(); renderSocial(); });
+$('#sAdd').onclick = () => {
+  const j = soJob(); if (!j.hero) { status('Fill in the event name first.', 'warn'); return; }
+  SO.batch.push(j); Object.assign(SO, { top: '', hero: '', date: '', loc: '', name: '' }); saveSO(); renderSocial();
+  status(`Added. ${SO.batch.length} in the batch.`, 'ok');
+};
+$('#sClearBatch').onclick = () => { SO.batch = []; saveSO(); renderSocial(); };
+function soShow(r) {
+  const notes = (r.notes || []).slice(); if (r.failed) notes.unshift('Stopped at ' + r.failed);
+  $('#sNotesCard').hidden = !notes.length; $('#sNotes').innerHTML = '';
+  notes.forEach(n => $('#sNotes').appendChild(soText(document.createElement('li'), n)));
+  if (r.what === 'preview') {
+    $('#sPrev').innerHTML = ''; $('#sPrevCard').hidden = !(r.files || []).length;
+    $('#sPrevHint').textContent = 'the frame where the glass element comes closest';
+    (r.files || []).forEach(f => {
+      const fig = document.createElement('figure'), img = document.createElement('img'), url = 'file://' + encodeURI(f).replace(/#/g, '%23') + '?t=' + Date.now();
+      let tries = 0; img.onerror = () => { if (tries++ < 8) setTimeout(() => { img.src = url + tries; }, 400); };   // the still can land a moment after After Effects returns
+      img.src = url; img.alt = 'Preview still';
+      fig.appendChild(img); fig.appendChild(soText(document.createElement('figcaption'), /_dark\.png$/.test(f) ? 'Dark' : 'Light'));
+      $('#sPrev').appendChild(fig);
+    });
+    status(r.failed ? 'Preview stopped: ' + r.failed : 'Preview saved. The comp is back as it was.', r.failed ? 'warn' : 'ok');
+  } else if (r.what === 'apply') status('In the comp. Undo once to put it back.', 'ok');
+  else status(r.failed ? `Rendered ${r.made.length} of ${r.total}, then stopped. See the notes.` : `Rendered ${r.made.length} file${r.made.length === 1 ? '' : 's'} to ${r.folder.split('/').pop()}. The comp is back as it was.`, r.failed ? 'warn' : 'ok');
+}
+function soRun(what) {
+  const jobs = what === 'render' ? soJobs() : [soJob()];
+  if (!jobs.length || !jobs[0].hero) { status('Fill in the event name first.', 'warn'); return; }
+  if (!soCount()) { status('Tick Light, Dark or both.', 'warn'); return; }
+  const say = what === 'render' ? `Renders ${jobs.length * soCount()} file${jobs.length * soCount() === 1 ? '' : 's'} from the social-asset comp and puts the comp back`
+    : what === 'preview' ? 'Saves a still of each version and shows it here' : 'Puts this post into the social-asset comp as one undo step';
+  bridge.run('social', { what, jobs, light: SO.light, dark: SO.dark, clear: SO.clear, minDrop: SO.minDrop, folder: SO.folder }, say, (k, body) => {
+    if (k !== 'SOCIAL') return;
+    try { soShow(JSON.parse(body)); } catch (e) { status('After Effects answered, but the panel could not read it.', 'warn'); }
+  });
+}
+$('#sPreview').onclick = () => soRun('preview');
+$('#sApply').onclick = () => soRun('apply');
+$('#sGo').onclick = () => soRun('render');
+renderSocial();
 </script>
 </body>
 </html>
