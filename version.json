@@ -1,0 +1,5 @@
+{
+  "ae": "9.9.9",
+  "ppro": "9.9.9",
+  "install": "curl -fsSL https://raw.githubusercontent.com/dougturnerct-droid/nscale-motion/main/install.sh | sh"
+}
