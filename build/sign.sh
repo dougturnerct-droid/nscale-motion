@@ -54,13 +54,16 @@ fi
 mkdir -p "$CERT_DIR"
 if [[ ! -f "$CERT" ]]; then
   say "Creating a self-signed certificate (one time, valid 10 years)"
-  PASS="$(LC_ALL=C tr -dc 'A-Za-z0-9' </dev/urandom | head -c 24)"
+  PASS="$(openssl rand -hex 16)"
   printf '%s' "$PASS" > "$PASS_FILE"
   chmod 600 "$PASS_FILE"
   "$SIGNER" -selfSignedCert GB Scotland "Nscale" "Nscale Motion" "$PASS" "$CERT" \
-    -locality Edinburgh -orgUnit Design -validityDays 3650 >/dev/null
+    -locality Edinburgh -orgUnit Design -validityDays 3650 \
+    || die "Certificate creation failed (see message above)."
+  [[ -f "$CERT" ]] || die "Certificate creation reported success but no .p12 was written."
   say "Certificate saved to build/cert/ — keep that folder; it's in .gitignore. Losing it is fine but every machine must then reinstall the panel."
 fi
+[[ -f "$PASS_FILE" ]] || die "build/cert/password.txt is missing. Delete build/cert/ and re-run to make a fresh certificate."
 PASS="$(cat "$PASS_FILE")"
 
 # ---------------------------------------------------------------- 3. stage
@@ -74,7 +77,7 @@ for d in CSXS panel bar library host; do
   [[ -d "$ROOT/$d" ]] || die "Missing folder: $d"
   rsync -a --exclude '.DS_Store' --exclude '__MACOSX' --exclude '*.map' "$ROOT/$d" "$STAGE/"
 done
-[[ -f "$ROOT/.debug" ]] && say "Note: .debug exists in the repo but is NOT packaged (correct for a release)."
+if [[ -f "$ROOT/.debug" ]]; then say "Note: .debug exists in the repo but is NOT packaged (correct for a release)."; fi
 
 # Symlinks break CEP's signature check — refuse rather than ship a blank panel.
 if find "$STAGE" -type l | grep -q .; then die "Symlinks found in the staged files; replace them with real files."; fi
@@ -84,11 +87,12 @@ mkdir -p "$DIST"
 OUT="$DIST/nscale-motion-$VERSION.zxp"
 rm -f "$OUT"
 say "Signing → dist/nscale-motion-$VERSION.zxp"
-if ! "$SIGNER" -sign "$STAGE" "$OUT" "$CERT" "$PASS" -tsa "$TSA" >/dev/null 2>&1; then
+if ! "$SIGNER" -sign "$STAGE" "$OUT" "$CERT" "$PASS" -tsa "$TSA"; then
   say "Timestamp server unreachable — signing without a timestamp (fine: the certificate is valid for 10 years)"
   rm -f "$OUT"
-  "$SIGNER" -sign "$STAGE" "$OUT" "$CERT" "$PASS"
+  "$SIGNER" -sign "$STAGE" "$OUT" "$CERT" "$PASS" || die "Signing failed (see message above)."
 fi
+[[ -f "$OUT" ]] || die "Signing reported success but no .zxp was written."
 cp -f "$OUT" "$DIST/nscale-motion.zxp"
 
 # ---------------------------------------------------------------- 5. verify
