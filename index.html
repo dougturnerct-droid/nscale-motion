@@ -1227,7 +1227,8 @@ function renderSocial() {
   $('#tFields').innerHTML = t.fields.map((f, i) => {
     const v = fieldVal(t, f), id = 'tf' + i, lab = esc(f.name) + (f.hint ? ' · ' + esc(f.hint) : '');
     if (f.type === 'checkbox') return `<label class="sw" style="margin:4px 0">${esc(f.name)} <input type="checkbox" id="${id}" data-f="${esc(f.name)}" data-type="checkbox" ${v === true || v === 'true' ? 'checked' : ''}></label>`;
-    if (f.type === 'number' || f.type === 'slider') return `<div><div class="flabel">${lab}</div><div class="fnum"><input type="range" id="${id}" data-f="${esc(f.name)}" data-type="${f.type}" min="${f.min ?? 0}" max="${f.max ?? 100}" step="${f.step ?? 1}" value="${esc(String(v))}"><output for="${id}">${esc(String(v))}</output></div></div>`;
+    if (f.type === 'number') return `<div><div class="flabel">${lab}</div><input class="field" type="number" id="${id}" data-f="${esc(f.name)}" data-type="number" min="${f.min ?? ''}" max="${f.max ?? ''}" step="${f.step ?? 1}" value="${esc(String(v))}"></div>`;
+    if (f.type === 'slider') return `<div><div class="flabel">${lab}</div><div class="fnum"><input type="range" id="${id}" data-f="${esc(f.name)}" data-type="${f.type}" min="${f.min ?? 0}" max="${f.max ?? 100}" step="${f.step ?? 1}" value="${esc(String(v))}"><output for="${id}">${esc(String(v))}</output></div></div>`;
     if (f.multiline) return `<div><div class="flabel">${lab}</div><textarea class="field short" id="${id}" data-f="${esc(f.name)}" placeholder="${esc(f.placeholder || '')}">${esc(String(v))}</textarea></div>`;
     return `<div><div class="flabel">${lab}</div><input class="field" id="${id}" data-f="${esc(f.name)}" placeholder="${esc(f.placeholder || '')}" value="${esc(String(v))}" autocomplete="off"></div>`;
   }).join('') || '<div class="flabel">No fields: this template renders as-is.</div>';

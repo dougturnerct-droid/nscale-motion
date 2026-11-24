@@ -62,11 +62,13 @@
     // ---- 3. text
     pointText("Headline", "Every rack installed,\rcabled and powered.", FONT_BLACK, 56, 1.1, -3, C.chalk, 79, 183, 860);
     // metrics: value 90px + unit 56px on one baseline (Figma trims the box to cap height; baseline = 917 + 63 = 980)
-    var m1 = pointText("Metric racks", "[XXX]", FONT_BLACK, 90, 1.1, -3, C.chalk, 79, 0, 462); pos(m1, 79, 980);
-    var u1 = pointText("Metric racks \u00b7 unit", " racks", FONT_BLACK, 56, 1.1, -3, C.chalk, 79, 0, 200); pos(u1, 79, 980);
+    var m1 = pointText("Metric racks", "[XXX]", FONT_BLACK, 90, 1.1, -3, C.chalk, 79, 0, 462); pos(m1, 79, 970);
+    m1.property("ADBE Text Properties").property("ADBE Text Document").expression = 'var v = Math.round(thisComp.layer("Theme \\u00b7 controls").effect("Racks")("Slider")); String(v).replace(/\\B(?=(\\d{3})+(?!\\d))/g, ",")';
+    var u1 = pointText("Metric racks \u00b7 unit", " racks", FONT_BLACK, 56, 1.1, -3, C.chalk, 79, 0, 200); pos(u1, 79, 970);
     u1.property("ADBE Transform Group").property("ADBE Position").expression = 'var v = thisComp.layer("Metric racks"); [v.position[0] + v.sourceRectAtTime(time, false).width + v.sourceRectAtTime(time, false).left, v.position[1]]';
-    var m2 = pointText("Metric MW", "[XXX]", FONT_BLACK, 90, 1.1, -3, C.chalk, 602, 0, 413); pos(m2, 602, 980);
-    var u2 = pointText("Metric MW \u00b7 unit", " MW", FONT_BLACK, 56, 1.1, -3, C.chalk, 602, 0, 200); pos(u2, 602, 980);
+    var m2 = pointText("Metric MW", "[XXX]", FONT_BLACK, 90, 1.1, -3, C.chalk, 602, 0, 413); pos(m2, 602, 970);
+    m2.property("ADBE Text Properties").property("ADBE Text Document").expression = 'var v = Math.round(thisComp.layer("Theme \\u00b7 controls").effect("MW")("Slider")); String(v).replace(/\\B(?=(\\d{3})+(?!\\d))/g, ",")';
+    var u2 = pointText("Metric MW \u00b7 unit", " MW", FONT_BLACK, 56, 1.1, -3, C.chalk, 602, 0, 200); pos(u2, 602, 970);
     u2.property("ADBE Transform Group").property("ADBE Position").expression = 'var v = thisComp.layer("Metric MW"); [v.position[0] + v.sourceRectAtTime(time, false).width + v.sourceRectAtTime(time, false).left, v.position[1]]';
 
     // ---- 4. tag: Chalk background, Midnight text (this card's colourway)
@@ -86,36 +88,73 @@
     // ---- 5. controls: Dark mode, Racks live (0-72), Reveal (0-6 rows shown; keyframe this for the row-by-row)
     var ctl = comp.layers.addNull(); ctl.name = "Theme \u00b7 controls"; ctl.label = 11;
     ctl.property("ADBE Effect Parade").addProperty("ADBE Checkbox Control").name = "Dark mode";
+    // the inputs: a value and a total for racks and MW. The grid lights round(72 * Racks / Racks total) cells.
+    var sl = [["Racks", 43], ["Racks total", 72], ["MW", 40], ["MW total", 60]];
+    for (var si = 0; si < sl.length; si++) { ctl.property("ADBE Effect Parade").addProperty("ADBE Slider Control").name = sl[si][0]; ctl.property("ADBE Effect Parade").property(sl[si][0]).property(1).setValue(sl[si][1]); }
     ctl.property("ADBE Effect Parade").addProperty("ADBE Slider Control").name = "Racks live";
-    ctl.property("ADBE Effect Parade").property("Racks live").property(1).setValue(43);
+    ctl.property("ADBE Effect Parade").property("Racks live").property(1).expression = 'var v = effect("Racks")("Slider"), t = effect("Racks total")("Slider"); t > 0 ? Math.round(72 * Math.min(v, t) / t) : 0';
     ctl.property("ADBE Effect Parade").addProperty("ADBE Slider Control").name = "Reveal";
     ctl.property("ADBE Effect Parade").property("Reveal").property(1).setValue(6);
     ctl.moveToBeginning();
 
-    // ---- 6. rack grid: one shape layer, 72 groups (12 x 6), 67x66 cells on a 79/78 pitch, top-left 79,385.
-    // Each group's fill opacity reads "Racks live" (index < N => live), and its overall opacity reads "Reveal" (row < Reveal => shown).
-    var grid = comp.layers.addShape(); grid.name = "Rack grid"; anchor0(grid); pos(grid, 79, 385);
-    var root = grid.property("ADBE Root Vectors Group");
-    var CELL_W = 67, CELL_H = 66, PX = 79, PY = 78, COLS = 12, ROWS = 6;
-    for (var r = 0; r < ROWS; r++) for (var c = 0; c < COLS; c++) {
-        var idx = r * COLS + c;
-        var g = root.addProperty("ADBE Vector Group"); g.name = "Rack " + (idx + 1);
-        var gg = g.property("ADBE Vectors Group");
-        gg.addProperty("ADBE Vector Shape - Rect");
-        gg.addProperty("ADBE Vector Graphic - Fill");
-        gg.addProperty("ADBE Vector Graphic - Stroke");
-        var gc = root.property(idx + 1).property("ADBE Vectors Group");
-        var rect = gc.property(1), fill = gc.property(2), stroke = gc.property(3);
-        rect.property("ADBE Vector Rect Size").setValue([CELL_W, CELL_H]);
-        rect.property("ADBE Vector Rect Position").setValue([c * PX + CELL_W / 2, r * PY + CELL_H / 2]);
-        fill.property("ADBE Vector Fill Color").setValue(C.mint.concat([1]));
-        fill.property("ADBE Vector Fill Opacity").expression = 'var n = thisComp.layer("Theme \\u00b7 controls").effect("Racks live")("Slider"); ' + idx + ' < n ? 35 : 0';
-        stroke.property("ADBE Vector Stroke Color").setValue(C.chalk.concat([1]));
-        stroke.property("ADBE Vector Stroke Width").setValue(0.5);
-        root.property(idx + 1).property("ADBE Vector Transform Group").property("ADBE Vector Group Opacity").expression =
-            'var rv = thisComp.layer("Theme \\u00b7 controls").effect("Reveal")("Slider"); ' + r + ' < rv ? 100 : 0';
+    // ---- 6. rack grid: three layers driven by the same two sliders.
+    //   Rack grid - outlines   72 chalk 0.5px outlines; each row's opacity reads "Reveal" (row < Reveal => shown)
+    //   Rack hatch             45deg Spearmint hairlines on a 7px pitch (1px line + Repeater), covering the grid area
+    //   Rack grid - live matte 72 solid cells, opaque where index < "Racks live" and row < Reveal; alpha matte for the hatch
+    var CELL_W = 67, CELL_H = 66, PX = 79, PY = 78, COLS = 12, ROWS = 6, GX = 79, GY = 385, GW = 936, GH = 456;
+    function cells(name, withStroke, fillCol, fillExpr) {
+        var L = comp.layers.addShape(); L.name = name; anchor0(L); pos(L, GX, GY);
+        var root = L.property("ADBE Root Vectors Group");
+        for (var r = 0; r < ROWS; r++) for (var c = 0; c < COLS; c++) {
+            var idx = r * COLS + c;
+            var g = root.addProperty("ADBE Vector Group"); g.name = "Rack " + (idx + 1);
+            var gg = g.property("ADBE Vectors Group");
+            gg.addProperty("ADBE Vector Shape - Rect");
+            gg.addProperty("ADBE Vector Graphic - Fill");
+            if (withStroke) gg.addProperty("ADBE Vector Graphic - Stroke");
+            var gc = root.property(idx + 1).property("ADBE Vectors Group");
+            gc.property(1).property("ADBE Vector Rect Size").setValue([CELL_W, CELL_H]);
+            gc.property(1).property("ADBE Vector Rect Position").setValue([c * PX + CELL_W / 2, r * PY + CELL_H / 2]);
+            gc.property(2).property("ADBE Vector Fill Color").setValue(fillCol.concat([1]));
+            if (fillExpr) gc.property(2).property("ADBE Vector Fill Opacity").expression = fillExpr.replace(/IDX/g, idx);
+            else gc.property(2).property("ADBE Vector Fill Opacity").setValue(0);
+            if (withStroke) { gc.property(3).property("ADBE Vector Stroke Color").setValue(C.chalk.concat([1])); gc.property(3).property("ADBE Vector Stroke Width").setValue(0.5); }
+            root.property(idx + 1).property("ADBE Vector Transform Group").property("ADBE Vector Group Opacity").expression =
+                'var rv = thisComp.layer("Theme \\u00b7 controls").effect("Reveal")("Slider"); ' + r + ' < rv ? 100 : 0';
+        }
+        return L;
     }
+    var outlines = cells("Rack grid \u00b7 outlines", true, C.chalk, null);
 
+    // hatch: a 1px Spearmint line, rotated 45deg, repeated on a 7px pitch across the grid's diagonal
+    var hatch = comp.layers.addShape(); hatch.name = "Rack hatch"; anchor0(hatch); pos(hatch, GX, GY);
+    // a faint Spearmint tint under the lines, so a live cell reads slightly greener than the panel (as in the design)
+    var tg0 = hatch.property("ADBE Root Vectors Group").addProperty("ADBE Vector Group"); tg0.name = "Tint";
+    tg0.property("ADBE Vectors Group").addProperty("ADBE Vector Shape - Rect");
+    tg0.property("ADBE Vectors Group").addProperty("ADBE Vector Graphic - Fill");
+    var tc0 = hatch.property("ADBE Root Vectors Group").property(1).property("ADBE Vectors Group");
+    tc0.property(1).property("ADBE Vector Rect Size").setValue([GW, GH]); tc0.property(1).property("ADBE Vector Rect Position").setValue([GW / 2, GH / 2]);
+    tc0.property(2).property("ADBE Vector Fill Color").setValue(C.mint.concat([1])); tc0.property(2).property("ADBE Vector Fill Opacity").setValue(12);
+    var hg = hatch.property("ADBE Root Vectors Group").addProperty("ADBE Vector Group"); hg.name = "Lines";
+    hg.property("ADBE Vectors Group").addProperty("ADBE Vector Shape - Rect");
+    hg.property("ADBE Vectors Group").addProperty("ADBE Vector Graphic - Fill");
+    hg.property("ADBE Vectors Group").addProperty("ADBE Vector Filter - Repeater");
+    var hc = hatch.property("ADBE Root Vectors Group").property(2).property("ADBE Vectors Group");
+    var diag = Math.ceil(Math.sqrt(GW * GW + GH * GH)), PITCH = 8, copies = Math.ceil(diag / PITCH) + 2;
+    hc.property(1).property("ADBE Vector Rect Size").setValue([1, diag * 1.5]);
+    hc.property(1).property("ADBE Vector Rect Position").setValue([-diag / 2 + GW / 2, GH / 2]);   // first line, left of the grid; copies march right
+    hc.property(2).property("ADBE Vector Fill Color").setValue(C.mint.concat([1]));
+    hc.property(3).property("ADBE Vector Repeater Copies").setValue(copies);
+    hc.property(3).property("ADBE Vector Repeater Transform").property("ADBE Vector Repeater Position").setValue([PITCH, 0]);
+    hatch.property("ADBE Root Vectors Group").property(2).property("ADBE Vector Transform Group").property("ADBE Vector Rotation").setValue(45);
+    hatch.property("ADBE Root Vectors Group").property(2).property("ADBE Vector Transform Group").property("ADBE Vector Anchor").setValue([GW / 2, GH / 2]);
+    hatch.property("ADBE Root Vectors Group").property(2).property("ADBE Vector Transform Group").property("ADBE Vector Position").setValue([GW / 2, GH / 2]);
+
+    // live matte: opaque cells where index < Racks live (and the row is revealed); the hatch is alpha-matted by it
+    var matte = cells("Rack grid \u00b7 live matte", false, C.mint, 'var n = thisComp.layer("Theme \\u00b7 controls").effect("Racks live")("Slider"); IDX < n ? 100 : 0');
+    matte.moveBefore(hatch);
+    if (typeof hatch.setTrackMatte === "function") hatch.setTrackMatte(matte, TrackMatteType.ALPHA); else hatch.trackMatteType = TrackMatteType.ALPHA;
+    outlines.moveBefore(matte);   // outlines on top of the hatch
     // ---- 7. frame lines + corners (above everything), background guide at the bottom
     var fr = [
         shapeRect("Frame \u00b7 left",   C.white, 0.5, H, 33, 0),
