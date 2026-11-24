@@ -1678,7 +1678,7 @@ function socialRun(p) {
 function socialTemplateFile(p) {
     if (p.templateFile) { var f0 = new File(p.templateFile); if (f0.exists) return f0; }
     if (!NSM_EXT) return null;
-    var f = new File(NSM_EXT.fsName + "/assets/social-templates.aep");
+    var f = new File(NSM_EXT.fsName + "/assets/templates.aep");
     return f.exists ? f : null;
 }
 function socialListTemplates() {
@@ -1691,7 +1691,7 @@ function socialListTemplates() {
 }
 function socialInTemplate(p, body) {
     var tpl = socialTemplateFile(p);
-    if (!tpl) return "WARN:The social template project isn't in this panel (assets/social-templates.aep). Reinstall, or Choose a template file.";
+    if (!tpl) return "WARN:The template project isn't in this panel (assets/templates.aep). Reinstall, or Choose a template file.";
 
     // the user's project: save it so we can come back to it
     var mine = app.project.file, hadItems = app.project.numItems > 0;
@@ -1741,9 +1741,7 @@ function socialGenericRun(p) {
     for (j = 0; j < jobs.length && !failed; j++) {
         var job = jobs[j], fields = job.fields || {}, name = slug(job.name || job.label || job.hero || "post");
         if (used[name]) { var n = 2; while (used[name + "-" + n]) n++; name = name + "-" + n; } used[name] = true;
-        var unset = [];
-        for (var k in fields) { if (!fields.hasOwnProperty(k)) continue; var L = null; try { L = comp.layer(k); } catch (eL) {} if (L && L instanceof TextLayer) setText(L, fields[k]); else unset.push(k); }
-        if (unset.length) notes.push(name + ": no text layer called " + unset.join(", ") + " in " + comp.name);
+        socialFillGeneric(comp, job, name, notes);
         for (m = 0; m < MODES.length; m++) {
             if (dark) dark.setValue(MODES[m].dark);
             var fn = name + MODES[m].suffix;
@@ -1763,6 +1761,61 @@ function socialGenericRun(p) {
     }
     return "SOCIAL:" + js({ what: "ame", notes: notes, made: made, files: [], failed: failed, folder: outFolder.fsName, total: jobs.length * MODES.length });
 }
+// Fill a template comp from a job: text fields -> text layer of that name; number/slider/checkbox -> control on Theme - controls
+function socialFillGeneric(comp, job, name, notes) {
+    var fields = job.fields || {}, types = job.types || {}, unset = [], ctl = null; try { ctl = comp.layer("Theme \u00b7 controls"); } catch (eC) {}
+    function setText(L, text) { var tp = L.property("ADBE Text Properties").property("ADBE Text Document"); var d = tp.value; d.text = String(text).replace(/\r\n|\n/g, "\r"); tp.setValue(d); }
+    for (var k in fields) {
+        if (!fields.hasOwnProperty(k)) continue;
+        var ty = types[k] || "text", v = fields[k];
+        if (ty === "text") { var L = null; try { L = comp.layer(k); } catch (eL) {} if (L && L instanceof TextLayer) setText(L, v); else unset.push(k); continue; }
+        var fx = null; try { fx = ctl && ctl.property("ADBE Effect Parade").property(k); } catch (eF) {}
+        if (!fx) { unset.push(k); continue; }
+        if (ty === "checkbox") fx.property(1).setValue(v === true || v === "true" || v === 1 ? 1 : 0);
+        else { var num = parseFloat(v); if (isFinite(num)) fx.property(1).setValue(num); }
+    }
+    if (unset.length) notes.push(name + ": nothing called " + unset.join(", ") + " in " + comp.name + " (text layer, or control on Theme \u00b7 controls)");
+    return unset;
+}
+function socialSetDark(comp, on) { try { comp.layer("Theme \u00b7 controls").property("ADBE Effect Parade").property("Dark mode").property(1).setValue(on ? 1 : 0); } catch (e) {} }
+
+// Add a filled template to the open project as a precomp (and into the active comp at the playhead).
+// The bundled template project is imported once, into a folder called "Nscale templates".
+function socialInsert(p) {
+    nsmSetExt(p);
+    var job = (p.jobs && p.jobs[0]) || null; if (!job) return "WARN:Nothing to add.";
+    var tplFile = socialTemplateFile(p); if (!tplFile) return "WARN:The template project isn't in this panel (assets/templates.aep).";
+    var FOLDER = "Nscale templates", folder = null, i;
+    for (i = 1; i <= app.project.numItems; i++) { var it = app.project.item(i); if (it instanceof FolderItem && it.name === FOLDER) { folder = it; break; } }
+    app.beginUndoGroup("Nscale: add " + (job.tplName || job.template));
+    try {
+        if (!folder) {
+            var before = {}; for (i = 1; i <= app.project.numItems; i++) before[app.project.item(i).id] = true;
+            var imported = app.project.importFile(new ImportOptions(tplFile));
+            if (imported instanceof FolderItem) { folder = imported; folder.name = FOLDER; }
+            else { folder = app.project.items.addFolder(FOLDER); for (i = 1; i <= app.project.numItems; i++) { var ni = app.project.item(i); if (!before[ni.id] && ni.parentFolder === app.project.rootFolder && ni !== folder) ni.parentFolder = folder; } }
+        }
+        var src = null;
+        for (i = 1; i <= app.project.numItems; i++) { var c = app.project.item(i); if (c instanceof CompItem && c.name === job.template && c.parentFolder === folder) { src = c; break; } }
+        if (!src) for (i = 1; i <= app.project.numItems; i++) { var c2 = app.project.item(i); if (c2 instanceof CompItem && c2.name === job.template) { src = c2; break; } }
+        if (!src) { app.endUndoGroup(); return "WARN:No comp called \u201c" + job.template + "\u201d in the template project. Build it first."; }
+        var dup = src.duplicate(); dup.name = job.template.replace(/\s*\u00b7.*$/, "") + " \u00b7 " + (job.label || job.name || "post");
+        var notes = [];
+        if (job.kind === "event") {
+            var q = {}; for (var k in p) if (p.hasOwnProperty(k)) q[k] = p[k];
+            q.what = "apply"; q.template = dup.name; q.jobs = [job];
+            var r = socialRun(q); if (r.indexOf("WARN:") === 0) { app.endUndoGroup(); return r; }
+        } else socialFillGeneric(dup, job, dup.name, notes);
+        socialSetDark(dup, !!(p.dark && !p.light));
+        var target = app.project.activeItem, where = "the project";
+        if (target instanceof CompItem && target !== dup) {
+            var L = target.layers.add(dup); L.startTime = target.time; L.moveToBeginning(); where = "\u201c" + target.name + "\u201d at the playhead";
+        } else { try { dup.openInViewer(); } catch (eV) {} }
+        app.endUndoGroup();
+        return "OK:Added \u201c" + dup.name + "\u201d to " + where + (notes.length ? " \u00b7 " + notes.join("; ") : "");
+    } catch (e) { app.endUndoGroup(); return "WARN:Add failed: " + e.toString() + (e.line ? " (line " + e.line + ")" : ""); }
+}
+
 function socialAME(p) {
     nsmSetExt(p);
     return socialInTemplate(p, function (q) {
@@ -1800,6 +1853,7 @@ function nsm_run(action, p) {
         if (action === "social") return socialRun(p);
         if (action === "chooseFile") { var cf = File.openDialog(p.title || "Choose a file"); return cf ? "PATH:" + cf.fsName : "WARN:No file chosen."; }
         if (action === "socialAME") return socialAME(p);
+        if (action === "socialInsert") return socialInsert(p);
         if (action === "socialScan") return socialScan(p);
         if (action === "socialTemplates") { var st = getSetting("socialTemplates", ""); return "SOCIAL:" + js({ what: "list", templates: st ? st.split("|") : [] }); }
         if (action === "chooseInbox") { var fd = Folder.selectDialog("Choose the Claude inbox folder in Google Drive"); return fd ? "PATH:" + fd.fsName : "WARN:No folder chosen."; }

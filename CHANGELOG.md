@@ -10,7 +10,7 @@ After Effects panel 2.6.0 · Premiere panel 1.3.0
 - Social: "Send to Media Encoder". Saves your project, fills the template in a temporary
   copy, hands each light/dark file to Media Encoder, and reopens your project within a few
   seconds. After Effects stays free while Media Encoder renders.
-- Social: the template project ships inside the panel (`assets/social-templates.aep`), so
+- Social: the template project ships inside the panel (`assets/templates.aep`), so
   you no longer open it yourself. Choose overrides it with another .aep; Built-in goes back.
 - Social: a Template picker lists every comp in the project that has `Theme · controls`;
   press Scan to refresh the list.

@@ -244,6 +244,13 @@ textarea.field.short{height:62px;resize:none}
 .pxin{display:flex;align-items:center;gap:6px;flex:none;color:var(--dim)}.sw .pxin input.field{appearance:auto;width:64px;height:28px;border-radius:7px;background:var(--base);padding:0 6px;text-align:right}.sw .pxin input.field::after{content:none}
 .sprev{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.sprev figure{margin:0}.sprev img{display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:var(--base)}.sprev figcaption{font:400 11px var(--sans);color:var(--dim);margin-top:4px}
 .snotes{margin:0;padding-left:16px;color:var(--muted);font-size:12px;line-height:1.5}
+.tbrowse{display:flex;flex-direction:column;gap:8px}
+.tlist{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.tlist button{height:40px;padding:0 10px;border-radius:9px;border:1px solid var(--line);background:var(--base);color:var(--text);font:500 12.5px var(--sans);cursor:pointer;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tlist button[aria-pressed="true"]{border-color:var(--signal2);background:var(--s3);box-shadow:var(--hi)}
+.tlist button.soon{color:var(--dim)}
+.tlist button.soon::after{content:" · not built";font-weight:400}
+.sfields .fnum{display:flex;align-items:center;gap:8px}.sfields .fnum input[type=range]{flex:1;accent-color:var(--signal)}.sfields .fnum output{font:400 12px var(--mono);color:var(--muted);min-width:34px;text-align:right}
 .sbatch{display:flex;flex-direction:column;gap:6px}.sbatch .empty{color:var(--dim);font-size:12px}
 .sbatch .item{display:flex;align-items:center;gap:8px;background:var(--base);border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-width:0}
 .sbatch .item b{font-weight:500;color:var(--text);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -285,7 +292,7 @@ select.field{appearance:none;background:var(--base) url("data:image/svg+xml,%3Cs
       <button class="tab" role="tab" aria-selected="false" data-tab="text"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 5V3.5h12V5M10 3.5v13M7.5 16.5h5"/></svg><span>Text</span></button>
       <button class="tab" role="tab" aria-selected="false" data-tab="notes"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 3h7l3 3v11H5z"/><path d="M8 9h5M8 12h5M8 15h3"/></svg><span>Notes</span></button>
       <button class="tab" role="tab" aria-selected="false" data-tab="render"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="14" height="10" rx="1.5"/><path d="M8.5 8v4l3.5-2z" fill="currentColor"/></svg><span>Render</span></button>
-      <button class="tab" role="tab" aria-selected="false" data-tab="social"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.5" y="3.5" width="13" height="13" rx="1.5"/><path d="M6.5 8h7M6.5 11h4.5"/><rect x="6.5" y="13" width="4" height="1.6" fill="currentColor" stroke="none"/></svg><span>Social</span></button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="social"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.5" y="3.5" width="13" height="13" rx="1.5"/><path d="M6.5 8h7M6.5 11h4.5"/><rect x="6.5" y="13" width="4" height="1.6" fill="currentColor" stroke="none"/></svg><span>Templates</span></button>
       <button class="tab" role="tab" aria-selected="false" data-tab="send"><svg viewBox="0 0 20 20" fill="currentColor" stroke="none" aria-hidden="true"><g transform="translate(10 10)"><path d="M-0.9 -8.2 L0.9 -8.2 L0.45 -1.2 L-0.45 -1.2 Z"/><path d="M-0.9 -8.2 L0.9 -8.2 L0.45 -1.2 L-0.45 -1.2 Z" transform="rotate(40)"/><path d="M-0.8 -7.2 L0.8 -7.2 L0.45 -1.2 L-0.45 -1.2 Z" transform="rotate(78)"/><path d="M-0.9 -8.2 L0.9 -8.2 L0.45 -1.2 L-0.45 -1.2 Z" transform="rotate(118)"/><path d="M-0.8 -7 L0.8 -7 L0.45 -1.2 L-0.45 -1.2 Z" transform="rotate(160)"/><path d="M-0.9 -8.2 L0.9 -8.2 L0.45 -1.2 L-0.45 -1.2 Z" transform="rotate(200)"/><path d="M-0.8 -7.4 L0.8 -7.4 L0.45 -1.2 L-0.45 -1.2 Z" transform="rotate(242)"/><path d="M-0.9 -8.2 L0.9 -8.2 L0.45 -1.2 L-0.45 -1.2 Z" transform="rotate(282)"/><path d="M-0.8 -7.1 L0.8 -7.1 L0.45 -1.2 L-0.45 -1.2 Z" transform="rotate(322)"/><circle r="1.6"/></g></svg><span>Send</span></button>
       <button class="tab" role="tab" aria-selected="false" data-tab="library"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 3.5h3v13H4zM8.5 3.5h3v13h-3z"/><path d="M13 4.2l2.8-.7 2.6 12.6-2.8.7z"/></svg><span>Library</span></button>
     </nav>
@@ -398,27 +405,29 @@ select.field{appearance:none;background:var(--base) url("data:image/svg+xml,%3Cs
 
     <!-- ===== Event social ===== -->
     <div class="body" id="tab-social" hidden>
-      <div class="card"><div class="label">Template <span class="hint" id="sTplHint">from the bundled project</span></div>
-        <div class="path"><select class="field" id="sTpl" aria-label="Template comp"><option value="">social-asset</option></select><button class="btn" id="sScan" title="Opens the template project for a moment, lists its template comps, and reopens your project.">Scan</button></div>
-        <div class="path" style="margin-top:6px"><code id="sTplFile">Built-in template project</code><button class="btn" id="sTplChoose" title="Use another .aep instead of the bundled one">Choose</button><button class="btn" id="sTplBuiltin" title="Back to the bundled template project">Built-in</button></div>
-      </div>
-      <div class="card"><div class="label">Event post <span class="hint">fills the template comp</span></div>
-        <div class="sfields">
-          <div><div class="flabel">Top line</div><input class="field" id="sTop" placeholder="Gold Sponsor" aria-label="Top line"></div>
-          <div><div class="flabel">Event name · press return to choose the line break; one long line is split for you</div><textarea class="field short" id="sHero" placeholder="NVIDIA GTC&#10;Washington, D.C." aria-label="Event name"></textarea></div>
-          <div class="two"><div><div class="flabel">Date chip</div><input class="field" id="sDate" placeholder="December 8–10" aria-label="Date chip"></div>
-            <div><div class="flabel">Location chip · blank hides it</div><input class="field" id="sLoc" placeholder="Las Vegas" aria-label="Location chip"></div></div>
-          <div><div class="flabel">File name · blank uses the event name. _light and _dark are added</div><input class="field" id="sName" placeholder="gartner-vegas" aria-label="File name"></div>
+      <div class="card"><div class="label">Templates <span class="hint" id="tHint"></span></div>
+        <div class="tbrowse">
+          <select class="field" id="tFolder" aria-label="Folder"></select>
+          <div class="tlist" id="tList"></div>
         </div>
+      </div>
+      <div class="card" id="tFormCard"><div class="label"><span id="tName">Template</span> <span class="hint" id="tComp"></span></div>
+        <div class="sfields" id="tFields"></div>
+        <div style="margin-top:8px"><div class="flabel">File name · blank uses the first field. _light and _dark are added</div><input class="field" id="sName" placeholder="gtc-dc" aria-label="File name"></div>
       </div>
       <div class="card toggles">
         <label class="sw">Light version <input type="checkbox" id="sLight"></label>
         <label class="sw">Dark version <input type="checkbox" id="sDark"></label>
-        <label class="sw" title="Looks at the glass element through the whole animation and lowers it until it is clear of the event name.">Keep the glass element clear of the event name <input type="checkbox" id="sClear"></label>
-        <label class="sw" title="Lowers the glass element by at least this much, whatever the check finds.">Lower the glass element by at least <span class="pxin"><input class="field" id="sDrop" type="number" min="0" max="600" step="10" aria-label="Minimum drop in pixels"> px</span></label>
+        <label class="sw" id="sClearRow" title="Looks at the glass element through the whole animation and lowers it until it is clear of the event name.">Keep the glass element clear of the event name <input type="checkbox" id="sClear"></label>
+        <label class="sw" id="sDropRow" title="Lowers the glass element by at least this much, whatever the check finds.">Lower the glass element by at least <span class="pxin"><input class="field" id="sDrop" type="number" min="0" max="600" step="10" aria-label="Minimum drop in pixels"> px</span></label>
       </div>
+      <details class="card" style="padding:10px 12px"><summary class="flabel" style="cursor:pointer">Template project</summary>
+        <div class="path" style="margin-top:8px"><code id="sTplFile">Built-in template project</code><button class="btn" id="sTplChoose" title="Use another .aep instead of the bundled one">Choose</button><button class="btn" id="sTplBuiltin" title="Back to the bundled template project">Built-in</button><button class="btn" id="sScan" title="Opens the template project for a moment, lists which template comps exist, and reopens your project.">Scan</button></div>
+        <div class="flabel" id="sTplHint" style="margin:6px 0 0"></div>
+      </details>
       <div class="card" id="sPrevCard" hidden><div class="label">Preview <span class="hint" id="sPrevHint"></span></div><div class="sprev" id="sPrev"></div></div>
       <div class="card" id="sNotesCard" hidden><div class="label">From the last run</div><ul class="snotes" id="sNotes"></ul></div>
+      <button class="btn" id="sInsert" style="width:100%;margin-bottom:8px" title="Imports the template project once, duplicates this template comp, fills it, and adds it to the open comp at the playhead so you can sequence and animate the cards together.">Add to open comp</button>
       <div class="row"><button class="btn" id="sPreview" title="Saves a still of each version at the moment the glass element comes closest to the event name. The comp is put back afterwards.">Preview stills</button><button class="btn" id="sApply" title="Leaves this post in the comp so you can adjust it by hand. One undo puts it back.">Apply to comp</button></div>
       <div class="card"><div class="label">Notion <span class="hint" id="nHint">rows marked Ready in Social posts</span></div>
         <div class="row"><button class="btn" id="nPull" title="Loads every row with Status = Ready into the batch">Pull Ready rows</button><button class="btn" id="nOpen" title="Opens the Social posts database">Open database</button></div>
@@ -597,6 +606,7 @@ const store = { get(k, d) { try { const v = localStorage.getItem('nsm.' + k); re
 const S = { mode: store.get('mode', 'productive'), curve: store.get('curve', 'enter'), edits: store.get('edits', {}), locked: true, showProps: store.get('showProps', false),
   st: Object.assign({ step: 'xs', order: 'Selection', spacing: 'Even', apply: 'layers', start: 'first', rev: false }, store.get('st', {})), sheet: 12, hist: store.get('hist', []) };
 const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = v => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 const isProp = id => !!PROPS[id];
 const def = id => isProp(id) ? { name: PROPS[id][0], bez: PROPS[id][1], role: 'Proposal', col: '--c-prop' } : { name: CURVES[id][S.mode][0], bez: CURVES[id][S.mode][1], role: CURVES[id].role, col: CURVES[id].col };
 const ek = id => S.mode + '.' + id;
@@ -1171,44 +1181,105 @@ $('#feedback').onclick = () => {
   if (window.cep && cep.util) cep.util.openURLInDefaultBrowser(url); else window.open(url, '_blank', 'noopener');
 };
 
-/* ---------- event social ---------- */
-const SO = Object.assign({ top: '', hero: '', date: '', loc: '', name: '', light: true, dark: true, clear: true, minDrop: 0, folder: '', batch: [], template: '', templateFile: '', templates: [] }, store.get('social', {}));
+/* ---------- templates (was: event social) ---------- */
+const SO = Object.assign({ name: '', light: true, dark: true, clear: true, minDrop: 0, folder: '', batch: [], folderId: '', tplId: '', values: {}, templateFile: '', templates: [] }, store.get('social', {}));
 const EXT_ROOT = (() => { try { return window.__adobe_cep__ ? window.__adobe_cep__.getSystemPath('extension') : ''; } catch (e) { return ''; } })();
 const saveSO = () => store.set('social', SO);
 const soText = (el, v) => { el.textContent = v; return el; };
-const soJob = () => ({ name: SO.name.trim(), top: SO.top.trim(), hero: SO.hero.trim(), date: SO.date.trim(), loc: SO.loc.trim() });
 const soCount = () => (SO.light ? 1 : 0) + (SO.dark ? 1 : 0);
-const SO_FIELDS = { sTop: 'top', sHero: 'hero', sDate: 'date', sLoc: 'loc', sName: 'name' };
+
+// The catalogue: assets/templates.json. Folders can nest one level (folder > folder > templates).
+let CAT = { folders: [] }, CAT_FLAT = [];   // CAT_FLAT: [{ folderPath, folderId, ...template }]
+function catFlatten() {
+  CAT_FLAT = [];
+  (function walk(f, path, ids) {
+    (f.templates || []).forEach(t => CAT_FLAT.push(Object.assign({ folderPath: path.join(' / '), folderId: ids.join('/') }, t)));
+    (f.folders || []).forEach(sub => walk(sub, path.concat(sub.name), ids.concat(sub.id)));
+  })(CAT, [], []);
+}
+function catFolders() { const seen = {}, out = []; CAT_FLAT.forEach(t => { if (!seen[t.folderId]) { seen[t.folderId] = 1; out.push({ id: t.folderId, name: t.folderPath }); } }); return out; }
+const tpl = () => CAT_FLAT.find(t => t.id === SO.tplId) || CAT_FLAT[0] || null;
+const tplById = id => CAT_FLAT.find(t => t.id === id);
+const tplByNotion = name => CAT_FLAT.find(t => t.notion === name || t.name === name || t.id === name);
+const tplVals = t => (SO.values[t.id] = SO.values[t.id] || {});
+const fieldVal = (t, f) => { const v = tplVals(t)[f.name]; return v !== undefined ? v : (f.default !== undefined ? f.default : ''); };
+
+function catLoaded(j) { CAT = j; catFlatten(); if (!tplById(SO.tplId) && CAT_FLAT[0]) { SO.tplId = CAT_FLAT[0].id; } renderSocial(); }
+function catLoadNode() {   // fallback: read the file through the panel's Node layer (file:// fetch can be refused)
+  try { const fs = require('fs'), path = require('path'); return JSON.parse(fs.readFileSync(path.join(EXT_ROOT, 'assets', 'templates.json'), 'utf8')); } catch (e) { return null; }
+}
+fetch('assets/templates.json').then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  .catch(() => catLoadNode() || Promise.reject(new Error('could not read assets/templates.json')))
+  .then(j => { try { catLoaded(j); } catch (e) { $('#tHint').textContent = 'panel error: ' + e.message; } })
+  .catch(e => { $('#tHint').textContent = e.message; });
+
 function renderSocial() {
-  Object.keys(SO_FIELDS).forEach(id => { if ($('#' + id).value !== SO[SO_FIELDS[id]]) $('#' + id).value = SO[SO_FIELDS[id]]; });
+  const t = tpl(); if (!t) return;
+  if (!SO.folderId || !catFolders().some(f => f.id === SO.folderId)) SO.folderId = t.folderId;
+  // folder picker + template buttons
+  $('#tFolder').innerHTML = catFolders().map(f => `<option value="${esc(f.id)}" ${f.id === SO.folderId ? 'selected' : ''}>${esc(f.name)}</option>`).join('');
+  $('#tList').innerHTML = CAT_FLAT.filter(x => x.folderId === SO.folderId).map(x => `<button type="button" data-tpl="${esc(x.id)}" class="${x.built === false ? 'soon' : ''}" aria-pressed="${x.id === t.id}" title="${esc(x.comp)}">${esc(x.name)}</button>`).join('');
+  $$('#tList button').forEach(b => b.onclick = () => { SO.tplId = b.dataset.tpl; saveSO(); renderSocial(); });
+  $('#tHint').textContent = `${CAT_FLAT.length} templates`;
+  // the form
+  $('#tName').textContent = t.name; $('#tComp').textContent = t.comp + (t.built === false ? ' · comp not built yet' : '');
+  const vals = tplVals(t);
+  $('#tFields').innerHTML = t.fields.map((f, i) => {
+    const v = fieldVal(t, f), id = 'tf' + i, lab = esc(f.name) + (f.hint ? ' · ' + esc(f.hint) : '');
+    if (f.type === 'checkbox') return `<label class="sw" style="margin:4px 0">${esc(f.name)} <input type="checkbox" id="${id}" data-f="${esc(f.name)}" data-type="checkbox" ${v === true || v === 'true' ? 'checked' : ''}></label>`;
+    if (f.type === 'number' || f.type === 'slider') return `<div><div class="flabel">${lab}</div><div class="fnum"><input type="range" id="${id}" data-f="${esc(f.name)}" data-type="${f.type}" min="${f.min ?? 0}" max="${f.max ?? 100}" step="${f.step ?? 1}" value="${esc(String(v))}"><output for="${id}">${esc(String(v))}</output></div></div>`;
+    if (f.multiline) return `<div><div class="flabel">${lab}</div><textarea class="field short" id="${id}" data-f="${esc(f.name)}" placeholder="${esc(f.placeholder || '')}">${esc(String(v))}</textarea></div>`;
+    return `<div><div class="flabel">${lab}</div><input class="field" id="${id}" data-f="${esc(f.name)}" placeholder="${esc(f.placeholder || '')}" value="${esc(String(v))}" autocomplete="off"></div>`;
+  }).join('') || '<div class="flabel">No fields: this template renders as-is.</div>';
+  $$('#tFields [data-f]').forEach(inp => {
+    const upd = () => { vals[inp.dataset.f] = inp.dataset.type === 'checkbox' ? inp.checked : (inp.dataset.type ? Number(inp.value) : inp.value); const o = inp.parentElement.querySelector('output'); if (o) o.textContent = inp.value; saveSO(); soLabel(); };
+    inp.oninput = upd; inp.onchange = upd;
+  });
+  $('#sName').value = SO.name;
+  const isEvent = t.kind === 'event';
+  $('#sClearRow').hidden = !isEvent; $('#sDropRow').hidden = !isEvent;
   $('#sLight').checked = SO.light; $('#sDark').checked = SO.dark; $('#sClear').checked = SO.clear; $('#sDrop').value = SO.minDrop || 0;
+  $('#sDark').disabled = t.dark === false; if (t.dark === false) { $('#sDark').checked = false; }
   $('#sFolder').textContent = SO.folder || 'motion finals › socials';
-  const names = SO.templates.length ? SO.templates : ['social-asset'];
-  $('#sTpl').innerHTML = names.map(n => `<option value="${n.replace(/"/g, '&quot;')}" ${n === (SO.template || names[0]) ? 'selected' : ''}>${n.replace(/</g, '&lt;')}</option>`).join('');
-  $('#sTplHint').textContent = SO.templates.length ? `${SO.templates.length} in the project · Scan to refresh` : 'press Scan to list the template comps';
+  $('#sTplHint').textContent = SO.templates.length ? `Comps found in the project: ${SO.templates.join(', ')}` : 'Scan lists which template comps the project has.';
   $('#sTplFile').textContent = SO.templateFile ? SO.templateFile.split('/').pop() : 'Built-in template project';
+  // batch
   const list = $('#sBatch'); list.innerHTML = '';
   if (!SO.batch.length) list.appendChild(soText(Object.assign(document.createElement('div'), { className: 'empty' }), 'Empty. Add posts here to render several in one go.'));
   SO.batch.forEach((j, i) => {
     const row = Object.assign(document.createElement('div'), { className: 'item' });
     row.appendChild(soText(document.createElement('b'), (j.label || j.hero || '').replace(/\s*\n\s*/g, ' ')));
-    row.appendChild(soText(document.createElement('span'), [j.top, j.date, j.loc].filter(Boolean).join(' · ')));
+    row.appendChild(soText(document.createElement('span'), j.tplName || j.template));
     const edit = soText(document.createElement('button'), 'Edit'); edit.title = 'Move this post back into the form';
-    edit.onclick = () => { Object.assign(SO, j); SO.batch.splice(i, 1); saveSO(); renderSocial(); };
-    const del = soText(document.createElement('button'), '✕'); del.title = 'Remove from the batch';
+    edit.onclick = () => { const tt = tplById(j.tplId); if (tt) { SO.tplId = tt.id; SO.values[tt.id] = Object.assign({}, j.fields); SO.name = j.name || ''; } SO.batch.splice(i, 1); saveSO(); renderSocial(); };
+    const del = soText(document.createElement('button'), '\u2715'); del.title = 'Remove from the batch';
     del.onclick = () => { SO.batch.splice(i, 1); saveSO(); renderSocial(); };
     row.appendChild(edit); row.appendChild(del); list.appendChild(row);
   });
   $('#sClearBatch').disabled = !SO.batch.length;
   soLabel();
 }
+$('#tFolder').onchange = e => { SO.folderId = e.target.value; const first = CAT_FLAT.find(x => x.folderId === SO.folderId); if (first) SO.tplId = first.id; saveSO(); renderSocial(); };
+$('#sName').addEventListener('input', e => { SO.name = e.target.value; saveSO(); soLabel(); });
+
+// A job: what the host needs to fill one comp. Generic templates send fields + types; the event template also
+// sends top/hero/date/loc so the event pipeline (line split, glass clearance) keeps working unchanged.
+function soJob() {
+  const t = tpl(); if (!t) return null;
+  const fields = {}, types = {};
+  t.fields.forEach(f => { fields[f.layer || f.name] = fieldVal(t, f); types[f.layer || f.name] = f.type || 'text'; });
+  const first = t.fields.length ? String(fieldVal(t, t.fields[0])) : t.name;
+  const job = { tplId: t.id, tplName: t.name, template: t.comp, kind: t.kind || 'generic', name: SO.name.trim(), label: first.replace(/\s*\n\s*/g, ' '), fields, types };
+  if (t.kind === 'event') { const v = tplVals(t); job.top = (v['Top line'] || '').trim(); job.hero = (v['Event name'] || '').trim(); job.date = (v['Date chip'] || '').trim(); job.loc = (v['Location chip'] || '').trim(); job.label = job.hero.replace(/\s*\n\s*/g, ' '); }
+  return job;
+}
+const soFormFilled = () => { const t = tpl(); if (!t) return false; if (!t.fields.length) return true; if (t.kind === 'event') return !!(tplVals(t)['Event name'] || '').trim(); return t.fields.some(f => f.type === 'text' && String(fieldVal(t, f)).trim()); };
 // Render takes the batch plus the post in the form, if the form has an event name
-const soJobs = () => SO.batch.concat(SO.hero.trim() ? [soJob()] : []);
+const soJobs = () => SO.batch.concat(soFormFilled() ? [soJob()] : []);
 function soLabel() {
   const n = Math.max(1, soJobs().length), files = n * soCount();
   $('#sGo').textContent = `Render ${n === 1 ? 'this post' : n + ' posts'}: ${files} file${files === 1 ? '' : 's'}`;
 }
-Object.keys(SO_FIELDS).forEach(id => $('#' + id).addEventListener('input', e => { SO[SO_FIELDS[id]] = e.target.value; saveSO(); soLabel(); }));
 $('#sLight').onchange = e => { SO.light = e.target.checked; saveSO(); renderSocial(); };
 $('#sDark').onchange = e => { SO.dark = e.target.checked; saveSO(); renderSocial(); };
 $('#sClear').onchange = e => { SO.clear = e.target.checked; saveSO(); };
@@ -1216,8 +1287,8 @@ $('#sDrop').onchange = e => { SO.minDrop = Math.max(0, Math.min(600, Math.round(
 $('#sChoose').onclick = () => bridge.run('chooseFolder', { title: 'Choose where the social posts are saved' }, 'Opens a folder picker in After Effects.', (k, body) => { if (k === 'PATH') { SO.folder = body; saveSO(); renderSocial(); status('Folder set.', 'ok'); } });
 $('#sFolder').title = 'Right-click to go back to the default'; $('#sFolder').addEventListener('contextmenu', e => { e.preventDefault(); SO.folder = ''; saveSO(); renderSocial(); });
 $('#sAdd').onclick = () => {
-  const j = soJob(); if (!j.hero) { status('Fill in the event name first.', 'warn'); return; }
-  SO.batch.push(j); Object.assign(SO, { top: '', hero: '', date: '', loc: '', name: '' }); saveSO(); renderSocial();
+  if (!soFormFilled()) { status('Fill in the template first.', 'warn'); return; }
+  const j = soJob(); SO.batch.push(j); SO.values[j.tplId] = {}; SO.name = ''; saveSO(); renderSocial();
   status(`Added. ${SO.batch.length} in the batch.`, 'ok');
 };
 $('#sClearBatch').onclick = () => { SO.batch = []; saveSO(); renderSocial(); };
@@ -1241,8 +1312,9 @@ function soShow(r) {
   else status(r.failed ? `Rendered ${r.made.length} of ${r.total}, then stopped. See the notes.` : `Rendered ${r.made.length} file${r.made.length === 1 ? '' : 's'} to ${r.folder.split('/').pop()}. The comp is back as it was.`, r.failed ? 'warn' : 'ok');
 }
 function soRun(what) {
-  const jobs = what === 'render' ? soJobs() : [soJob()];
-  if (!jobs.length || !jobs[0].hero) { status('Fill in the event name first.', 'warn'); return; }
+  const jobs = what === 'render' ? soJobs() : (soFormFilled() ? [soJob()] : []);
+  if (!jobs.length) { status('Fill in the template first.', 'warn'); return; }
+  if (what !== 'render' && tpl().kind !== 'event') { status('Preview and Apply work on the event template for now. Use Send to Media Encoder.', 'warn'); return; }
   if (!soCount()) { status('Tick Light, Dark or both.', 'warn'); return; }
   const say = what === 'render' ? `Renders ${jobs.length * soCount()} file${jobs.length * soCount() === 1 ? '' : 's'} from the social-asset comp and puts the comp back`
     : what === 'preview' ? 'Saves a still of each version and shows it here' : 'Puts this post into the social-asset comp as one undo step';
@@ -1251,28 +1323,25 @@ function soRun(what) {
     try { soShow(JSON.parse(body)); } catch (e) { status('After Effects answered, but the panel could not read it.', 'warn'); }
   });
 }
-$('#sTpl').onchange = e => { SO.template = e.target.value; saveSO(); };
-$('#sTplChoose').onclick = () => bridge.run('chooseFile', { title: 'Choose the social template project (.aep)' }, 'Opens a file picker in After Effects.', (k, body) => { if (k === 'PATH') { SO.templateFile = body; SO.templates = []; SO.template = ''; saveSO(); renderSocial(); status('Template project set. Press Scan to list its comps.', 'ok'); } });
-$('#sTplBuiltin').onclick = () => { SO.templateFile = ''; SO.templates = []; SO.template = ''; saveSO(); renderSocial(); status('Using the bundled template project.', 'ok'); };
+$('#sTplChoose').onclick = () => bridge.run('chooseFile', { title: 'Choose the social template project (.aep)' }, 'Opens a file picker in After Effects.', (k, body) => { if (k === 'PATH') { SO.templateFile = body; SO.templates = []; saveSO(); renderSocial(); status('Template project set. Press Scan to list its comps.', 'ok'); } });
+$('#sTplBuiltin').onclick = () => { SO.templateFile = ''; SO.templates = []; saveSO(); renderSocial(); status('Using the bundled template project.', 'ok'); };
 $('#sScan').onclick = () => bridge.run('socialScan', { root: EXT_ROOT, templateFile: SO.templateFile }, 'Lists the template comps in the bundled project.', (k, body) => {
   if (k !== 'SOCIAL') return;
-  try { const r = JSON.parse(body); SO.templates = r.templates || []; if (!SO.templates.includes(SO.template)) SO.template = SO.templates[0] || ''; saveSO(); renderSocial(); status(SO.templates.length ? `${SO.templates.length} template comp${SO.templates.length === 1 ? '' : 's'} found. Your project is back.` : 'No template comps found in that project.', SO.templates.length ? 'ok' : 'warn'); } catch (e) {}
+  try { const r = JSON.parse(body); SO.templates = r.templates || []; saveSO(); renderSocial(); status(SO.templates.length ? `${SO.templates.length} template comp${SO.templates.length === 1 ? '' : 's'} found. Your project is back.` : 'No template comps found in that project.', SO.templates.length ? 'ok' : 'warn'); } catch (e) {}
 });
 $('#sAME').onclick = () => {
   const jobs = soJobs();
-  if (!jobs.length || !jobs[0].hero) { status('Fill in the event name first.', 'warn'); return; }
+  if (!jobs.length) { status('Fill in the template first.', 'warn'); return; }
   if (!soCount()) { status('Tick Light, Dark or both.', 'warn'); return; }
   const n = jobs.length * soCount();
-  bridge.run('socialAME', { root: EXT_ROOT, templateFile: SO.templateFile, template: SO.template, jobs, light: SO.light, dark: SO.dark, clear: SO.clear, minDrop: SO.minDrop, folder: SO.folder },
+  bridge.run('socialAME', { root: EXT_ROOT, templateFile: SO.templateFile, template: jobs[0].template, jobs, light: SO.light, dark: SO.dark, clear: SO.clear, minDrop: SO.minDrop, folder: SO.folder },
     `Hands ${n} file${n === 1 ? '' : 's'} to Media Encoder and reopens your project`, (k, body) => {
       if (k !== 'SOCIAL') return;
-      try { const r = JSON.parse(body); if (r.templates) { SO.templates = r.templates; SO.template = r.template || SO.template; saveSO(); renderSocial(); } soShow(r); notionAfterAME(jobs, r); } catch (e) { status('After Effects answered, but the panel could not read it.', 'warn'); }
+      try { const r = JSON.parse(body); if (r.templates) { SO.templates = r.templates; saveSO(); renderSocial(); } soShow(r); notionAfterAME(jobs, r); } catch (e) { status('After Effects answered, but the panel could not read it.', 'warn'); }
     });
 };
 /* ---------- Notion: Social posts database. Calls go through the panel's Node layer because api.notion.com
    refuses browser-origin requests. The token lives in a file under the user's Library, never in the repo. ---------- */
-// Notion "Template" option → comp name in assets/social-templates.aep. Unlisted options are used as the comp name as-is.
-const TEMPLATE_COMP = { 'Event post': 'social-asset', 'Quote post': 'quote-post' };
 const NOTION = {
   dataSource: '41dcaf6b-fadc-81cb-8c96-000bbbbbfd8d',                   // "Social posts" under Motion System
   dbUrl: 'https://app.notion.com/p/41dcaf6bfadc8135a40df95667d3018d',
@@ -1344,19 +1413,24 @@ $('#nPull').onclick = async () => {
     const rows = await NOTION.ready();
     if (!rows.length) { nState('Nothing marked Ready in Social posts.'); return; }
     let added = 0;
-    const miss = [];
+    const miss = [], unknown = [];
     rows.forEach(r => {
       if (SO.batch.some(b => b.notion === r.id)) return;
-      const f = r.fields, hero = f.Heading || f.Hero || r.title;
-      if (!Object.keys(f).length) miss.push(r.title);
-      SO.batch.push({ name: r.name, top: f['Top line'] || '', hero, date: f['Date chip'] || '', loc: f['Location chip'] || '', template: TEMPLATE_COMP[r.template] || r.template, fields: f, notion: r.id, label: r.title });
-      added++;
+      const t = tplByNotion(r.template); if (!t) { unknown.push(r.title + ' (' + r.template + ')'); return; }
+      const f = r.fields; if (!Object.keys(f).length && t.fields.length) miss.push(r.title);
+      const fields = {}, types = {};
+      t.fields.forEach(x => { const k = x.layer || x.name; const v = f[x.name] !== undefined ? f[x.name] : f[k]; fields[k] = v !== undefined ? v : (x.default !== undefined ? x.default : ''); types[k] = x.type || 'text'; });
+      const job = { tplId: t.id, tplName: t.name, template: t.comp, kind: t.kind || 'generic', name: r.name, label: r.title, fields, types, notion: r.id };
+      if (t.kind === 'event') { job.top = f['Top line'] || ''; job.hero = f.Heading || f['Event name'] || r.title; job.date = f['Date chip'] || ''; job.loc = f['Location chip'] || ''; }
+      SO.batch.push(job); added++;
     });
+    if (unknown.length) nState(`No template called: ${unknown.join(', ')} — add it to assets/templates.json or fix the row's Template.`, 'warn');
     if (miss.length) nState(`No fields found in: ${miss.join(', ')} — the page body needs a ### heading per field.`, 'warn');
+    else if (unknown.length) {}
     const anyLight = rows.some(r => r.light), anyDark = rows.some(r => r.dark);
     if (anyLight || anyDark) { SO.light = anyLight; SO.dark = anyDark; }
     saveSO(); renderSocial();
-    if (!miss.length) nState(`${added} added to the batch (${rows.length} Ready). Light/Dark set from the rows.`, 'ok');
+    if (!miss.length && !unknown.length) nState(`${added} added to the batch (${rows.length} Ready). Light/Dark set from the rows.`, 'ok');
   } catch (e) { nState(e.message, 'warn'); }
 };
 // after a Media Encoder hand-off: write back to the rows that came from Notion
@@ -1374,6 +1448,11 @@ async function notionAfterAME(jobs, r) {
   // rows that went out are done: drop them from the batch
   SO.batch = SO.batch.filter(b => !b.notion); saveSO(); renderSocial();
 }
+$('#sInsert').onclick = () => {
+  if (!soFormFilled()) { status('Fill in the template first.', 'warn'); return; }
+  const j = soJob();
+  bridge.run('socialInsert', { root: EXT_ROOT, templateFile: SO.templateFile, jobs: [j], light: SO.light, dark: SO.dark, clear: SO.clear, minDrop: SO.minDrop }, `Adds ${j.tplName} to the open comp as a precomp`);
+};
 $('#sPreview').onclick = () => soRun('preview');
 $('#sApply').onclick = () => soRun('apply');
 $('#sGo').onclick = () => soRun('render');

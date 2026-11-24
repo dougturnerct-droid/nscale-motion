@@ -58,7 +58,7 @@ nscale-motion/
 ├─ jsx/host.jsx            runs inside After Effects — every tool, dispatcher nsm_run at the end
 ├─ library/index.html      the motion library, shown in the Library tab
 ├─ scripts/*.jsx           the two Premiere template builders, run from the Text tab
-├─ assets/                 shipped with the AE panel: social-templates.aep (+ its footage)
+├─ assets/                 shipped with the AE panel: templates.aep (+ its footage)
 ├─ premiere/               the Premiere Pro extension, packaged separately
 │  ├─ CSXS/manifest.xml    Premiere bundle, host PPRO 22+
 │  ├─ ppro/index.html      the panel, draws itself from templates.json
@@ -141,7 +141,7 @@ This panel has about three years before it needs a UXP port.
 
 ## Social: the template project
 
-`assets/social-templates.aep` ships inside the After Effects panel. Any comp in it with a
+`assets/templates.aep` ships inside the After Effects panel. Any comp in it with a
 `Theme · controls` layer (with the `Dark mode` checkbox) and a `Heading` text layer is offered
 in the Social tab's Template picker. To change templates: edit the file, Collect Files into
 `assets/` so footage comes along, bump the AE version, changelog, release. Third-party effects
@@ -172,7 +172,7 @@ How a page maps to a comp:
 - Rows whose title starts with `TEMPLATE` are never rendered.
 
 Adding a post type: build the comp (text layers named as the fields; a `Theme · controls`
-layer with `Dark mode`), save into `assets/social-templates.aep`, add the option to the
+layer with `Dark mode`), save into `assets/templates.aep`, add the option to the
 Template select in Notion, make a page template for it (below), add the option → comp name to
 `TEMPLATE_COMP`, release.
 
