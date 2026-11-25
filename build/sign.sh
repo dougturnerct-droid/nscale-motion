@@ -103,7 +103,7 @@ AE_STAGE="$(mktemp -d)"
 trap 'rm -rf "$AE_STAGE"' EXIT
 for d in CSXS jsx library scripts; do [[ -d "$ROOT/$d" ]] || die "Missing folder: $d"; cp -R "$ROOT/$d" "$AE_STAGE/"; done
 # assets (template projects, footage). After Effects' Auto-Save folders are never shipped.
-if [[ -d "$ROOT/assets" ]]; then rsync -a --exclude 'Auto-Save' --exclude '*.aep_AME' --exclude '.DS_Store' "$ROOT/assets/" "$AE_STAGE/assets/"; fi
+if [[ -d "$ROOT/assets" ]]; then rsync -a --exclude 'Auto-Save' --exclude 'backgrounds' --exclude '*.aep_AME' --exclude '.DS_Store' "$ROOT/assets/" "$AE_STAGE/assets/"; fi
 for f in index.html bar.html; do [[ -f "$ROOT/$f" ]] || die "Missing file: $f"; cp "$ROOT/$f" "$AE_STAGE/"; done
 build_one "$AE_STAGE" nscale-motion
 

@@ -4,7 +4,7 @@
 // Static layout only. Motion comes next. Layer names are the future mogrt field names.
 
 (function () {
-    var W = 1080, H = 1080, FPS = 25, DUR = 6;
+    var W = 1080, H = 1080, FPS = 60, DUR = 6;
     var C = { blue: [15 / 255, 65 / 255, 243 / 255], midnight: [4 / 255, 14 / 255, 39 / 255], chalk: [253 / 255, 255 / 255, 248 / 255], mint: [0, 223 / 255, 153 / 255], white: [1, 1, 1] };
     var FONT_BLACK = "DMSans-Black", FONT_REG = "DMSans-Regular", FONT_MONO = "DMMono-Regular";
     // DM Sans vertical metrics (per em). Figma centres the glyph box (ascent+descent) in the line box, so the
@@ -29,6 +29,7 @@
         var L = comp.layers.addText(text); L.name = name;
         var tp = L.property("ADBE Text Properties").property("ADBE Text Document"), d = tp.value;
         try { d.font = font; } catch (e) {}
+        if (d.font !== font) { if (!$.global.__nsmFontWarned) $.global.__nsmFontWarned = {}; if (!$.global.__nsmFontWarned[font]) { $.global.__nsmFontWarned[font] = 1; alert("Font not installed: " + font + "\nLayer \u201c" + name + "\u201d is using " + d.font + ". Activate it (Adobe Fonts) and re-run."); } }
         d.fontSize = size; d.fillColor = col; d.applyFill = true; d.applyStroke = false;
         d.tracking = Math.round(trackingPct * 10);            // Figma -3% letter-spacing -> AE tracking -30 (1/1000 em)
         try { d.leading = lh * size; } catch (e2) {}            // Figma line-height factor -> AE leading in px

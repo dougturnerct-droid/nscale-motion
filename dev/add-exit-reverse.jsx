@@ -18,7 +18,7 @@
     function walk(g, fn) { for (var i = 1; i <= g.numProperties; i++) { var p = g.property(i); if (p.propertyType === PropertyType.PROPERTY) fn(p); else walk(p, fn); } }
     // effects whose keys are NOT part of the enter and must not be mirrored (one-way things: progress bars, pass wipes, counts)
     var NO_EXIT_EFFECTS = { "Progress": 1, "Pass": 1, "Count": 1 };
-    function inSkippedEffect(p) { try { var g = p.propertyGroup(1); return g && g.propertyGroup(1).matchName === "ADBE Effect Parade" && NO_EXIT_EFFECTS[g.name] === 1; } catch (e) { return false; } }
+    function inSkippedEffect(p) { try { var g = p.propertyGroup(1); return g && g.propertyGroup(1).matchName === "ADBE Effect Parade" && (NO_EXIT_EFFECTS[g.name] === 1 || /count$/i.test(g.name)); } catch (e) { return false; } }
     function separated(p) { try { return p.matchName === "ADBE Position" && p.dimensionsSeparated; } catch (e) { return false; } }   // X/Y/Z are mirrored instead
     function keyed(p) { return p.canVaryOverTime && p.numKeys >= 2 && p.matchName !== "ADBE Marker" && !inSkippedEffect(p) && !separated(p); }
     var problems = [];
