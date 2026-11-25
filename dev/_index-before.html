@@ -1,0 +1,1489 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Nscale Motion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+<style>
+/* page around the mockup follows the viewer's theme; the panel itself is always dark, like After Effects */
+:root{
+  --page:#DDE3EF; --page-text:#040E27; --page-muted:#3B404D;
+  --sans:'DM Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --mono:'DM Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  /* panel tokens, from the Nscale design system */
+  --base:#040E27; --s1:#081634; --s2:#0C1D44; --s3:#12285A; --line:#1E2D55; --line2:#2A3B68;
+  --text:#FDFFF8; --muted:#C0C3C9; --dim:#828793; --signal:#0F41F3; --signal2:#3F68FF; --mint:#00DF99;
+  --c-enter:#3FD08A; --c-exit:#F06B5B; --c-move:#6E8DFF; --c-line:#F2C94C; --c-settle:#3CCFE0; --c-prop:#FF9A3C;
+  --hi:inset 0 1px 0 rgba(255,255,255,.06); --drop:0 10px 30px rgba(0,0,0,.45);
+  color-scheme:light;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ --page:#0B1020; --page-text:#FDFFF8; --page-muted:#C0C3C9; color-scheme:dark; } }
+:root[data-theme="dark"]{ --page:#0B1020; --page-text:#FDFFF8; --page-muted:#C0C3C9; color-scheme:dark; }
+*,*::before,*::after{box-sizing:inherit}
+html,body{height:100%}body{margin:0;background:#040E27;color:var(--text);font-family:var(--sans);overflow:hidden}
+.stagewrap{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:40px;max-width:1180px;margin:0 auto;padding:40px clamp(16px,4vw,40px) 60px;align-items:start}
+@media (max-width:960px){.stagewrap{grid-template-columns:1fr}}
+.intro h1{font-weight:500;font-size:clamp(28px,4vw,40px);letter-spacing:-.02em;margin:0 0 10px}
+.intro p{color:var(--page-muted);max-width:56ch;line-height:1.55;margin:0 0 12px}
+.intro ul{color:var(--page-muted);line-height:1.6;padding-left:18px}
+
+/* ---------------- the panel ---------------- */
+.panel{width:100%;height:100vh;background:var(--base);color:var(--text);display:flex;flex-direction:column;overflow:hidden;font-size:13px;user-select:none}
+.tabs{display:flex;gap:4px;padding:8px;background:var(--s1);border-bottom:1px solid var(--line);box-shadow:var(--hi)}
+.tab{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;height:36px;border-radius:9px;border:0;background:transparent;color:var(--dim);font:500 12.5px var(--sans);cursor:pointer}
+.tab svg{width:17px;height:17px}
+.tab:hover{color:var(--muted);background:rgba(255,255,255,.03)}
+.tab[aria-selected="true"]{background:var(--s3);color:var(--text);box-shadow:var(--hi),0 2px 8px rgba(0,0,0,.35)}
+.tab[aria-selected="true"] svg{color:var(--signal2)}
+.body{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+.body::-webkit-scrollbar{width:8px}.body::-webkit-scrollbar-thumb{background:var(--line2);border-radius:8px}
+.card{background:linear-gradient(180deg,var(--s2),var(--s1));border:1px solid var(--line);border-radius:12px;box-shadow:var(--hi),0 6px 18px rgba(0,0,0,.25);padding:12px}
+.label{font:500 10.5px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}
+.seg{display:flex;background:var(--base);border:1px solid var(--line);border-radius:9px;padding:3px;gap:3px}
+.seg button{flex:1;height:30px;border:0;border-radius:7px;background:transparent;color:var(--muted);font:500 12.5px var(--sans);cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05}
+.seg button small{font:400 10px var(--mono);color:var(--dim)}
+.seg button:hover{background:rgba(255,255,255,.04)}
+.seg button[aria-pressed="true"]{background:var(--s3);color:var(--text);box-shadow:var(--hi),0 2px 6px rgba(0,0,0,.35)}
+.seg button[aria-pressed="true"] small{color:var(--muted)}
+.seg.steps button{height:40px}
+.seg.beats button{height:30px;flex-direction:row;gap:4px;font-size:12px}
+.seg.beats button small{font-size:9.5px}
+.beatlabel{font:500 10.5px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin:12px 0 6px}
+.beatlabel span{text-transform:none;letter-spacing:0;font-weight:400;margin-left:4px}
+.seg.signal button[aria-pressed="true"]{background:var(--signal);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 2px 10px rgba(15,65,243,.45)}
+/* curve editor */
+.curvehead{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px}
+.curvehead .t{font:500 15px var(--sans)}
+.curvehead .role{font:500 10.5px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+.edited{display:inline-flex;align-items:center;gap:6px;margin-top:4px;font:400 11px var(--mono);color:var(--mint)}
+.edited[hidden]{display:none}
+.iconbtn{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--s1);color:var(--muted);display:grid;place-items:center;cursor:pointer;box-shadow:var(--hi)}
+.iconbtn:hover{color:var(--text);border-color:var(--line2)}
+.iconbtn svg{width:15px;height:15px}
+.iconbtn[aria-pressed="true"]{color:var(--mint);border-color:rgba(0,223,153,.4)}
+.editor{position:relative;background:var(--base);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.editor svg{display:block;width:100%;height:auto;touch-action:none}
+.vals{display:grid;grid-template-columns:repeat(4,1fr) auto;gap:6px;margin-top:8px;align-items:center}
+.vals input{width:100%;height:28px;border-radius:7px;border:1px solid var(--line);background:var(--base);color:var(--text);font:400 12px var(--mono);text-align:center}
+.vals input:disabled{color:var(--muted);opacity:.75}
+.btn{height:30px;padding:0 12px;border-radius:8px;border:1px solid var(--line);background:var(--s2);color:var(--text);font:500 12px var(--sans);cursor:pointer;box-shadow:var(--hi);display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap}
+.btn:hover{border-color:var(--line2);background:var(--s3)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn svg{width:14px;height:14px}
+.btn.primary{background:var(--signal);border-color:transparent;box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 6px 18px rgba(15,65,243,.4);height:40px;font-size:13.5px}
+.btn.primary:hover{background:var(--signal2)}
+/* curve list */
+.clist{display:flex;flex-direction:column;gap:3px}
+.crow{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;padding:6px 8px;border-radius:9px;border:1px solid transparent;background:transparent;color:var(--text);cursor:pointer;text-align:left;font:inherit}
+.crow:hover{background:rgba(255,255,255,.03)}
+.crow[aria-pressed="true"]{background:var(--s3);border-color:var(--line2);box-shadow:var(--hi)}
+.crow .ic{width:44px;height:26px;border-radius:6px;background:var(--base);border:1px solid var(--line);position:relative;overflow:hidden}
+.crow .ic i{position:absolute;left:0;top:0;bottom:0;width:3px}
+.crow .ic svg{width:100%;height:100%;display:block}
+.crow .n{font:500 12.5px var(--sans);display:flex;gap:6px;align-items:baseline;flex-wrap:wrap}
+.crow .n em{font:400 10.5px var(--sans);font-style:normal;color:var(--dim);letter-spacing:.04em;text-transform:uppercase}
+.crow .v{font:400 10.5px var(--mono);color:var(--dim)}
+.crow .dot{width:6px;height:6px;border-radius:50%;background:var(--mint);display:inline-block;margin-left:4px}
+.disclose{display:flex;align-items:center;gap:6px;background:none;border:0;color:var(--dim);font:500 11px var(--sans);letter-spacing:.06em;text-transform:uppercase;cursor:pointer;padding:6px 8px}
+.disclose svg{width:12px;height:12px;transition:transform .15s}
+.disclose[aria-expanded="true"] svg{transform:rotate(90deg)}
+.row{display:flex;gap:6px;flex-wrap:wrap}
+.row .btn{flex:1}
+.btn small{font:400 10.5px var(--mono);color:var(--dim)}
+.toggles{display:flex;flex-direction:column;gap:8px}
+.sw{display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--muted);font-size:12.5px;cursor:pointer}
+.sw input{appearance:none;width:34px;height:20px;border-radius:20px;background:var(--line2);position:relative;cursor:pointer;flex:none;transition:background .15s}
+.sw input::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--text);transition:transform .15s;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.sw input:checked{background:var(--signal)}
+.sw input:checked::after{transform:translateX(14px)}
+.legend{display:flex;flex-wrap:wrap;gap:10px;font:400 10.5px var(--sans);color:var(--dim)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:8px;height:8px;border-radius:2px;display:inline-block}
+/* stagger */
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{height:28px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--base);color:var(--muted);font:500 12px var(--sans);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--s3);color:var(--text);border-color:var(--line2);box-shadow:var(--hi)}
+.preview{background:var(--base);border:1px solid var(--line);border-radius:10px;padding:10px}
+.preview svg{width:100%;height:auto;display:block}
+/* send */
+.path{display:flex;gap:8px;align-items:center}
+.path code{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:400 11.5px var(--mono);color:var(--muted);background:var(--base);border:1px solid var(--line);border-radius:7px;padding:6px 8px}
+.field{width:100%;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--base);color:var(--text);font:400 13px var(--sans);padding:0 10px}
+textarea.field{height:110px;padding:8px 10px;resize:vertical;line-height:1.45}
+.opt{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:9px 10px;border-radius:9px;border:1px solid var(--line);background:var(--base);cursor:pointer}
+.opt+.opt{margin-top:6px}
+.opt b{font:500 12.5px var(--sans);display:block}
+.opt small{color:var(--dim);font-size:11px}
+.opt input[type=checkbox]{appearance:none;width:18px;height:18px;border-radius:5px;border:1px solid var(--line2);background:var(--s1);display:grid;place-items:center;cursor:pointer}
+.opt input[type=checkbox]:checked{background:var(--signal);border-color:var(--signal)}
+.opt input[type=checkbox]:checked::after{content:"";width:9px;height:5px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(1px,-1px)}
+.mini{display:flex;gap:3px}
+.mini button{height:24px;min-width:30px;border-radius:6px;border:1px solid var(--line);background:var(--s1);color:var(--muted);font:400 11px var(--mono);cursor:pointer}
+.mini button[aria-pressed="true"]{background:var(--s3);color:var(--text);border-color:var(--line2)}
+.hist{display:flex;flex-direction:column;gap:4px}
+.hist div{display:flex;justify-content:space-between;font:400 11.5px var(--mono);color:var(--muted);padding:6px 8px;border-radius:7px;background:var(--base);border:1px solid var(--line)}
+.hist div span:last-child{color:var(--dim)}
+/* status */
+.actrow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.actrow .runbtn{width:auto}
+.actrow{align-items:stretch}
+.actrow>.btn{min-width:0;overflow:hidden;height:auto;min-height:54px;padding:12px 14px;border-radius:8px;justify-content:flex-start;gap:12px;font-size:12px}
+.sendtop{height:auto;padding:12px 14px;justify-content:flex-start;gap:12px;text-align:left}
+.sendtop svg{width:16px;height:16px;flex:none}
+.sendtop span{display:flex;flex-direction:column;line-height:1.3;min-width:0}
+.sendtop b{font:500 13.5px var(--sans)}
+.sendtop small{font:400 11px var(--sans);opacity:.8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:330px){.actrow{grid-template-columns:1fr}}
+.runbtn{width:100%;height:auto;padding:12px 14px;justify-content:flex-start;gap:12px;text-align:left;background:linear-gradient(180deg,var(--s3),var(--s2));border-color:var(--line2);box-shadow:var(--hi),0 6px 18px rgba(0,0,0,.3)}
+.runbtn:hover{border-color:var(--signal2)}
+.runbtn svg{width:16px;height:16px;flex:none;color:var(--mint)}
+.runbtn span{display:flex;flex-direction:column;line-height:1.3;min-width:0}
+.runbtn b{font:500 13.5px var(--sans)}
+.runbtn small{font:400 11px var(--sans);color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.flabel{font:400 11px var(--sans);color:var(--dim);margin:0 0 4px}
+.status{display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--s1);border-top:1px solid var(--line);font:400 11.5px var(--sans);color:var(--muted);min-height:38px}
+.status i{width:7px;height:7px;border-radius:50%;background:var(--dim);flex:none}
+.status.ok i{background:var(--mint);box-shadow:0 0 8px var(--mint)}
+.status.warn i{background:var(--c-prop)}
+.status .ghost+.ghost{margin-left:4px}
+.status span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.ghost{flex:none;background:none;border:0;padding:2px 0;color:var(--dim);font:500 11.5px var(--sans);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line2);cursor:pointer}
+.ghost:hover{color:var(--text);text-decoration-color:var(--signal2)}
+.panel{position:relative}
+.loader{position:absolute;inset:0;z-index:5;background:var(--base);display:grid;place-items:center;transition:opacity .3s ease}
+.loader.done{opacity:0;pointer-events:none}
+.loader svg{width:78%;height:auto}
+@media (prefers-reduced-motion: reduce){.loader{display:none}}
+:focus-visible{outline:2px solid var(--signal2);outline-offset:2px}
+/* quick tools: null and cloner, always in reach */
+.quick{display:flex;gap:6px;padding:8px 8px 0;background:var(--base)}
+.qbtn{flex:1;height:34px;border-radius:9px;border:1px solid var(--line);background:linear-gradient(180deg,var(--s2),var(--s1));color:var(--text);font:500 12.5px var(--sans);display:flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;box-shadow:var(--hi)}
+.qbtn:hover{border-color:var(--line2);background:var(--s3)}
+.qbtn svg{width:16px;height:16px;color:var(--signal2);flex:none}
+.quick .iconbtn{width:34px;height:34px;flex:none}
+.qopts{margin:8px 8px 0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--s1);display:flex;flex-direction:column;gap:8px}
+.qopts .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.qopts .grid3 label{display:flex;flex-direction:column;gap:3px;font:400 10.5px var(--sans);color:var(--dim)}
+.qopts .grid3 input{width:100%;height:28px;border-radius:7px;border:1px solid var(--line);background:var(--base);color:var(--text);font:400 12px var(--mono);text-align:center}
+.qopts .sub{font:500 10.5px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+.qopts .seg button{height:26px;font-size:11.5px}
+/* library tab: the motion library page fills the tab */
+.body.lib{padding:0;gap:0}
+.libbar{display:flex;align-items:center;gap:12px;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--s1);font:500 12px var(--sans);color:var(--muted)}
+.libbar span{flex:1}
+.libframe{flex:1;width:100%;border:0;background:#030A1E;min-height:0}
+@media (max-width:380px){.tab span{display:none}}
+/* ---------- 2.3: home, toolkit, sheets, notes, render ---------- */
+.hint{text-transform:none;letter-spacing:0;font-weight:400;color:var(--dim)}
+.hint b{font-weight:500;color:var(--muted)}
+.homehead{display:flex;justify-content:flex-end}
+.seg.small{padding:2px;border-radius:8px}
+.seg.small button{height:24px;font-size:11.5px;padding:0 10px;flex:none}
+.boxes{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+.boxes.six{grid-template-columns:repeat(6,minmax(0,1fr))}
+.box{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:7px 4px 6px;min-height:58px;border-radius:9px;border:1px solid var(--line);background:var(--base);color:var(--text);cursor:pointer;font:500 11px var(--sans);text-align:center;min-width:0}
+.box:hover{border-color:var(--line2);background:var(--s1)}
+.box[aria-pressed="true"]{background:var(--s3);border-color:var(--line2);box-shadow:var(--hi),0 2px 6px rgba(0,0,0,.35)}
+.box svg{width:100%;max-width:46px;height:26px;display:block}
+.box em{font:400 9.5px var(--sans);font-style:normal;color:var(--dim);letter-spacing:.04em;text-transform:uppercase}
+.box span{line-height:1.15;max-width:100%;overflow-wrap:anywhere}
+.box i{position:absolute;left:6px;right:6px;top:0;height:2px;border-radius:0 0 2px 2px}
+.box.step{min-height:46px;font:600 13px var(--sans)}
+.box.step small{font:400 10px var(--mono);color:var(--dim)}
+.box.step[aria-pressed="true"] small{color:var(--muted)}
+.tools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.tool{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:linear-gradient(180deg,var(--s2),var(--s1));color:var(--text);cursor:pointer;box-shadow:var(--hi);font:500 12.5px var(--sans);text-align:left;min-width:0}
+.tool:hover{border-color:var(--line2);background:var(--s3)}
+.tool svg{width:18px;height:18px;flex:none;color:var(--signal2)}
+.tool span{display:flex;flex-direction:column;min-width:0;line-height:1.2}
+.tool small{font:400 10.5px var(--sans);color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:400px){.tools{grid-template-columns:repeat(2,minmax(0,1fr))}.boxes{grid-template-columns:repeat(3,minmax(0,1fr))}.boxes.six{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* sheets: tool windows over the panel */
+.scrim{position:absolute;inset:0;background:rgba(2,6,18,.6);z-index:8;opacity:0;transition:opacity 217ms cubic-bezier(.2,.8,.3,1)}
+.scrim.on{opacity:1}
+.sheet{position:absolute;left:8px;right:8px;bottom:8px;max-height:calc(100% - 60px);z-index:9;display:flex;flex-direction:column;background:linear-gradient(180deg,var(--s2),var(--s1));border:1px solid var(--line2);border-radius:14px;box-shadow:0 20px 50px rgba(0,0,0,.6),var(--hi);transform:translateY(24px);opacity:0;transition:transform 350ms cubic-bezier(.2,.8,.3,1),opacity 217ms cubic-bezier(.2,.8,.3,1)}
+.sheet.on{transform:none;opacity:1}
+.sheethead{display:flex;align-items:center;gap:10px;padding:12px 12px 8px}
+.sheethead svg.t{width:18px;height:18px;color:var(--signal2)}
+.sheethead b{flex:1;font:500 14px var(--sans)}
+.sheetbody{overflow:auto;padding:4px 12px 12px;display:flex;flex-direction:column;gap:10px}
+.sheetbody .card{padding:10px}
+@media (prefers-reduced-motion: reduce){.sheet,.scrim{transition:none}}
+.anchorpick{display:grid;grid-template-columns:repeat(3,1fr);gap:0;width:180px;height:120px;margin:14px auto 16px;border:1.5px dashed var(--line2);border-radius:6px;position:relative}
+.anchorpick button{border:0;background:none;cursor:pointer;display:grid;place-items:center;padding:0}
+.anchorpick button i{width:12px;height:12px;border-radius:50%;border:2px solid var(--muted);background:var(--base);transition:transform 133ms cubic-bezier(.2,.8,.3,1)}
+.anchorpick button:hover i{border-color:var(--signal2);background:var(--signal2);transform:scale(1.25)}
+.anchorpick button[aria-pressed="true"] i{border-color:var(--mint);background:var(--mint)}
+.anchorpick button:nth-child(1){place-items:start start}.anchorpick button:nth-child(2){place-items:start center}.anchorpick button:nth-child(3){place-items:start end}
+.anchorpick button:nth-child(4){place-items:center start}.anchorpick button:nth-child(6){place-items:center end}
+.anchorpick button:nth-child(7){place-items:end start}.anchorpick button:nth-child(8){place-items:end center}.anchorpick button:nth-child(9){place-items:end end}
+.anchorpick button i{margin:-7px}
+.corners{display:grid;grid-template-columns:1fr 1fr;gap:4px;width:96px;height:64px;padding:4px;border:1px solid var(--line2);border-radius:6px;background:var(--base)}
+.corners button{border:1px solid var(--line);border-radius:4px;background:var(--s1);cursor:pointer}
+.corners button[aria-pressed="true"]{background:var(--signal);border-color:var(--signal)}
+.inline{display:flex;gap:10px;align-items:center;justify-content:space-between}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px}
+.checks label{display:flex;align-items:center;gap:7px;font:400 12px var(--sans);color:var(--muted);cursor:pointer}
+.checks input{appearance:none;width:16px;height:16px;border-radius:4px;border:1px solid var(--line2);background:var(--s1);display:grid;place-items:center;cursor:pointer;flex:none;margin:0}
+.checks input:checked{background:var(--signal);border-color:var(--signal)}
+.checks input:checked::after{content:"";width:8px;height:4px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(1px,-1px)}
+.tokens{display:flex;flex-direction:column;gap:4px}
+.tok{display:grid;grid-template-columns:1fr 92px 92px;gap:6px;align-items:center}
+.tok.head{font:500 10px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+.tok .nm{font:500 12px var(--sans);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sw2{display:flex;align-items:center;gap:5px;height:28px;border:1px solid var(--line);border-radius:7px;background:var(--base);padding:0 6px}
+.sw2 i{width:14px;height:14px;border-radius:4px;flex:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.15)}
+.sw2 input{width:100%;min-width:0;border:0;background:none;color:var(--text);font:400 11px var(--mono);padding:0;outline:none;text-transform:uppercase}
+.empty{font:400 12px var(--sans);color:var(--dim);padding:8px 2px;line-height:1.45}
+textarea.field.tall{height:180px}
+.sfields{display:flex;flex-direction:column;gap:10px}.sfields .two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:end}
+textarea.field.short{height:62px;resize:none}
+.pxin{display:flex;align-items:center;gap:6px;flex:none;color:var(--dim)}.sw .pxin input.field{appearance:auto;width:64px;height:28px;border-radius:7px;background:var(--base);padding:0 6px;text-align:right}.sw .pxin input.field::after{content:none}
+.sprev{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.sprev figure{margin:0}.sprev img{display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:1px solid var(--line);background:var(--base)}.sprev figcaption{font:400 11px var(--sans);color:var(--dim);margin-top:4px}
+.snotes{margin:0;padding-left:16px;color:var(--muted);font-size:12px;line-height:1.5}
+.tbrowse{display:flex;flex-direction:column;gap:8px}
+.tlist{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.tlist button{height:40px;padding:0 10px;border-radius:9px;border:1px solid var(--line);background:var(--base);color:var(--text);font:500 12.5px var(--sans);cursor:pointer;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tlist button[aria-pressed="true"]{border-color:var(--signal2);background:var(--s3);box-shadow:var(--hi)}
+.tlist button.soon{color:var(--dim)}
+.tlist button.soon::after{content:" · not built";font-weight:400}
+.sfields .fnum{display:flex;align-items:center;gap:8px}.sfields .fnum input[type=range]{flex:1;accent-color:var(--signal)}.sfields .fnum output{font:400 12px var(--mono);color:var(--muted);min-width:34px;text-align:right}
+.sbatch{display:flex;flex-direction:column;gap:6px}.sbatch .empty{color:var(--dim);font-size:12px}
+.sbatch .item{display:flex;align-items:center;gap:8px;background:var(--base);border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-width:0}
+.sbatch .item b{font-weight:500;color:var(--text);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sbatch .item span{flex:1;min-width:0;color:var(--dim);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sbatch .item button{flex:none;border:0;background:transparent;color:var(--dim);cursor:pointer;font-size:12px;padding:2px 4px}.sbatch .item button:hover{color:var(--text)}
+.meta{font:400 10.5px var(--mono);color:var(--dim);margin-top:6px}
+.presets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.preset{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:9px 10px;border-radius:9px;border:1px solid var(--line);background:var(--base);color:var(--text);cursor:pointer;text-align:left;font:500 12.5px var(--sans);min-width:0}
+.preset small{font:400 10.5px var(--sans);color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.preset:hover{border-color:var(--line2)}
+.preset[aria-pressed="true"]{background:var(--s3);border-color:var(--signal2);box-shadow:var(--hi)}
+.preset .x{position:absolute;top:4px;right:6px;border:0;background:none;color:var(--dim);cursor:pointer;font:400 13px var(--sans);padding:0 2px}
+.preset .x:hover{color:var(--c-exit)}
+select.field{appearance:none;background:var(--base) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23828793' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 10px center;padding-right:28px}
+.readinfo{display:flex;gap:8px;align-items:center;margin-top:8px;padding:7px 9px;border-radius:8px;background:var(--base);border:1px dashed var(--line2);font:400 11px var(--mono);color:var(--muted)}
+.readinfo span{flex:1;min-width:0;line-height:1.4}
+.readinfo b{font-weight:500;color:var(--text)}
+.tab{gap:5px;font-size:12px;padding:0 4px;min-width:0}.tab svg{width:15px;height:15px;flex:none}
+@media (max-width:400px){.tab span{display:none}}
+@media (max-width:560px){.tab span{display:none}.tab[aria-selected="true"] span{display:inline}.tab[aria-selected="true"]{flex:1.8}}
+@media (max-width:330px){.tab[aria-selected="true"] span{display:none}.tab[aria-selected="true"]{flex:1}}
+[hidden]{display:none!important}
+
+/* update notice: shown above the status bar when version.json on GitHub is newer than this panel */
+.update{display:none;align-items:center;gap:10px;padding:8px 12px;background:var(--s2);border-top:1px solid var(--line);font:500 12px var(--sans);color:var(--text)}
+.update[data-on]{display:flex}
+.update span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.update small{color:var(--dim);font-weight:400}
+.update button{height:28px;padding:0 10px;border-radius:7px;border:1px solid var(--line2);background:var(--signal);color:#fff;font:500 12px var(--sans);cursor:pointer;white-space:nowrap}
+.update button.quiet{background:transparent;color:var(--dim);border-color:transparent}
+</style>
+</head>
+<body>
+  <section class="panel" aria-label="Nscale Motion panel">
+    <div class="loader" id="loader" aria-hidden="true"><svg id="loaderSvg" viewBox="30 300 750 180"></svg></div>
+    <nav class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" data-tab="home"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="6" height="6" rx="1.2"/><rect x="11" y="3" width="6" height="6" rx="1.2"/><rect x="3" y="11" width="6" height="6" rx="1.2"/><rect x="11" y="11" width="6" height="6" rx="1.2"/></svg><span>Home</span></button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="timing"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 16C7 16 8 4 17 4"/><circle cx="3" cy="16" r="1.6" fill="currentColor"/><circle cx="17" cy="4" r="1.6" fill="currentColor"/></svg><span>Timing</span></button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="text"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 5V3.5h12V5M10 3.5v13M7.5 16.5h5"/></svg><span>Text</span></button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="notes"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M5 3h7l3 3v11H5z"/><path d="M8 9h5M8 12h5M8 15h3"/></svg><span>Notes</span></button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="render"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="14" height="10" rx="1.5"/><path d="M8.5 8v4l3.5-2z" fill="currentColor"/></svg><span>Render</span></button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="social"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.5" y="3.5" width="13" height="13" rx="1.5"/><path d="M6.5 8h7M6.5 11h4.5"/><rect x="6.5" y="13" width="4" height="1.6" fill="currentColor" stroke="none"/></svg><span>Templates</span></button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="send"><svg viewBox="0 0 20 20" fill="currentColor" stroke="none" aria-hidden="true"><g transform="translate(10 10)"><path d="M-0.9 -8.2 L0.9 -8.2 L0.45 -1.2 L-0.45 -1.2 Z"/><path d="M-0.9 -8.2 L0.9 -8.2 L0.45 -1.2 L-0.45 -1.2 Z" transform="rotate(40)"/><path d="M-0.8 -7.2 L0.8 -7.2 L0.45 -1.2 L-0.45 -1.2 Z" transform="rotate(78)"/><path d="M-0.9 -8.2 L0.9 -8.2 L0.45 -1.2 L-0.45 -1.2 Z" transform="rotate(118)"/><path d="M-0.8 -7 L0.8 -7 L0.45 -1.2 L-0.45 -1.2 Z" transform="rotate(160)"/><path d="M-0.9 -8.2 L0.9 -8.2 L0.45 -1.2 L-0.45 -1.2 Z" transform="rotate(200)"/><path d="M-0.8 -7.4 L0.8 -7.4 L0.45 -1.2 L-0.45 -1.2 Z" transform="rotate(242)"/><path d="M-0.9 -8.2 L0.9 -8.2 L0.45 -1.2 L-0.45 -1.2 Z" transform="rotate(282)"/><path d="M-0.8 -7.1 L0.8 -7.1 L0.45 -1.2 L-0.45 -1.2 Z" transform="rotate(322)"/><circle r="1.6"/></g></svg><span>Send</span></button>
+      <button class="tab" role="tab" aria-selected="false" data-tab="library"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 3.5h3v13H4zM8.5 3.5h3v13h-3z"/><path d="M13 4.2l2.8-.7 2.6 12.6-2.8.7z"/></svg><span>Library</span></button>
+    </nav>
+
+    <!-- ===== Home ===== -->
+    <div class="body" id="tab-home">
+      <div class="homehead"><div class="seg signal small" role="group" aria-label="Moment"><button data-mode="productive">Productive</button><button data-mode="expressive">Expressive</button></div></div>
+      <div class="card"><div class="label">Curves <span class="hint">click applies · shift-click picks</span></div><div class="boxes" id="hCurves"></div></div>
+      <div class="card"><div class="label">Timings <span class="hint">click retimes with <b id="hCurveName"></b></span></div><div class="boxes six" id="hSteps"></div></div>
+      <div class="card"><div class="label">Toolkit <span class="hint">right-click or ⌘-click for options</span></div>
+        <div class="tools">
+          <button class="tool" id="tNull" title="A null at the centre of the selection, above it. Right-click for options."><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="12" height="12" rx="1"/><path d="M10 6v8M6 10h8"/></svg><span>Null<small id="tNullSub">parents</small></span></button>
+          <button class="tool" id="tAnchor" title="Anchor point to the centre. Right-click or ⌘-click to choose a corner or side."><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.5" y="3.5" width="13" height="13" rx="1" stroke-dasharray="2 2"/><circle cx="10" cy="10" r="2.4"/><path d="M10 5.5v2M10 12.5v2M5.5 10h2M12.5 10h2"/></svg><span>Anchor<small>centre</small></span></button>
+          <button class="tool" id="tClone" title="Copy, mirror or reverse the selected keyframes"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="7" height="7" rx="1"/><rect x="7" y="5" width="7" height="7" rx="1" opacity=".7"/><rect x="11" y="3" width="7" height="7" rx="1" opacity=".45"/></svg><span>Cloner<small id="tCloneSub">simple</small></span></button>
+          <button class="tool" id="tStagger" title="Offset the selected layers or keys by a step"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 5h6M6 10h7M9 15h8"/></svg><span>Stagger<small id="tStaggerSub">xs · selection</small></span></button>
+          <button class="tool" id="tReview" title="A small review box with the name, version and how things move"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="14" height="12" rx="1.5"/><rect x="10" y="11" width="5" height="3" rx=".5" fill="currentColor" stroke="none"/></svg><span>Review<small>review box</small></span></button>
+          <button class="tool" id="tMode" title="Light and dark modes for the design"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="10" r="6"/><path d="M10 4a6 6 0 0 1 0 12z" fill="currentColor"/></svg><span>Mode<small id="tModeSub">light / dark</small></span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Text moves: the house set ===== -->
+    <div class="body" id="tab-text" hidden>
+      <div class="card"><div class="label">Start <span class="hint">select text layers first</span></div>
+        <div class="seg small" role="group" aria-label="Start from" id="tmAt"><button data-at="playhead">Playhead</button><button data-at="inpoint">Layer in point</button></div>
+      </div>
+      <div class="card"><div class="label">Headline · by word <span class="hint">titles, social</span></div>
+        <div class="row"><button class="btn" data-tm="word" data-part="in">In<small> 89f</small></button><button class="btn" data-tm="word" data-part="out">Out<small> 34f</small></button></div></div>
+      <div class="card"><div class="label">Body copy · by line <span class="hint">paragraphs, lower thirds</span></div>
+        <div class="row"><button class="btn" data-tm="line" data-part="in">In<small> 144f</small></button><button class="btn" data-tm="line" data-part="out">Out<small> 55f</small></button></div></div>
+      <div class="card"><div class="label">Short line · rise by word <span class="hint">labels, captions</span></div>
+        <div class="row"><button class="btn" data-tm="rise" data-part="in">In<small> 55f</small></button></div></div>
+      <div class="card"><div class="label">Typing · with cursor <span class="hint">prompts, terminal lines</span></div>
+        <label class="sw" style="margin-bottom:10px">Add a cursor <input type="checkbox" id="tmCursor" checked></label>
+        <div class="row"><button class="btn" data-tm="type" data-part="in">Type<small> 150f</small></button></div></div>
+      <div class="card"><div class="label">Premiere templates <span class="hint">for Nscale Motion in Premiere</span></div>
+        <p class="hint" style="margin:0 0 10px">Rebuilds the .mogrt files from their comps, in five sizes (16:9, 16:9 4K, 1:1, 4:5, 9:16). Open the project that holds the comp first, then choose the shared Mogrts folder.</p>
+        <div class="row"><button class="btn" data-bundled="nscale_lower_third_to_mogrt.jsx" data-what="lower thirds">Build lower thirds…</button><button class="btn" data-bundled="nscale_title_to_mogrt.jsx" data-what="titles">Build titles…</button></div></div>
+      <p class="hint" style="margin:2px 2px 0">Timings are the agreed 60 fps frames, converted to the comp's frame rate. Applying a move again replaces that move's animators. Typing reads the text when you press it: press again after editing the text.</p>
+    </div>
+
+    <!-- ===== Timing & easing ===== -->
+    <div class="body" id="tab-timing" hidden>
+      <div class="seg signal" role="group" aria-label="Moment"><button data-mode="productive">Productive</button><button data-mode="expressive">Expressive</button></div>
+
+      <div class="card">
+        <div class="curvehead">
+          <div><div class="role" id="cRole"></div><div class="t" id="cName"></div><div class="edited" id="cEdited" hidden></div></div>
+          <div style="display:flex;gap:6px"><button class="iconbtn" id="readBtn" title="Read the curve on the selected keyframes"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/></svg></button><button class="iconbtn" id="lockBtn" aria-pressed="false" title="Unlock to edit"></button><button class="iconbtn" id="resetBtn" title="Return to default"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 8a5 5 0 1 0 1.5-3.6M3 2.5v2.5h2.5"/></svg></button></div>
+        </div>
+        <div class="editor"><svg id="ed" viewBox="0 0 400 230" role="img" aria-label="Curve editor"></svg></div>
+        <div class="vals"><input id="v0" aria-label="x1"><input id="v1" aria-label="y1"><input id="v2" aria-label="x2"><input id="v3" aria-label="y2"><button class="btn" id="copyBez" title="Copy as cubic-bezier">Copy</button></div>
+        <div class="readinfo" id="readInfo" hidden><span id="readTxt"></span><button class="ghost" id="readUse" title="Make this the selected curve's edit">Use</button><button class="ghost" id="readClear">Clear</button></div>
+      </div>
+
+      <div class="card">
+        <div class="label">Curves</div>
+        <div class="clist" id="clist"></div>
+        <button class="disclose" id="propToggle" aria-expanded="false"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 2l4 4-4 4"/></svg>Proposals · Mechanic</button>
+        <div class="clist" id="plist" hidden></div>
+      </div>
+
+      <div class="card">
+        <div class="label">Steps <span style="text-transform:none;letter-spacing:0">retime and ease in one press</span></div>
+        <div class="seg steps" id="steps" role="group" aria-label="Steps"></div>
+        <div class="beatlabel">Add beat <span>hold the selected key for a step</span></div>
+        <div class="seg beats" id="beats" role="group" aria-label="Add beat"></div>
+      </div>
+
+      <div class="card toggles">
+        <label class="sw">Snap to comp frames <input type="checkbox" id="snap" checked></label>
+        <label class="sw">Colour keyframes by curve type <input type="checkbox" id="colour" checked></label>
+        <div class="legend" id="legend"></div>
+      </div>
+    </div>
+
+    <!-- ===== Notes: saved inside the project file ===== -->
+    <div class="body" id="tab-notes" hidden>
+      <div class="card"><div class="label"><span>This comp</span><span class="hint" id="nComp"></span></div>
+        <textarea class="field tall" id="nCompText" placeholder="Notes on this animation: what was decided, feedback, what to try next"></textarea>
+        <div class="meta" id="nCompMeta"></div></div>
+      <div class="card"><div class="label">Whole project</div>
+        <textarea class="field" id="nProjText" placeholder="Notes for everything in this project"></textarea>
+        <div class="meta" id="nProjMeta"></div></div>
+      <div class="card"><div class="label">Other comps with notes <span class="hint">click to open</span></div><div class="hist" id="nList"></div></div>
+      <div class="flabel">Saved inside the project file as you type. Save the project to keep them; anyone who opens the file sees them here.</div>
+    </div>
+
+    <!-- ===== Render ===== -->
+    <div class="body" id="tab-render" hidden>
+      <div class="card"><div class="label">Presets</div><div class="presets" id="rPresets"></div></div>
+      <div class="card toggles">
+        <div class="label" style="margin:0">Range</div><div class="seg" id="rRange"><button data-v="work">Work area</button><button data-v="comp">Whole comp</button></div>
+        <div class="label" style="margin:6px 0 0">Size</div><div class="seg" id="rRes"><button data-v="full">Full</button><button data-v="half">Half</button></div>
+        <label class="sw" style="margin-top:4px">Version the file name (_v01, _v02…) <input type="checkbox" id="rVer"></label>
+        <label class="sw">Render now (off: add to the Render Queue) <input type="checkbox" id="rNow"></label>
+        <label class="sw" title="The file plays the chosen range four times back to back. The name gets _loop4.">Loop export: play it 4 times <input type="checkbox" id="rLoop"></label>
+      </div>
+      <div class="card"><div class="label">Save to</div>
+        <div class="path"><code id="rFolder"></code><button class="btn" id="rChoose">Choose</button></div>
+        <div class="flabel" style="margin:6px 0">Not set: a Renders folder next to the project file</div>
+        <input class="field" id="rName" placeholder="File name (blank uses the comp name)" aria-label="File name">
+      </div>
+      <div class="card"><div class="label">Custom preset <span class="hint">any output template in your After Effects</span></div>
+        <div class="row"><select class="field" id="rTpl" style="flex:1"><option value="">Load templates first</option></select><button class="btn" id="rLoad">Load</button></div>
+        <div class="row" style="margin-top:6px"><input class="field" id="rPName" placeholder="Preset name" style="flex:1"><button class="btn" id="rSave">Save preset</button></div>
+      </div>
+      <button class="btn primary" id="rGo">Render</button>
+    </div>
+
+    <!-- ===== Event social ===== -->
+    <div class="body" id="tab-social" hidden>
+      <div class="card"><div class="label">Templates <span class="hint" id="tHint"></span></div>
+        <div class="tbrowse">
+          <select class="field" id="tFolder" aria-label="Folder"></select>
+          <div class="tlist" id="tList"></div>
+        </div>
+      </div>
+      <div class="card" id="tFormCard"><div class="label"><span id="tName">Template</span> <span class="hint" id="tComp"></span></div>
+        <div class="sfields" id="tFields"></div>
+        <div style="margin-top:8px"><div class="flabel">File name · blank uses the first field. _light and _dark are added</div><input class="field" id="sName" placeholder="gtc-dc" aria-label="File name"></div>
+      </div>
+      <div class="card toggles">
+        <label class="sw">Light version <input type="checkbox" id="sLight"></label>
+        <label class="sw">Dark version <input type="checkbox" id="sDark"></label>
+        <label class="sw" id="sClearRow" title="Looks at the glass element through the whole animation and lowers it until it is clear of the event name.">Keep the glass element clear of the event name <input type="checkbox" id="sClear"></label>
+        <label class="sw" id="sDropRow" title="Lowers the glass element by at least this much, whatever the check finds.">Lower the glass element by at least <span class="pxin"><input class="field" id="sDrop" type="number" min="0" max="600" step="10" aria-label="Minimum drop in pixels"> px</span></label>
+      </div>
+      <details class="card" style="padding:10px 12px"><summary class="flabel" style="cursor:pointer">Template project</summary>
+        <div class="path" style="margin-top:8px"><code id="sTplFile">Built-in template project</code><button class="btn" id="sTplChoose" title="Use another .aep instead of the bundled one">Choose</button><button class="btn" id="sTplBuiltin" title="Back to the bundled template project">Built-in</button><button class="btn" id="sScan" title="Opens the template project for a moment, lists which template comps exist, and reopens your project.">Scan</button></div>
+        <div class="flabel" id="sTplHint" style="margin:6px 0 0"></div>
+      </details>
+      <div class="card" id="sPrevCard" hidden><div class="label">Preview <span class="hint" id="sPrevHint"></span></div><div class="sprev" id="sPrev"></div></div>
+      <div class="card" id="sNotesCard" hidden><div class="label">From the last run</div><ul class="snotes" id="sNotes"></ul></div>
+      <button class="btn" id="sInsert" style="width:100%;margin-bottom:8px" title="Imports the template project once, duplicates this template comp, fills it, and adds it to the open comp at the playhead so you can sequence and animate the cards together.">Add to open comp</button>
+      <div class="row"><button class="btn" id="sPreview" title="Saves a still of each version at the moment the glass element comes closest to the event name. The comp is put back afterwards.">Preview stills</button><button class="btn" id="sApply" title="Leaves this post in the comp so you can adjust it by hand. One undo puts it back.">Apply to comp</button></div>
+      <div class="card"><div class="label">Notion <span class="hint" id="nHint">rows marked Ready in Social posts</span></div>
+        <div class="row"><button class="btn" id="nPull" title="Loads every row with Status = Ready into the batch">Pull Ready rows</button><button class="btn" id="nOpen" title="Opens the Social posts database">Open database</button></div>
+        <div class="flabel" id="nState" style="margin:6px 0 0"></div>
+        <details id="nSetup" style="margin-top:8px"><summary class="flabel" style="cursor:pointer">Connection</summary>
+          <div class="flabel" style="margin:6px 0 4px">Integration token · shared by Doug, paste once. Stored on this Mac only.</div>
+          <input class="field" id="nToken" type="password" placeholder="ntn_…" autocomplete="off">
+          <div class="row" style="margin-top:6px"><button class="btn" id="nSave">Save</button><button class="btn" id="nTest">Test</button></div>
+        </details>
+      </div>
+      <div class="card"><div class="label">Batch <span class="hint">Render takes these plus the form</span></div>
+        <div class="sbatch" id="sBatch"></div>
+        <div class="row" style="margin-top:8px"><button class="btn" id="sAdd">Add this post to the batch</button><button class="btn" id="sClearBatch">Empty the batch</button></div>
+      </div>
+      <div class="card"><div class="label">Save to</div>
+        <div class="path"><code id="sFolder"></code><button class="btn" id="sChoose">Choose</button></div>
+        <div class="flabel" style="margin:6px 0 0">Not set: Drive › Motion › motion finals › socials. H.264, work area.</div>
+      </div>
+      <button class="btn primary" id="sAME" title="Saves your project, fills the template in a temporary copy, hands each file to Media Encoder, reopens your project. After Effects is free while Media Encoder renders.">Send to Media Encoder</button>
+      <button class="btn" id="sGo" title="Renders in After Effects' own queue from the comp that is open in this project. After Effects is busy until it finishes.">Render here instead</button>
+    </div>
+
+    <!-- ===== Send to Claude ===== -->
+    <div class="body" id="tab-send" hidden>
+      <div class="actrow">
+        <button class="btn runbtn" id="runLatest" title="Runs the newest .jsx in your Scripts folder (or its subfolders). You'll see its name before it runs.">
+        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M6 4.5v11l9-5.5z"/></svg>
+        <span><b>Run latest script</b><small id="runHint">From your Scripts folder</small></span>
+      </button>
+        <button class="btn primary sendtop" id="sendBtn"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 10l14-6-5 14-2.5-5.5L3 10z"/></svg><span><b>Send to Claude</b><small>Notes and options below</small></span></button>
+      </div>
+      <div class="card"><div class="label">Notes for Claude</div><textarea class="field" id="notes" placeholder="What are you trying? What feels off?"></textarea></div>
+      <div class="card"><div class="label">Send</div>
+        <input class="field" id="sendName" placeholder="Name (blank uses the comp name)" style="margin-bottom:8px" aria-label="Name">
+        <label class="opt"><input type="checkbox" id="oSheet" checked><span><b>Contact sheet</b><small>PNG, frame numbers on every cell</small></span><span class="mini" id="sheetN"><button>8</button><button aria-pressed="true">12</button><button>16</button></span></label>
+        <label class="opt"><input type="checkbox" id="oJson" checked><span><b>Look and keyframes</b><small>JSON: styles, effects, eases, errors, your notes</small></span><span></span></label>
+        <label class="opt"><input type="checkbox" id="oMp4" checked><span><b>Draft render</b><small>Half resolution, H.264, work area</small></span><span></span></label>
+      </div>
+      <div class="card"><div class="label">Recent</div><div class="hist" id="hist"></div></div>
+      <div class="card"><div class="label">Folders</div>
+        <div class="flabel">Claude inbox</div>
+        <div class="path"><code id="inbox">Google Drive / Motion / Claude inbox</code><button class="btn" id="chooseInbox">Choose</button></div>
+        <div class="flabel" style="margin-top:10px">Scripts</div>
+        <div class="path"><code id="scriptsPath">Google Drive / Motion / Scripts</code><button class="btn" id="chooseScripts">Choose</button></div>
+      </div>
+    </div>
+
+    <!-- ===== Library ===== -->
+    <div class="body lib" id="tab-library" hidden>
+      <div class="libbar"><span>Motion library · offline copy</span><button class="ghost" id="libReload">Reload</button><button class="ghost" id="libOpen" title="The shared version on claude.ai, with the team's notes">Open shared</button></div>
+      <iframe class="libframe" id="libFrame" title="Nscale motion library"></iframe>
+    </div>
+
+
+    <!-- ===== Tool windows (sheets over the panel) ===== -->
+    <div class="scrim" id="scrim" hidden></div>
+
+    <div class="sheet" id="sheet-null" hidden role="dialog" aria-label="Null options">
+      <div class="sheethead"><svg class="t" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="4" width="12" height="12" rx="1"/><path d="M10 6v8M6 10h8"/></svg><b>Null</b><button class="iconbtn sclose" title="Close">✕</button></div>
+      <div class="sheetbody">
+        <div class="card toggles"><label class="sw">Parent the selected layers to it <input type="checkbox" id="nullParent"></label>
+          <div class="flabel" style="margin:0">Layers that already have a parent keep it.</div></div>
+        <button class="btn primary" id="nullGo">Make null</button>
+      </div>
+    </div>
+
+    <div class="sheet" id="sheet-anchor" hidden role="dialog" aria-label="Anchor point">
+      <div class="sheethead"><svg class="t" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.5" y="3.5" width="13" height="13" rx="1" stroke-dasharray="2 2"/><circle cx="10" cy="10" r="2.4"/></svg><b>Anchor point</b><button class="iconbtn sclose" title="Close">✕</button></div>
+      <div class="sheetbody">
+        <div class="card"><div class="label">Pick a point <span class="hint">on each selected layer's bounds</span></div>
+          <div class="anchorpick" id="anchorPick">
+            <button data-p="tl" title="Top left"><i></i></button><button data-p="t" title="Top middle"><i></i></button><button data-p="tr" title="Top right"><i></i></button>
+            <button data-p="l" title="Left middle"><i></i></button><button data-p="c" title="Centre"><i></i></button><button data-p="r" title="Right middle"><i></i></button>
+            <button data-p="bl" title="Bottom left"><i></i></button><button data-p="b" title="Bottom middle"><i></i></button><button data-p="br" title="Bottom right"><i></i></button>
+          </div>
+          <div class="flabel" style="margin:8px 0 0;text-align:center">The layer stays where it is; its position makes up the difference.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sheet" id="sheet-clone" hidden role="dialog" aria-label="Cloner">
+      <div class="sheethead"><svg class="t" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="7" height="7" rx="1"/><rect x="7" y="5" width="7" height="7" rx="1" opacity=".7"/><rect x="11" y="3" width="7" height="7" rx="1" opacity=".45"/></svg><b>Cloner</b><button class="iconbtn sclose" title="Close">✕</button></div>
+      <div class="sheetbody">
+        <div class="seg" id="cKind"><button data-v="simple">Simple</button><button data-v="mirror">Mirror</button><button data-v="reverse">Reverse</button></div>
+        <div class="flabel" style="margin:0 2px">Works on the selected keyframes, on any number of properties and layers.</div>
+        <div class="card toggles" id="cSimple">
+          <div class="label" style="margin:0">Put the copy</div><div class="seg" id="cPlace"><button data-v="after">After the selection</button><button data-v="playhead">At the playhead</button></div>
+          <div id="cGapWrap"><div class="label" style="margin:6px 0 6px">Gap before the copy</div><div class="qopts" style="margin:0;padding:0;border:0;background:none"><div class="seg" id="cStep"></div></div></div>
+        </div>
+        <div class="card toggles" id="cMirror" hidden>
+          <div class="label" style="margin:0">Plays the selected keys back to the start: there and back</div>
+          <div class="label" style="margin:6px 0 6px">Hold before the return</div><div class="qopts" style="margin:0;padding:0;border:0;background:none"><div class="seg" id="mStep"></div></div>
+        </div>
+        <div class="card toggles" id="cReverse" hidden>
+          <div class="label" style="margin:0">Flips the selected keys in place</div>
+          <div class="flabel" style="margin:0">Same start and end, order reversed, eases swapped so each move still eases the way it should.</div>
+        </div>
+        <button class="btn primary" id="cGo">Clone</button>
+      </div>
+    </div>
+
+    <div class="sheet" id="sheet-stagger" hidden role="dialog" aria-label="Stagger">
+      <div class="sheethead"><svg class="t" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 5h6M6 10h7M9 15h8"/></svg><b>Stagger</b><button class="iconbtn sclose" title="Close">✕</button></div>
+      <div class="sheetbody">
+        <div class="card"><div class="label">Step <span id="stMoment" class="hint"></span></div><div class="seg steps" id="stSteps"></div></div>
+        <div class="card"><div class="label">Order</div><div class="chips" id="stOrder"></div></div>
+        <div class="card"><div class="label">Spacing</div><div class="chips" id="stSpacing"></div>
+          <div class="preview" style="margin-top:10px"><svg id="stPrev" viewBox="0 0 380 150" role="img" aria-label="Stagger preview"></svg></div></div>
+        <div class="card toggles">
+          <div class="label" style="margin:0">Apply to</div><div class="seg" id="stApply"><button data-v="layers">Whole layers</button><button data-v="keys">Selected keyframes</button></div>
+          <div class="label" style="margin:6px 0 0">Start</div><div class="seg" id="stStart"><button data-v="first">First layer</button><button data-v="playhead">Playhead</button></div>
+          <label class="sw" style="margin-top:4px">Reverse order <input type="checkbox" id="stRev"></label>
+        </div>
+        <button class="btn primary" id="stGo">Stagger selected layers</button>
+      </div>
+    </div>
+
+    <div class="sheet" id="sheet-review" hidden role="dialog" aria-label="Review box">
+      <div class="sheethead"><svg class="t" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="14" height="12" rx="1.5"/><rect x="10" y="11" width="5" height="3" rx=".5" fill="currentColor" stroke="none"/></svg><b>Review box</b><button class="iconbtn sclose" title="Close">✕</button></div>
+      <div class="sheetbody">
+        <div class="card">
+          <div class="row"><input class="field" id="rvName" placeholder="Test name, e.g. line-move-draw" style="flex:2"><input class="field" id="rvVer" placeholder="v01" style="flex:1;min-width:0"><button class="btn" id="rvBump" title="Next version">+1</button></div>
+        </div>
+        <div class="card"><div class="label">Show</div>
+          <div class="checks" id="rvShow">
+            <label><input type="checkbox" data-k="name">Name</label><label><input type="checkbox" data-k="version">Version</label>
+            <label><input type="checkbox" data-k="comp">Comp name</label><label><input type="checkbox" data-k="date">Date</label>
+            <label><input type="checkbox" data-k="fps">Frame rate and length</label><label><input type="checkbox" data-k="details">How things move</label>
+          </div>
+          <div class="label" style="margin:10px 0 6px">Describe <span class="hint">what moves, how far, how long, token and curve</span></div>
+          <div class="seg" id="rvDetails"><button data-v="lines">Lines and marker</button><button data-v="selected">Selected layers</button><button data-v="all">All animated</button></div>
+        </div>
+        <div class="card inline">
+          <div><div class="label" style="margin-bottom:6px">Corner</div><div class="corners" id="rvCorner"><button data-v="tl" title="Top left"></button><button data-v="tr" title="Top right"></button><button data-v="bl" title="Bottom left"></button><button data-v="br" title="Bottom right"></button></div></div>
+          <div style="flex:1"><div class="label" style="margin-bottom:6px">Size</div><div class="seg" id="rvSize"><button data-v="9">S</button><button data-v="11">M</button><button data-v="14">L</button></div></div>
+        </div>
+        <div class="row"><button class="btn primary" id="rvGo" style="flex:2">Add or update box</button><button class="btn" id="rvRemove" style="flex:1;height:40px">Remove</button></div>
+        <div class="flabel" style="margin:0">In an exporter comp it reads whichever precomp is on screen. Different names per cut: add a layer marker on "Review meta" with the name as its comment.</div>
+      </div>
+    </div>
+
+    <div class="sheet" id="sheet-mode" hidden role="dialog" aria-label="Modes">
+      <div class="sheethead"><svg class="t" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="10" r="6"/><path d="M10 4a6 6 0 0 1 0 12z" fill="currentColor"/></svg><b>Modes</b><button class="iconbtn sclose" title="Close">✕</button></div>
+      <div class="sheetbody">
+        <div class="seg signal" id="mdMode"><button data-v="light">Light</button><button data-v="dark">Dark</button></div>
+        <label class="sw" style="padding:0 2px">Switch every comp in the project <input type="checkbox" id="mdAll"></label>
+        <div class="card"><div class="label"><span>Colours <span class="hint" id="mdComp"></span></span><button class="ghost" id="mdRefresh">Refresh</button></div>
+          <div class="tokens" id="mdTokens"></div></div>
+        <button class="btn primary" id="mdLink">Link colours on selected layers</button>
+        <div class="flabel" style="margin:0">Linking turns each colour on the selected layers (all layers if none are selected) into a colour with a light and a dark value, like a Figma variable. New colours start with the same value in both: set the dark one here.</div>
+      </div>
+    </div>
+
+<div class="update" id="updateBox"><span>Update available <small id="updateVer"></small></span><button id="updateCopy" title="Copies the install line; paste it into Terminal and restart">Copy install line</button><button class="quiet" id="updateNotes" title="Opens the change list on GitHub">What's new</button><button class="quiet" id="updateLater" title="Hide until next time">Later</button></div>
+    <footer class="status" id="status"><i></i><span id="statusTxt" role="status">Ready. Select keyframes, pick a curve, press a step.</span><button class="ghost" id="openBar" title="Open Nscale Bar, the compact toolbar">Bar</button><button class="ghost" id="feedback">Bugs / feature request</button></footer>
+  </section>
+
+<script>
+/* ---------- tokens: v1.0 ---------- */
+const STEPS = ['xs', 's', 'm', 'l', 'xl', 'xxl'];
+const FR = { productive: { xs: 3, s: 8, m: 13, l: 21, xl: 34, xxl: 55 }, expressive: { xs: 13, s: 21, m: 34, l: 55, xl: 89, xxl: 144 } };
+const CURVES = {
+  enter:  { role: 'Enter',  col: '--c-enter',  productive: ['Quick settle', [0.2, 0.8, 0.3, 1]],   expressive: ['Float', [0.3, 0.3, 0.15, 1]] },
+  exit:   { role: 'Exit',   col: '--c-exit',   productive: ['Reverse settle', [0.7, 0, 0.8, 0.2]], expressive: ['Reverse float', [0.85, 0, 0.7, 0.7]] },
+  move:   { role: 'Move',   col: '--c-move',   productive: ['Machined', [0.65, 0, 0.35, 1]],       expressive: ['Drift', [0.5, 0.13, 0.3, 1]] },
+  line:   { role: 'Line',   col: '--c-line',   productive: ['Hard stop', [0.55, 0, 0.9, 0.55]],    expressive: ['Momentum', [0.6, 0, 0.8, 0.5]] },
+  settle: { role: 'Settle', col: '--c-settle', productive: ['Carry settle', [0.33, 0.67, 0.67, 1]], expressive: ['Carry settle', [0.33, 0.67, 0.67, 1]] }
+};
+const PROPS = { mScale: ['Mechanic scale', [0.05, 0.1, 0.75, 0.3]], mPush: ['Mechanic push', [0.2, 0, 0.75, 0.15]], mEject: ['Mechanic eject', [0.3, 0.1, 0.8, 0.5]], mSnap: ['Mechanic snap', [0.6, 0.05, 0.9, 0.6]] };
+const LABEL_NAME = { enter: 'Green', exit: 'Red', move: 'Blue', line: 'Yellow', settle: 'Cyan', prop: 'Orange' };
+
+/* ---------- state (kept between sessions) ---------- */
+const SHARED = ['mode', 'curve', 'edits', 'showProps', 'st', 'q', 'snap', 'colour', 'step'];
+const store = { get(k, d) { try { const v = localStorage.getItem('nsm.' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('nsm.' + k, JSON.stringify(v)); } catch (e) {} if (SHARED.includes(k) && typeof schedulePush === 'function') schedulePush(); } };
+const S = { mode: store.get('mode', 'productive'), curve: store.get('curve', 'enter'), edits: store.get('edits', {}), locked: true, showProps: store.get('showProps', false),
+  st: Object.assign({ step: 'xs', order: 'Selection', spacing: 'Even', apply: 'layers', start: 'first', rev: false }, store.get('st', {})), sheet: 12, hist: store.get('hist', []) };
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = v => String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const isProp = id => !!PROPS[id];
+const def = id => isProp(id) ? { name: PROPS[id][0], bez: PROPS[id][1], role: 'Proposal', col: '--c-prop' } : { name: CURVES[id][S.mode][0], bez: CURVES[id][S.mode][1], role: CURVES[id].role, col: CURVES[id].col };
+const ek = id => S.mode + '.' + id;
+const bez = id => S.edits[ek(id)] || def(id).bez;
+const edited = id => !!S.edits[ek(id)];
+const f2 = v => String(+(+v).toFixed(2));
+const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function bezY(b, x) { const cx = 3 * b[0], bx = 3 * (b[2] - b[0]) - cx, ax = 1 - cx - bx, cy = 3 * b[1], by = 3 * (b[3] - b[1]) - cy, ay = 1 - cy - by; let t = x; for (let i = 0; i < 12; i++) { const e = ((ax * t + bx) * t + cx) * t - x, d = (3 * ax * t + 2 * bx) * t + cx; if (Math.abs(e) < 1e-6 || !d) break; t -= e / d; } t = Math.max(0, Math.min(1, t)); return ((ay * t + by) * t + cy) * t; }
+function status(msg, kind) { $('#statusTxt').textContent = msg; $('#status').className = 'status' + (kind ? ' ' + kind : ''); }
+
+/* The bridge: in After Effects this calls the panel's ExtendScript; here it describes what would happen. */
+const bridge = {
+  inAE: !!(window.__adobe_cep__),
+  run(action, payload, describe, done) {
+    if (!this.inAE) { status(describe, 'ok'); if (done) done(''); return; }
+    status('Working…');
+    window.__adobe_cep__.evalScript('nsm_run(' + JSON.stringify(action) + ',' + JSON.stringify(payload) + ')', res => {
+      res = String(res || '');
+      const kind = res.slice(0, res.indexOf(':')), body = res.slice(res.indexOf(':') + 1);
+      if (kind === 'WARN' || res === 'EvalScript error.') status(body || 'Something went wrong in After Effects.', 'warn');
+      else if (kind === 'STEP') { const [k, m] = body.split('|'); lastStep = k; store.set('step', k); renderSteps($('#steps'), k, applyStep); if (typeof renderHome === 'function') renderHome(); status(m, 'ok'); }
+      else if (!['PATH', 'SENT', 'THEME', 'NOTES', 'COMP', 'CURVE', 'TEMPLATES', 'SOCIAL'].includes(kind)) status(body, 'ok');
+      if (done) done(kind, body);
+    });
+  }
+};
+const LABEL_INDEX = { enter: 9, exit: 1, move: 8, line: 2, settle: 14, prop: 11 };
+const curvePayload = () => ({ mode: S.mode, bez: bez(S.curve), curveName: curveLabel(), snap: $('#snap').checked, colour: $('#colour').checked, label: LABEL_INDEX[isProp(S.curve) ? 'prop' : S.curve] });
+
+/* ---------- tabs ---------- */
+const TABS = ['home', 'timing', 'text', 'notes', 'render', 'social', 'send', 'library'];
+$$('.tab').forEach(t => t.onclick = () => {
+  const tab = t.dataset.tab;
+  $$('.tab').forEach(x => x.setAttribute('aria-selected', x === t));
+  TABS.forEach(id => { $('#tab-' + id).hidden = tab !== id; });
+  closeSheet(true);
+  if (tab === 'library' && !$('#libFrame').src) $('#libFrame').src = 'library/index.html';   // loads the first time the tab opens
+  if (tab === 'timing') readKeys(true);
+  if (tab === 'notes') { loadNotes(); startNotesPoll(); } else stopNotesPoll();
+  if (tab === 'render') renderRender();
+  if (tab === 'social') renderSocial();
+});
+
+/* ---------- text moves ---------- */
+const TM_NAME = { word: 'Headline · by word', line: 'Body copy · by line', rise: 'Short line · rise by word', type: 'Typing · with cursor' };
+let tmAt = store.get('tmAt', 'playhead');
+function renderTmAt() { $$('#tmAt [data-at]').forEach(b => b.setAttribute('aria-pressed', b.dataset.at === tmAt)); }
+$$('#tmAt [data-at]').forEach(b => b.onclick = () => { tmAt = b.dataset.at; store.set('tmAt', tmAt); renderTmAt(); });
+$('#tmCursor').checked = store.get('tmCursor', true);
+$('#tmCursor').onchange = () => store.set('tmCursor', $('#tmCursor').checked);
+renderTmAt();
+$$('[data-bundled]').forEach(b => b.onclick = () => bridge.run('runBundled', { name: b.dataset.bundled }, `Builds the ${b.dataset.what} templates in five sizes and exports them to a folder you choose`));
+$$('[data-tm]').forEach(b => b.onclick = () => {
+  const id = b.dataset.tm, part = b.dataset.part, cursor = $('#tmCursor').checked;
+  bridge.run('textMove', { id, part, at: tmAt, cursor }, `${TM_NAME[id]}${id === 'type' ? (cursor ? ' with cursor' : '') : ' ' + part} added from the ${tmAt === 'inpoint' ? 'layer in point' : 'playhead'}`);
+});
+
+/* ---------- moment ---------- */
+$$('[data-mode]').forEach(b => b.onclick = () => { S.mode = b.dataset.mode; store.set('mode', S.mode); render(); status(`Moment: ${S.mode === 'productive' ? 'Productive' : 'Expressive'}`); });
+
+/* ---------- curve editor ---------- */
+const ED = { x0: 40, x1: 360, y0: 190, y1: 40 };
+const X = u => ED.x0 + (ED.x1 - ED.x0) * u, Y = v => ED.y0 + (ED.y1 - ED.y0) * v;
+function drawEditor() {
+  const b = bez(S.curve), col = css(def(S.curve).col);
+  let p = '', ghost = '';
+  for (let i = 0; i <= 64; i++) { const u = i / 64; p += (i ? 'L' : 'M') + X(u).toFixed(1) + ' ' + Y(bezY(b, u)).toFixed(1); }
+  if (edited(S.curve)) { const o = def(S.curve).bez; for (let i = 0; i <= 64; i++) { const u = i / 64; ghost += (i ? 'L' : 'M') + X(u).toFixed(1) + ' ' + Y(bezY(o, u)).toFixed(1); } }
+  let rp = ''; if (S.read) for (let i = 0; i <= 64; i++) { const u = i / 64; rp += (i ? 'L' : 'M') + X(u).toFixed(1) + ' ' + Y(bezY(S.read.bez, u)).toFixed(1); }
+  let grid = ''; for (let i = 1; i < 4; i++) { grid += `<line x1="${X(i / 4)}" y1="${ED.y1}" x2="${X(i / 4)}" y2="${ED.y0}" stroke="#14244A"/><line x1="${ED.x0}" y1="${Y(i / 4)}" x2="${ED.x1}" y2="${Y(i / 4)}" stroke="#14244A"/>`; }
+  const h = S.locked ? '#5B6A8E' : '#FDFFF8';
+  $('#ed').innerHTML = `<defs><linearGradient id="glow" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="${col}" stop-opacity="0"/><stop offset="1" stop-color="${col}" stop-opacity=".18"/></linearGradient></defs>
+    <rect x="${ED.x0}" y="${ED.y1}" width="${ED.x1 - ED.x0}" height="${ED.y0 - ED.y1}" fill="none" stroke="#1E2D55"/>${grid}
+    <path d="${p} L${ED.x1} ${ED.y0} L${ED.x0} ${ED.y0} Z" fill="url(#glow)"/>
+    ${ghost ? `<path d="${ghost}" fill="none" stroke="#5B6A8E" stroke-width="1.5" stroke-dasharray="4 4"/>` : ''}
+    ${rp ? `<path d="${rp}" fill="none" stroke="#FDFFF8" stroke-width="2" stroke-dasharray="1 5" stroke-linecap="round"/>` : ''}
+    <line x1="${X(0)}" y1="${Y(0)}" x2="${X(b[0])}" y2="${Y(b[1])}" stroke="${h}" stroke-opacity=".5"/>
+    <line x1="${X(1)}" y1="${Y(1)}" x2="${X(b[2])}" y2="${Y(b[3])}" stroke="${h}" stroke-opacity=".5"/>
+    <path d="${p}" fill="none" stroke="${col}" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="${X(0)}" cy="${Y(0)}" r="3.5" fill="#FDFFF8"/><circle cx="${X(1)}" cy="${Y(1)}" r="3.5" fill="#FDFFF8"/>
+    <circle class="h" data-h="0" cx="${X(b[0])}" cy="${Y(b[1])}" r="${S.locked ? 5 : 7}" fill="${S.locked ? '#5B6A8E' : col}" stroke="#040E27" stroke-width="2" style="cursor:${S.locked ? 'default' : 'grab'}"/>
+    <circle class="h" data-h="1" cx="${X(b[2])}" cy="${Y(b[3])}" r="${S.locked ? 5 : 7}" fill="${S.locked ? '#5B6A8E' : col}" stroke="#040E27" stroke-width="2" style="cursor:${S.locked ? 'default' : 'grab'}"/>
+    <text x="${ED.x0}" y="${ED.y0 + 24}" fill="#828793" font-family="DM Mono, monospace" font-size="11">time</text>
+    <text x="${ED.x0 - 8}" y="${ED.y1 - 12}" fill="#828793" font-family="DM Mono, monospace" font-size="11">value</text>`;
+}
+let drag = -1;
+const edPt = e => { const m = $('#ed').getScreenCTM(); const q = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse()); return [(q.x - ED.x0) / (ED.x1 - ED.x0), (q.y - ED.y0) / (ED.y1 - ED.y0)]; };
+$('#ed').addEventListener('pointerdown', e => { if (S.locked) { status('Curve is locked. Unlock it to edit.', 'warn'); return; } const b = bez(S.curve), [u, v] = edPt(e); drag = Math.hypot(u - b[0], v - b[1]) < Math.hypot(u - b[2], v - b[3]) ? 0 : 1; $('#ed').setPointerCapture(e.pointerId); });
+$('#ed').addEventListener('pointermove', e => { if (drag < 0) return; const b = bez(S.curve).slice(), [u, v] = edPt(e); b[drag * 2] = Math.round(Math.max(0, Math.min(1, u)) * 100) / 100; b[drag * 2 + 1] = Math.round(Math.max(-0.5, Math.min(1.5, v)) * 100) / 100; setEdit(b); });
+$('#ed').addEventListener('pointerup', () => { drag = -1; });
+function setEdit(b) { const o = def(S.curve).bez; if (b.every((v, i) => Math.abs(v - o[i]) < 0.005)) delete S.edits[ek(S.curve)]; else S.edits[ek(S.curve)] = b; store.set('edits', S.edits); render(); }
+[0, 1, 2, 3].forEach(i => { const inp = $('#v' + i); inp.onchange = () => { const n = parseFloat(inp.value); if (isNaN(n)) return render(); const b = bez(S.curve).slice(); b[i] = i % 2 ? n : Math.max(0, Math.min(1, n)); setEdit(b); }; });
+const LOCK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3.5" y="7" width="9" height="6.5" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2"/></svg>';
+const UNLOCK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3.5" y="7" width="9" height="6.5" rx="1.5"/><path d="M5.5 7V5a2.5 2.5 0 0 1 4.9-.7"/></svg>';
+$('#lockBtn').onclick = () => { S.locked = !S.locked; render(); status(S.locked ? 'Curve locked.' : 'Curve unlocked: drag the handles or type values.'); };
+$('#resetBtn').onclick = () => { delete S.edits[ek(S.curve)]; store.set('edits', S.edits); render(); status(`${def(S.curve).name} returned to default.`, 'ok'); };
+$('#copyBez').onclick = async () => { const t = `cubic-bezier(${bez(S.curve).map(f2).join(', ')})`; try { await navigator.clipboard.writeText(t); status('Copied ' + t, 'ok'); } catch (e) { status(t); } };
+
+/* ---------- curve list ---------- */
+function icon(b, colVar) {
+  let p = ''; for (let i = 0; i <= 20; i++) { const u = i / 20; p += (i ? 'L' : 'M') + (8 + 32 * u).toFixed(1) + ' ' + (22 - 18 * bezY(b, u)).toFixed(1); }
+  return `<i style="background:var(${colVar})"></i><svg viewBox="0 0 44 26"><path d="${p}" fill="none" stroke="var(${colVar})" stroke-width="1.8" stroke-linecap="round"/></svg>`;
+}
+function listHTML(ids) {
+  return ids.map(id => { const d = def(id); return `<button class="crow" data-c="${id}" aria-pressed="${id === S.curve}"><span class="ic">${icon(bez(id), d.col)}</span>
+    <span class="n">${d.name}${edited(id) ? '<span class="dot" title="Edited"></span>' : ''} <em>${d.role}</em></span><span class="v">${bez(id).map(f2).join(' ')}</span></button>`; }).join('');
+}
+function pick(id) { S.curve = id; store.set('curve', id); render(); }
+
+/* ---------- steps and cycling ---------- */
+function renderSteps(el, active, onPick) {
+  el.innerHTML = STEPS.map(k => `<button data-k="${k}" aria-pressed="${k === active}">${k}<small>${FR[S.mode][k]}f</small></button>`).join('');
+  el.querySelectorAll('button').forEach(b => b.onclick = () => onPick(b.dataset.k));
+}
+let lastStep = store.get('step', 'l');
+function curveLabel() { return def(S.curve).name + (edited(S.curve) ? ' (edited)' : ''); }
+function renderBeats() {
+  const el = $('#beats');
+  el.innerHTML = STEPS.map(k => `<button data-k="${k}" title="Hold the selected key for ${FR[S.mode][k]} frames; later keys move along">+${k}<small>${FR[S.mode][k]}f</small></button>`).join('');
+  el.querySelectorAll('button').forEach(b => b.onclick = () => bridge.run('beat', { step: b.dataset.k, mode: S.mode }, `Beat ${b.dataset.k} ${FR[S.mode][b.dataset.k]}f added at the selected keys`));
+}
+function applyStep(k) { lastStep = k; store.set('step', k); renderSteps($('#steps'), k, applyStep); if (typeof renderHome === 'function') renderHome(); bridge.run('step', Object.assign({ step: k }, curvePayload()), `Retimed to ${k} ${FR[S.mode][k]}f · ${curveLabel()}`); }
+function cycle(d) { const ids = Object.keys(CURVES).concat(S.showProps ? Object.keys(PROPS) : []), i = ids.indexOf(S.curve); pick(ids[(i + d + ids.length) % ids.length]); bridge.run('curve', curvePayload(), `Curve: ${curveLabel()} applied to the selected keys`); }
+$('#propToggle').onclick = () => { S.showProps = !S.showProps; store.set('showProps', S.showProps); render(); };
+
+/* ---------- render timing tab ---------- */
+function render() {
+  $$('[data-mode]').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === S.mode));
+  const d = def(S.curve), b = bez(S.curve);
+  $('#cRole').textContent = d.role + (isProp(S.curve) ? ' · not in v1.0' : '');
+  $('#cName').textContent = d.name;
+  $('#cEdited').hidden = !edited(S.curve); $('#cEdited').textContent = `Edited · was ${d.bez.map(f2).join(', ')}`;
+  $('#lockBtn').innerHTML = S.locked ? LOCK : UNLOCK; $('#lockBtn').setAttribute('aria-pressed', !S.locked); $('#lockBtn').title = S.locked ? 'Unlock to edit' : 'Lock';
+  $('#resetBtn').disabled = !edited(S.curve); $('#resetBtn').style.opacity = edited(S.curve) ? 1 : .4;
+  [0, 1, 2, 3].forEach(i => { $('#v' + i).value = f2(b[i]); $('#v' + i).disabled = S.locked; });
+  drawEditor();
+  $('#clist').innerHTML = listHTML(Object.keys(CURVES)); $('#plist').innerHTML = listHTML(Object.keys(PROPS)); $('#plist').hidden = !S.showProps; $('#propToggle').setAttribute('aria-expanded', S.showProps);
+  $$('.crow').forEach(r => r.onclick = () => pick(r.dataset.c));
+  renderSteps($('#steps'), lastStep, applyStep);
+  renderBeats();
+  $('#legend').innerHTML = Object.keys(CURVES).map(k => `<span><i style="background:var(${CURVES[k].col})"></i>${CURVES[k].role}</span>`).join('') + `<span><i style="background:var(--c-prop)"></i>Proposal</span>`;
+  $('#stMoment').textContent = S.mode === 'productive' ? 'Productive' : 'Expressive';
+  if (typeof renderQ === 'function' && $('#cStep')) try { renderQ(); } catch (e) {}
+  if (!$('#sheet-stagger').hidden) drawStagger();
+  renderHome();
+}
+
+/* ---------- stagger ---------- */
+const ORDERS = ['Selection', 'Layer stack', 'Left to right', 'Right to left', 'Centre out'], SPACINGS = ['Even', 'Eased', 'Growing'];
+function chipGroup(el, items, key) { el.innerHTML = items.map(v => `<button class="chip" aria-pressed="${S.st[key] === v}">${v}</button>`).join(''); el.querySelectorAll('.chip').forEach((b, i) => b.onclick = () => { S.st[key] = items[i]; store.set('st', S.st); drawStagger(); }); }
+function segGroup(el, key) { el.querySelectorAll('button').forEach(b => { b.setAttribute('aria-pressed', S.st[key] === b.dataset.v); b.onclick = () => { S.st[key] = b.dataset.v; store.set('st', S.st); drawStagger(); }; }); }
+function offsets(n) {
+  const step = FR[S.mode][S.st.step], out = [0];
+  if (S.st.spacing === 'Growing') { let k = STEPS.indexOf(S.st.step); for (let i = 1; i < n; i++) out.push(out[i - 1] + FR[S.mode][STEPS[Math.min(5, k + i - 1)]]); }
+  else if (S.st.spacing === 'Eased') { const b = bez(S.curve); for (let i = 1; i < n; i++) out.push(Math.round(step * (n - 1) * bezY(b, i / (n - 1)))); }
+  else for (let i = 1; i < n; i++) out.push(step * i);
+  return out;
+}
+function drawStagger() {
+  renderSteps($('#stSteps'), S.st.step, k => { S.st.step = k; store.set('st', S.st); drawStagger(); });
+  chipGroup($('#stOrder'), ORDERS, 'order'); chipGroup($('#stSpacing'), SPACINGS, 'spacing'); segGroup($('#stApply'), 'apply'); segGroup($('#stStart'), 'start'); $('#stRev').checked = S.st.rev;
+  const n = 6, off = offsets(n), max = Math.max(...off) + FR[S.mode].l, sx = 300 / max; let s = '';
+  off.forEach((o, i) => { const y = 14 + i * 21; s += `<rect x="${60 + o * sx}" y="${y}" width="${FR[S.mode].l * sx}" height="13" rx="3" fill="#12285A" stroke="#2A3B68"/><rect x="${60 + o * sx}" y="${y}" width="3" height="13" rx="1.5" fill="#3F68FF"/><text x="8" y="${y + 10}" fill="#828793" font-family="DM Mono, monospace" font-size="10">${S.st.rev ? 'L' + (n - i) : 'L' + (i + 1)}  +${o}f</text>`; });
+  $('#stPrev').innerHTML = s;
+  if (typeof renderHome === 'function') renderHome();
+}
+$('#stRev').onchange = e => { S.st.rev = e.target.checked; store.set('st', S.st); drawStagger(); };
+$('#stGo').onclick = () => { closeSheet(); bridge.run('stagger', Object.assign({}, S.st, { mode: S.mode, bez: bez(S.curve) }), `Would stagger selected layers: ${S.st.step} ${FR[S.mode][S.st.step]}f · ${S.st.order.toLowerCase()} · ${S.st.spacing.toLowerCase()} · ${S.st.apply === 'layers' ? 'whole layers' : 'selected keyframes'}`); };
+
+/* ---------- send ---------- */
+$$('#sheetN button').forEach(b => b.onclick = e => { e.preventDefault(); S.sheet = +b.textContent; $$('#sheetN button').forEach(x => x.setAttribute('aria-pressed', x === b)); });
+S.inbox = store.get('inbox', ''); S.scripts = store.get('scripts', '');
+function showScripts() { $('#scriptsPath').textContent = S.scripts || 'Choose the Drive folder: Motion / Scripts'; $('#runHint').textContent = S.scripts ? 'Pick from the newest five' : 'Set the folder under Folders'; }
+showScripts();
+$('#chooseScripts').onclick = () => bridge.run('chooseScripts', {}, 'Opens a folder picker in After Effects.', (kind, body) => { if (kind === 'PATH') { S.scripts = body; store.set('scripts', body); showScripts(); status('Scripts folder set.', 'ok'); } });
+$('#runLatest').onclick = () => { if (!S.scripts && bridge.inAE) { status('Choose the Scripts folder first.', 'warn'); return; } bridge.run('runLatest', { folder: S.scripts }, 'Runs the newest script from the Scripts folder'); };
+function showInbox() { $('#inbox').textContent = S.inbox || 'Choose the Drive folder: Motion / Claude inbox'; }
+showInbox();
+$('#chooseInbox').onclick = () => bridge.run('chooseInbox', {}, 'Opens a folder picker in After Effects.', (kind, body) => { if (kind === 'PATH') { S.inbox = body; store.set('inbox', body); showInbox(); status('Inbox set.', 'ok'); } });
+function renderHist() { $('#hist').innerHTML = S.hist.length ? S.hist.slice(-4).reverse().map(h => `<div><span>${h.name}</span><span>${h.what}</span></div>`).join('') : '<div><span>Nothing sent yet</span><span></span></div>'; }
+$('#sendBtn').onclick = () => {
+  if (!S.inbox) { status('Choose the inbox folder first.', 'warn'); return; }
+  const payload = { inbox: S.inbox, name: $('#sendName').value.trim(), sheet: $('#oSheet').checked ? S.sheet : 0, json: $('#oJson').checked, mp4: $('#oMp4').checked, notes: $('#notes').value, mode: S.mode, edits: S.edits };
+  $('#sendBtn').disabled = true; status('Sending… After Effects is rendering, this takes a few seconds.');
+  bridge.run('send', payload, 'Send', (kind, body) => {
+    $('#sendBtn').disabled = false;
+    if (kind !== 'SENT') return;
+    const [name, what, problems] = body.split('|');
+    S.hist.push({ name, what: what || 'nothing' }); store.set('hist', S.hist); renderHist();
+    status(`Sent ${name}${what ? ': ' + what : ''}${problems ? ' · ' + problems : ''}`, problems ? 'warn' : 'ok');
+  });
+};
+
+/* ---------- quick tools: null and cloner ---------- */
+const Q = Object.assign({ parent: true, step: '' }, store.get('q', {}));
+function renderQ() {
+  $('#nullParent').checked = Q.parent;
+  const el = $('#cStep');
+  el.innerHTML = `<button data-k="" aria-pressed="${!Q.step}">none</button>` + STEPS.map(k => `<button data-k="${k}" aria-pressed="${k === Q.step}">${k}<small>${FR[S.mode][k]}f</small></button>`).join('');
+  el.querySelectorAll('button').forEach(b => b.onclick = () => { Q.step = b.dataset.k; store.set('q', Q); renderQ(); });
+}
+const num = (v, d) => { const n = parseFloat(v); return isNaN(n) ? d : n; };
+$('#nullParent').onchange = e => { Q.parent = e.target.checked; store.set('q', Q); renderHome(); };
+
+/* ---------- library ---------- */
+const LIBRARY_URL = 'https://claude.ai/artifact/DDnXbWJU8q7JQuXTmTNmiF';
+$('#libOpen').onclick = () => { if (window.cep && cep.util) cep.util.openURLInDefaultBrowser(LIBRARY_URL); else window.open(LIBRARY_URL, '_blank', 'noopener'); };
+// match the panel: the library follows the system theme, so set it to dark once it has loaded
+$('#libFrame').addEventListener('load', () => { try { $('#libFrame').contentDocument.documentElement.setAttribute('data-theme', 'dark'); } catch (e) {} });
+$('#libReload').onclick = () => { $('#libFrame').src = 'library/index.html?' + Date.now(); };
+
+/* ---------- sync with Nscale Bar ----------
+   Both panels keep the same settings: each change is saved in After Effects (so whichever opens next starts from it)
+   and broadcast to the other panel straight away. */
+const CEP = window.__adobe_cep__, SYNC_EVT = 'com.nscale.motion.state', ME = 'panel';
+function snapshot() { return { mode: S.mode, curve: S.curve, edits: S.edits, showProps: S.showProps, step: lastStep, snap: $('#snap').checked, colour: $('#colour').checked, st: S.st, q: Q, from: ME, t: Date.now() }; }
+let pushT = 0, applying = false;
+function schedulePush() { if (applying) return; clearTimeout(pushT); pushT = setTimeout(pushState, 120); }
+function pushState() {
+  const s = snapshot(); try { localStorage.setItem('nsm.t', String(s.t)); } catch (e) {}
+  if (!CEP) return;
+  CEP.evalScript('nsm_stateSet(' + JSON.stringify(JSON.stringify(s)) + ')', () => {});
+  try { const env = JSON.parse(CEP.getHostEnvironment()); CEP.dispatchEvent({ type: SYNC_EVT, scope: 'APPLICATION', appId: env.appId, extensionId: CEP.getExtensionId(), data: JSON.stringify(s) }); } catch (e) {}
+}
+function applyState(s) {
+  if (!s) return;
+  applying = true;
+  try {
+    if (s.mode) S.mode = s.mode; if (s.curve) S.curve = s.curve; if (s.edits) S.edits = s.edits; S.showProps = !!s.showProps;
+    if (s.step) lastStep = s.step; if (s.st) Object.assign(S.st, s.st); if (s.q) Object.assign(Q, s.q);
+    $('#snap').checked = s.snap !== false; $('#colour').checked = s.colour !== false;
+    ['mode', 'curve', 'edits', 'showProps', 'st', 'q', 'snap', 'colour', 'step'].forEach(k => store.set(k, snapshot()[k]));
+    try { localStorage.setItem('nsm.t', String(s.t || Date.now())); } catch (e) {}
+    render(); renderQ();
+  } finally { applying = false; }
+}
+$('#snap').checked = store.get('snap', true); $('#colour').checked = store.get('colour', true);
+$('#snap').onchange = () => store.set('snap', $('#snap').checked);
+$('#colour').onchange = () => store.set('colour', $('#colour').checked);
+if (CEP) {
+  CEP.addEventListener(SYNC_EVT, e => { let d = e.data; try { if (typeof d === 'string') d = JSON.parse(d); } catch (x) { return; } if (d && d.from !== ME) applyState(d); });
+  // start from whichever panel changed something last
+  CEP.evalScript('nsm_stateGet()', r => { try { const s = JSON.parse(r); if (s && s.t > +(localStorage.getItem('nsm.t') || 0)) applyState(Object.assign(s, { from: 'saved' })); } catch (e) {} });
+}
+$('#openBar').onclick = () => { if (CEP) CEP.requestOpenExtension('com.nscale.motion.bar', ''); else status('Opens Nscale Bar in After Effects.'); };
+
+
+/* =====================================================================
+   2.3: Home, toolkit and its tool windows, read curve, notes, render
+   ===================================================================== */
+// talk to After Effects without touching the status line (polling, background loads)
+function quiet(action, payload, cb) {
+  if (!bridge.inAE) { if (cb) cb('', ''); return; }
+  window.__adobe_cep__.evalScript('nsm_run(' + JSON.stringify(action) + ',' + JSON.stringify(payload || {}) + ')', res => {
+    res = String(res || ''); const i = res.indexOf(':'); if (cb) cb(res.slice(0, i), res.slice(i + 1));
+  });
+}
+// a segmented control bound to a value: get() says which is on, set(v) handles the press
+function segBind(el, get, set) { el.querySelectorAll('button').forEach(b => { b.setAttribute('aria-pressed', String(get()) === b.dataset.v); b.onclick = () => set(b.dataset.v); }); }
+
+/* ---------- home ---------- */
+function curveBox(id) {
+  const d = def(id), b = bez(id); let p = '';
+  for (let i = 0; i <= 20; i++) { const u = i / 20; p += (i ? 'L' : 'M') + (5 + 36 * u).toFixed(1) + ' ' + (23 - 20 * bezY(b, u)).toFixed(1); }
+  return `<button class="box" data-c="${id}" aria-pressed="${id === S.curve}" title="${d.name} · ${b.map(f2).join(', ')}"><i style="background:var(${d.col})"></i><svg viewBox="0 0 46 26"><path d="${p}" fill="none" stroke="var(${d.col})" stroke-width="1.8" stroke-linecap="round"/></svg><span>${d.name}${edited(id) ? '*' : ''}</span><em>${d.role}</em></button>`;
+}
+function renderHome() {
+  $('#hCurves').innerHTML = Object.keys(CURVES).map(curveBox).join('');
+  $$('#hCurves .box').forEach(b => b.onclick = e => {
+    pick(b.dataset.c);
+    if (e.shiftKey) status(`${curveLabel()} picked: the timings will use it.`);
+    else bridge.run('curve', curvePayload(), `Curve: ${curveLabel()} on the selected keys, timing kept`);
+  });
+  $('#hSteps').innerHTML = STEPS.map(k => `<button class="box step" data-k="${k}" aria-pressed="${k === lastStep}" title="Retime the selected keys to ${FR[S.mode][k]} frames with ${curveLabel()}">${k}<small>${FR[S.mode][k]}f</small></button>`).join('');
+  $$('#hSteps .box').forEach(b => b.onclick = () => applyStep(b.dataset.k));
+  $('#hCurveName').textContent = curveLabel();
+  $('#tNullSub').textContent = Q.parent ? 'parents' : 'no parenting';
+  $('#tCloneSub').textContent = { simple: 'copy keys', mirror: 'mirror keys', reverse: 'reverse keys' }[Q.kind] || 'copy keys';
+  $('#tStaggerSub').textContent = `${S.st.step} · ${S.st.order.toLowerCase()}`;
+}
+
+/* ---------- tool windows ---------- */
+let openSheet = null;
+function showSheet(id) {
+  closeSheet(true);
+  const sh = $('#sheet-' + id), sc = $('#scrim');
+  sh.hidden = false; sc.hidden = false; openSheet = id;
+  requestAnimationFrame(() => { sh.classList.add('on'); sc.classList.add('on'); });
+  if (id === 'stagger') drawStagger();
+  if (id === 'clone') renderClone();
+  if (id === 'review') renderReview();
+  if (id === 'mode') loadTheme();
+  if (id === 'null') renderQ();
+}
+function closeSheet(now) {
+  if (!openSheet) return;
+  const sh = $('#sheet-' + openSheet), sc = $('#scrim');
+  sh.classList.remove('on'); sc.classList.remove('on'); openSheet = null;
+  const done = () => { sh.hidden = true; if (!openSheet) sc.hidden = true; };
+  if (now) done(); else setTimeout(done, 220);
+}
+$('#scrim').onclick = () => closeSheet();
+$$('.sclose').forEach(b => b.onclick = () => closeSheet());
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSheet(); });
+// click does the default; right-click (or Cmd / Ctrl-click) opens the options
+function tool(el, onClick, onOptions) {
+  el.onclick = e => { if (e.metaKey || e.ctrlKey) { e.preventDefault(); onOptions(); } else onClick(e); };
+  el.addEventListener('contextmenu', e => { e.preventDefault(); onOptions(); });
+}
+const runNull = () => bridge.run('null', { parent: Q.parent }, Q.parent ? 'Null at the centre of the selection, parented' : 'Null at the centre of the selection');
+const ANCHOR_NAMES = { tl: 'top left', t: 'top middle', tr: 'top right', l: 'left middle', c: 'centre', r: 'right middle', bl: 'bottom left', b: 'bottom middle', br: 'bottom right' };
+const runAnchor = p => bridge.run('anchor', { point: p }, `Anchor point: ${ANCHOR_NAMES[p]} of the selected layers`);
+tool($('#tNull'), runNull, () => showSheet('null'));
+tool($('#tAnchor'), () => runAnchor('c'), () => showSheet('anchor'));
+tool($('#tClone'), () => showSheet('clone'), () => showSheet('clone'));
+tool($('#tStagger'), () => showSheet('stagger'), () => showSheet('stagger'));
+tool($('#tReview'), () => showSheet('review'), () => showSheet('review'));
+tool($('#tMode'), () => showSheet('mode'), () => showSheet('mode'));
+$('#nullGo').onclick = () => { runNull(); closeSheet(); };
+$$('#anchorPick button').forEach(b => b.onclick = () => { $$('#anchorPick button').forEach(x => x.setAttribute('aria-pressed', x === b)); runAnchor(b.dataset.p); setTimeout(() => closeSheet(), 180); });
+
+/* ---------- cloner window ---------- */
+Q.kind = Q.kind || 'simple'; Q.place = Q.place || 'after'; Q.mstep = Q.mstep || '';
+const setQ = (k, v) => { Q[k] = v; store.set('q', Q); renderClone(); };
+function renderClone() {
+  segBind($('#cKind'), () => Q.kind, v => setQ('kind', v));
+  $('#cSimple').hidden = Q.kind !== 'simple'; $('#cMirror').hidden = Q.kind !== 'mirror'; $('#cReverse').hidden = Q.kind !== 'reverse';
+  segBind($('#cPlace'), () => Q.place, v => setQ('place', v));
+  $('#cGapWrap').hidden = Q.place === 'playhead';
+  $('#mStep').innerHTML = `<button data-v="">none</button>` + STEPS.map(k => `<button data-v="${k}">${k}<small>${FR[S.mode][k]}f</small></button>`).join('');
+  segBind($('#mStep'), () => Q.mstep, v => setQ('mstep', v));
+  $('#cGo').textContent = { simple: 'Copy keyframes', mirror: 'Mirror keyframes', reverse: 'Reverse keyframes' }[Q.kind];
+  renderQ(); renderHome();
+}
+$('#cGo').onclick = () => {
+  const p = { kind: Q.kind, place: Q.place, mode: S.mode, step: Q.kind === 'mirror' ? Q.mstep : Q.kind === 'simple' && Q.place === 'after' ? Q.step : '' };
+  const d = { simple: Q.place === 'playhead' ? 'Selected keys copied to the playhead' : 'Selected keys copied after themselves', mirror: 'Selected keys mirrored: there and back', reverse: 'Selected keys reversed in place' }[Q.kind];
+  bridge.run('clone', p, d); closeSheet();
+};
+
+/* ---------- review window ---------- */
+const RV = Object.assign({ name: '', version: 'v01', show: { name: true, version: true, comp: false, date: true, fps: false, details: true }, details: 'lines', corner: 'br', size: '11' }, store.get('rv', {}));
+const saveRV = () => store.set('rv', RV);
+function renderReview() {
+  $('#rvName').value = RV.name; $('#rvVer').value = RV.version;
+  $$('#rvShow input').forEach(i => { i.checked = !!RV.show[i.dataset.k]; i.onchange = () => { RV.show[i.dataset.k] = i.checked; saveRV(); }; });
+  segBind($('#rvDetails'), () => RV.details, v => { RV.details = v; saveRV(); renderReview(); });
+  segBind($('#rvCorner'), () => RV.corner, v => { RV.corner = v; saveRV(); renderReview(); });
+  segBind($('#rvSize'), () => String(RV.size), v => { RV.size = v; saveRV(); renderReview(); });
+}
+$('#rvName').oninput = () => { RV.name = $('#rvName').value; saveRV(); };
+$('#rvVer').oninput = () => { RV.version = $('#rvVer').value; saveRV(); };
+$('#rvBump').onclick = () => {
+  const m = (RV.version || 'v00').match(/^(\D*)(\d+)(.*)$/);
+  RV.version = m ? m[1] + String(+m[2] + 1).padStart(m[2].length, '0') + m[3] : (RV.version || '') + '2';
+  saveRV(); renderReview();
+};
+$('#rvGo').onclick = () => {
+  const payload = { name: RV.name || 'untitled', version: RV.version, show: RV.show, details: RV.details, corner: RV.corner, size: +RV.size,
+    date: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }), nameLabel: 'Test' };
+  bridge.run('review', payload, `Review box: ${payload.name} ${payload.version}, ${{ tl: 'top left', tr: 'top right', bl: 'bottom left', br: 'bottom right' }[RV.corner]}`);
+  closeSheet();
+};
+$('#rvRemove').onclick = () => { bridge.run('reviewRemove', {}, 'Review box removed'); closeSheet(); };
+
+/* ---------- modes window: light / dark ---------- */
+const MD = { all: store.get('mdAll', true), state: null };
+const DEMO_THEME = { comp: 'social-asset', has: true, dark: false, tokens: [{ name: 'Blue', light: '0F41F3', dark: '040E27' }, { name: 'Midnight', light: '040E27', dark: '00DF99' }, { name: 'Chalk', light: 'FDFFF8', dark: 'FDFFF8' }] };
+function loadTheme() {
+  $('#mdAll').checked = MD.all;
+  if (!bridge.inAE) { MD.state = MD.state || JSON.parse(JSON.stringify(DEMO_THEME)); renderTheme(); return; }
+  quiet('themeState', {}, (kind, body) => { if (kind === 'THEME') { try { MD.state = JSON.parse(body); } catch (e) { MD.state = null; } } else MD.state = null; renderTheme(); });
+}
+const swatch = (hex, i, w) => `<label class="sw2"><i style="background:#${hex}"></i><input data-i="${i}" data-w="${w}" value="${hex}" maxlength="7" spellcheck="false" aria-label="${w} colour"></label>`;
+function renderTheme() {
+  const s = MD.state;
+  segBind($('#mdMode'), () => (s && s.dark ? 'dark' : 'light'), v => setMode(v === 'dark'));
+  $('#mdComp').textContent = s ? '· ' + s.comp : '';
+  $('#tModeSub').textContent = s && s.has ? (s.dark ? 'dark' : 'light') : 'light / dark';
+  const el = $('#mdTokens');
+  if (!s || !s.tokens || !s.tokens.length) { el.innerHTML = '<div class="empty">No colours linked in this comp yet. Select the layers whose colours should change and press Link colours.</div>'; return; }
+  el.innerHTML = '<div class="tok head"><span>Colour</span><span>Light</span><span>Dark</span></div>' +
+    s.tokens.map((t, i) => `<div class="tok"><span class="nm" title="${t.name}">${t.name}</span>${swatch(t.light, i, 'light')}${swatch(t.dark, i, 'dark')}</div>`).join('');
+  el.querySelectorAll('input').forEach(inp => inp.onchange = () => {
+    const t = s.tokens[+inp.dataset.i], v = inp.value.replace(/[^0-9a-f]/gi, '').toUpperCase();
+    if (v.length !== 6) { inp.value = t[inp.dataset.w]; status('Use a 6-digit hex, like 0F41F3.', 'warn'); return; }
+    t[inp.dataset.w] = v; inp.value = v; inp.previousElementSibling.style.background = '#' + v;
+    bridge.run('themeToken', { name: t.name, light: t.light, dark: t.dark }, `${t.name}: light #${t.light}, dark #${t.dark}`);
+  });
+}
+function setMode(dark) {
+  bridge.run('themeMode', { dark, scope: MD.all ? 'all' : 'comp' }, `${dark ? 'Dark' : 'Light'} mode`, kind => {
+    if (kind === 'OK' || !bridge.inAE) { if (MD.state) MD.state.dark = dark; renderTheme(); }
+  });
+}
+$('#mdAll').onchange = e => { MD.all = e.target.checked; store.set('mdAll', MD.all); };
+$('#mdRefresh').onclick = loadTheme;
+$('#mdLink').onclick = () => bridge.run('themeLink', {}, 'Links the colours on the selected layers to light and dark values', () => loadTheme());
+
+/* ---------- timing: read the curve on the selected keys ---------- */
+S.read = null;
+function nearestCurve(b) {
+  const cand = [];
+  ['productive', 'expressive'].forEach(m => Object.keys(CURVES).forEach(id => cand.push([CURVES[id][m][0], CURVES[id][m][1], m])));
+  Object.keys(PROPS).forEach(id => cand.push([PROPS[id][0], PROPS[id][1], 'proposal']));
+  cand.push(['Linear', [0, 0, 1, 1], '']); cand.push(['AE Easy Ease', [0.333, 0, 0.667, 1], '']);
+  let best = null, be = 1e9;
+  cand.forEach(([n, c, m]) => { let e = 0; for (let i = 1; i < 10; i++) { const u = i / 10; e += (bezY(b, u) - bezY(c, u)) ** 2; } e = Math.sqrt(e / 9); if (e < be) { be = e; best = { n, m, e }; } });
+  return best;
+}
+function showRead(html) { $('#readInfo').hidden = !html; $('#readTxt').innerHTML = html || ''; }
+function handleRead(kind, body, loud) {
+  if (kind === 'CURVE') {
+    const [v, where, frames] = body.split('|');
+    if (v === 'hold') { S.read = null; drawEditor(); showRead(`<b>Hold</b> keyframe · ${frames}f · ${where}`); return; }
+    const b = v.split(',').map(Number), nc = nearestCurve(b), moment = nc.m === 'productive' ? ' (Productive)' : nc.m === 'expressive' ? ' (Expressive)' : '';
+    S.read = { bez: b, where, frames: +frames }; drawEditor();
+    showRead(`<b>${b.map(f2).join(', ')}</b> · ${frames}f · ${where}<br>${nc.e < 0.03 ? 'Matches ' + nc.n + moment : 'Closest: ' + nc.n + moment + ', off by ' + Math.round(nc.e * 100) + '%'}`);
+    if (loud) status('Read the curve on the selected keys: dotted line.', 'ok');
+  } else if (loud && kind === 'WARN') status(body, 'warn');
+}
+function readKeys(auto) {
+  if (!bridge.inAE) { if (!auto) handleRead('CURVE', '0.6,0.05,0.85,0.55|border-line_vt > Position|44', true); return; }
+  if (auto) quiet('readCurve', {}, (k, b) => handleRead(k, b, false));
+  else bridge.run('readCurve', {}, '', (k, b) => handleRead(k, b, true));
+}
+$('#readBtn').onclick = () => readKeys(false);
+$('#readClear').onclick = () => { S.read = null; showRead(''); drawEditor(); };
+$('#readUse').onclick = () => { if (!S.read) return; setEdit(S.read.bez.map(v => Math.round(v * 100) / 100)); status(`${def(S.curve).name} now uses the curve from the keys (edited; reset returns it).`, 'ok'); };
+
+/* ---------- notes, saved in the project ---------- */
+const N = { compId: '', compName: '', timer: 0, dirty: false, poll: 0 };
+const fmtT = t => t ? new Date(t).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '';
+function renderNotes(d) {
+  const sameComp = d.compId === N.compId;
+  N.compId = d.compId; N.compName = d.compName;
+  $('#nComp').textContent = d.compName || 'no comp open';
+  $('#nCompText').disabled = !d.compId;
+  if (!(N.dirty && sameComp)) {
+    $('#nCompText').value = d.comp ? d.comp.text || '' : ''; $('#nProjText').value = d.project ? d.project.text || '' : '';
+    $('#nCompMeta').textContent = d.comp && d.comp.t ? 'Last edited ' + fmtT(d.comp.t) : (d.compId ? 'No notes on this comp yet' : 'Open a comp to write notes on it');
+    $('#nProjMeta').textContent = d.project && d.project.t ? 'Last edited ' + fmtT(d.project.t) : '';
+  }
+  const others = (d.list || []).filter(x => x.id !== d.compId);
+  $('#nList').innerHTML = others.length ? others.map(x => `<div data-id="${x.id}" style="cursor:pointer"><span>${x.name}</span><span>${fmtT(x.t)}</span></div>`).join('') : '<div><span>None yet</span><span></span></div>';
+  $$('#nList [data-id]').forEach(r => r.onclick = () => quiet('openComp', { id: r.dataset.id }, () => loadNotes()));
+}
+function loadNotes() {
+  if (!bridge.inAE) { renderNotes({ compId: '1', compName: 'social-asset 4', comp: { text: '', t: 0 }, project: { text: '', t: 0 }, list: [{ id: '2', name: 'loader-y-fast', t: Date.now() - 864e5 }] }); return; }
+  quiet('notesGet', {}, (k, body) => { if (k === 'NOTES') try { renderNotes(JSON.parse(body)); } catch (e) {} });
+}
+function saveNotes() {
+  clearTimeout(N.timer);
+  const payload = { compId: N.compId, compName: N.compName, comp: $('#nCompText').value, project: $('#nProjText').value };
+  quiet('notesSet', payload, k => {
+    N.dirty = false; const t = fmtT(Date.now());
+    if (k === 'WARN') { status("Couldn't save the notes into the project.", 'warn'); return; }
+    if (N.compId) $('#nCompMeta').textContent = 'Saved ' + t + ' · save the project to keep it';
+    $('#nProjMeta').textContent = 'Saved ' + t;
+  });
+}
+['#nCompText', '#nProjText'].forEach(id => $(id).addEventListener('input', () => { N.dirty = true; clearTimeout(N.timer); N.timer = setTimeout(saveNotes, 700); }));
+// follow the active comp while the Notes tab is open
+function startNotesPoll() {
+  stopNotesPoll(); if (!bridge.inAE) return;
+  N.poll = setInterval(() => quiet('activeComp', {}, (k, body) => {
+    const id = body.split('|')[0];
+    if (k === 'COMP' && id !== N.compId) { if (N.dirty) saveNotes(); N.dirty = false; loadNotes(); }
+  }), 1500);
+}
+function stopNotesPoll() { clearInterval(N.poll); N.poll = 0; }
+
+/* ---------- render presets ---------- */
+const BUILTIN = [
+  { id: 'review', name: 'Review MP4', sub: 'H.264 · half size', template: 'H\\.264', half: true },
+  { id: 'mp4', name: 'MP4', sub: 'H.264 · full size', template: 'H\\.264', half: false },
+  { id: 'prores', name: 'ProRes 422 HQ', sub: 'Master · full size', template: 'ProRes 422 HQ', half: false },
+  { id: 'alpha', name: 'ProRes 4444', sub: 'With alpha', template: 'ProRes 4444||High Quality with Alpha', half: false },
+  { id: 'png', name: 'PNG sequence', sub: 'Frames, in their own folder', template: 'PNG Sequence', half: false },
+  { id: 'still', name: 'Still', sub: 'PNG of the current frame', still: true, half: false }
+];
+const R = Object.assign({ preset: 'review', range: 'work', half: true, ver: true, now: true, loop: false, folder: '', custom: [] }, store.get('render', {}));
+const saveR = () => store.set('render', R);
+const presets = () => BUILTIN.concat(R.custom);
+const curPreset = () => presets().find(x => x.id === R.preset) || BUILTIN[0];
+function renderRender() {
+  const el = $('#rPresets');
+  el.innerHTML = presets().map(p => `<button class="preset" data-id="${p.id}" aria-pressed="${p.id === R.preset}">${p.name}<small>${p.sub}</small>${p.custom ? `<span class="x" data-del="${p.id}" title="Delete this preset">✕</span>` : ''}</button>`).join('');
+  el.querySelectorAll('.preset').forEach(b => b.onclick = e => {
+    const del = e.target.dataset && e.target.dataset.del;
+    if (del) { R.custom = R.custom.filter(c => c.id !== del); if (R.preset === del) R.preset = 'review'; saveR(); renderRender(); return; }
+    const p = presets().find(x => x.id === b.dataset.id); R.preset = p.id; R.half = !!p.half; saveR(); renderRender();
+  });
+  segBind($('#rRange'), () => R.range, v => { R.range = v; saveR(); renderRender(); });
+  segBind($('#rRes'), () => (R.half ? 'half' : 'full'), v => { R.half = v === 'half'; saveR(); renderRender(); });
+  $('#rVer').checked = R.ver; $('#rNow').checked = R.now; $('#rLoop').checked = R.loop; $('#rLoop').disabled = !!curPreset().still;
+  $('#rFolder').textContent = R.folder || 'Renders, next to the project file';
+  const p = curPreset();
+  $('#rGo').textContent = p.still ? 'Save still' : (R.now ? 'Render ' : 'Add to queue: ') + p.name;
+  $('#rRange').closest('.card').style.opacity = p.still ? 0.45 : 1;
+}
+$('#rVer').onchange = e => { R.ver = e.target.checked; saveR(); };
+$('#rNow').onchange = e => { R.now = e.target.checked; saveR(); renderRender(); };
+$('#rLoop').onchange = e => { R.loop = e.target.checked; saveR(); };
+$('#rChoose').onclick = () => bridge.run('chooseFolder', { title: 'Choose where renders are saved' }, 'Opens a folder picker in After Effects.', (k, body) => { if (k === 'PATH') { R.folder = body; saveR(); renderRender(); status('Render folder set.', 'ok'); } });
+$('#rFolder').title = 'Right-click to go back to the default'; $('#rFolder').addEventListener('contextmenu', e => { e.preventDefault(); R.folder = ''; saveR(); renderRender(); });
+$('#rLoad').onclick = () => bridge.run('renderTemplates', {}, 'Lists the output templates in After Effects', (k, body) => {
+  let list = []; if (k === 'TEMPLATES') try { list = JSON.parse(body); } catch (e) {}
+  if (!bridge.inAE) list = ['H.264 - Match Render Settings - 15 Mbps', 'Apple ProRes 422 HQ', 'High Quality with Alpha', 'PNG Sequence', 'Lossless'];
+  $('#rTpl').innerHTML = list.length ? list.map(n => `<option>${n}</option>`).join('') : '<option value="">No templates found</option>';
+  if (list.length) status(list.length + ' output templates loaded.', 'ok');
+});
+$('#rSave').onclick = () => {
+  const tpl = $('#rTpl').value, name = $('#rPName').value.trim() || tpl;
+  if (!tpl) { status('Load the templates and pick one first.', 'warn'); return; }
+  const p = { id: 'c' + Date.now(), name, sub: tpl, template: tpl, half: R.half, custom: true };
+  R.custom.push(p); R.preset = p.id; saveR(); renderRender(); $('#rPName').value = ''; status(`Preset saved: ${name}`, 'ok');
+};
+$('#rGo').onclick = () => {
+  const p = curPreset();
+  const payload = { template: p.template || '', label: p.name, half: R.half, range: R.range, version: R.ver, now: R.now, still: !!p.still, loop: R.loop && !p.still ? 4 : 0, folder: R.folder, name: $('#rName').value.trim() };
+  if (R.now && !p.still) status('Rendering… After Effects is busy until it finishes.');
+  bridge.run('render', payload, p.still ? 'Saves a PNG of the current frame' : `${R.now ? 'Renders' : 'Queues'} ${p.name}, ${R.half ? 'half' : 'full'} size, ${R.range === 'work' ? 'work area' : 'whole comp'}${R.loop ? ', played 4 times' : ''}`);
+};
+
+render(); renderHist(); renderQ();
+
+/* ---------- opening loader: the mechanic-scale animation, frame-accurate to the reference ---------- */
+const WM = ["M215.863 95.5374V9.55248C215.863 4.30303 220.168 0 225.42 0C228.045 0 230.444 1.0726 232.224 2.86448L292.313 62.9303V0H311.425V85.985C311.425 91.2344 307.121 95.5374 301.869 95.5374C299.243 95.5374 296.845 94.4648 295.065 92.673L234.976 32.6072V95.5501H215.863V95.5374Z", "M419.548 19.105H343.086V38.2099H400.436C410.951 38.2099 419.548 46.8034 419.548 57.3149V76.4199C419.548 86.9314 410.951 95.5248 400.436 95.5248H323.974V76.4199H400.436V57.3149H343.086C332.57 57.3149 323.974 48.7215 323.974 38.2099V19.105C323.974 8.59345 332.57 0 343.086 0H419.548V19.105Z", "M451.208 95.5375C440.693 95.5375 432.096 86.944 432.096 76.4325V19.105C432.096 8.59345 440.693 0 451.208 0H527.67V19.105H451.208V76.4325H527.67V95.5375H451.208Z", "M616.668 0C627.183 0 635.78 8.59345 635.78 19.105V95.5375H616.668V57.3149H559.318V95.5375H540.206V19.105C540.206 8.59345 548.802 0 559.318 0H616.668ZM559.318 38.2226H616.668V19.1176H559.318V38.2226Z", "M667.428 95.5375C656.913 95.5375 648.316 86.944 648.316 76.4325V0H667.428V76.4325H743.89V95.5375H667.428Z", "M852 19.105H775.538V38.2099H852V57.3149H775.538V76.4199H852V95.5248H775.538C765.022 95.5248 756.425 86.9314 756.425 76.4199V19.105C756.425 8.59345 765.022 0 775.538 0H852V19.105Z", "M169.166 10.5398C169.166 1.34779 158.058 -3.26665 151.541 3.21799L62.1696 92.1405C60.893 93.4106 61.7929 95.5893 63.594 95.5893H76.5088C77.1212 95.5893 77.7327 95.5429 78.338 95.4505L98.2649 92.408C110.88 90.4819 123.721 90.5603 136.311 92.6404L153.175 95.4264C153.828 95.5343 154.489 95.5885 155.15 95.5885H164.229C166.956 95.5885 169.166 93.379 169.166 90.6534V10.5398Z", "M31.0274 95.5594C29.2293 95.5594 28.328 93.3868 29.5986 92.1149L91.3964 30.2512C95.0095 26.6343 100.872 26.6321 104.488 30.2465C108.102 33.859 108.102 39.7159 104.488 43.3284L55.0404 92.7569C53.2455 94.5511 50.8112 95.5591 48.2728 95.5591L31.0274 95.5594Z", "M4.79516 95.5712C0.534009 95.5712 -1.60222 90.4233 1.40785 87.4084L38.9619 49.7939C42.5742 46.1757 48.4377 46.1728 52.0536 49.7874C55.667 53.3994 55.667 59.2555 52.0536 62.8675L22.1407 92.7688C20.3458 94.563 17.9115 95.571 15.3731 95.571L4.79516 95.5712Z"], LET = WM.slice(0, 6), MAINP = WM[6], LONGP = WM[7], SHORTP = WM[8];
+const LS = 0.823, LBOT = 429, LOOP_F = 113;   // the reference holds the lockup to frame 113
+const LB = (() => { const ns = 'http://www.w3.org/2000/svg', svgp = document.createElementNS(ns, 'svg'); svgp.setAttribute('style', 'position:absolute;width:0;height:0'); document.body.appendChild(svgp);
+  const box = d => { const e = document.createElementNS(ns, 'path'); e.setAttribute('d', d); svgp.appendChild(e); return e.getBBox(); };
+  const r = { m: box(MAINP), l: box(LONGP), s: box(SHORTP), w: LET.map(box) }; svgp.remove(); return r; })();
+const LDY = LBOT - LS * Math.max(LB.m.y + LB.m.height, LB.l.y + LB.l.height, LB.s.y + LB.s.height), LMIN = Math.min(...LB.w.map(b => b.x));
+const LC = { scale: [0, 0.1, 0.75, 0.3], push: [0.2, 0, 0.75, 0.15], eject: [0.3, 0.1, 0.8, 0.5], snap: [0.6, 0.05, 0.9, 0.6], linear: [0, 0, 1, 1], settle: [0.33, 0.67, 0.67, 1] };
+const LK = {
+  mainScale: [[4, 0], [10, 1, 'scale']],
+  mainX: [[10, 326], [16, 326], [25, 366, 'push'], [34, 366], [45, 394, 'linear'], [55, 394], [88, 422, 'linear'], [93, 106, 'snap']],
+  longX: [[24, 366], [29, 338, 'eject'], [38, 338], [49, 365, 'linear'], [55, 365], [88, 374, 'linear'], [93, 87, 'snap'], [97, 79, 'settle']],
+  shortX: [[43, 356], [48, 341, 'eject'], [55, 341], [88, 332, 'linear'], [93, 49, 'snap'], [96, 55, 'settle']],
+  letters: [[89, 640], [93, 0, 'snap']]
+};
+function lval(track, f) { const k = LK[track]; if (f <= k[0][0]) return k[0][1]; for (let i = 1; i < k.length; i++) { const [f0, v0] = k[i - 1], [f1, v1, c] = k[i]; if (f <= f1) return v0 + (v1 - v0) * bezY(LC[c || 'linear'], (f - f0) / (f1 - f0)); } return k[k.length - 1][1]; }
+const ltx = (b, xmin) => xmin - LS * b.x;
+function loaderFrame(f) {
+  let s = '';
+  if (f >= 43) s += `<path d="${SHORTP}" fill="#FDFFF8" fill-opacity=".4" transform="translate(${ltx(LB.s, lval('shortX', f)).toFixed(2)} ${LDY.toFixed(2)}) scale(${LS})"/>`;
+  if (f >= 24) s += `<path d="${LONGP}" fill="#FDFFF8" fill-opacity=".6" transform="translate(${ltx(LB.l, lval('longX', f)).toFixed(2)} ${LDY.toFixed(2)}) scale(${LS})"/>`;
+  const k = lval('mainScale', f), x = lval('mainX', f), cx = x + LS * LB.m.width / 2, cy = LDY + LS * (LB.m.y + LB.m.height / 2);
+  if (k > 0) s += `<path d="${MAINP}" fill="#FDFFF8" transform="translate(${cx.toFixed(2)} ${cy.toFixed(2)}) scale(${(LS * k).toFixed(4)}) translate(${(-(LB.m.x + LB.m.width / 2)).toFixed(2)} ${(-(LB.m.y + LB.m.height / 2)).toFixed(2)})"/>`;
+  if (f >= 89) { const lx = 106 + LS * (LMIN - LB.m.x) + lval('letters', f); s += `<g fill="#FDFFF8" transform="translate(${(lx - LS * LMIN).toFixed(2)} ${LDY.toFixed(2)}) scale(${LS})">${LET.map(d => `<path d="${d}"/>`).join('')}</g>`; }
+  return s;
+}
+function playLoader() {
+  const el = $('#loader'), svgEl = $('#loaderSvg'); el.classList.remove('done');
+  const t0 = performance.now();
+  (function step(now) {
+    const f = (now - t0) * 60 / 1000; svgEl.innerHTML = loaderFrame(Math.min(f, LOOP_F));
+    if (f < LOOP_F) requestAnimationFrame(step); else el.classList.add('done');
+  })(t0);
+}
+if (!matchMedia('(prefers-reduced-motion: reduce)').matches) playLoader(); else $('#loader').classList.add('done');
+
+
+/* ---------- bugs and feature requests: opens a Slack DM with Doug ---------- */
+// Set these once: your Slack workspace (team) ID and your member ID. In the extension the link opens in the Slack app.
+// Nscale is on Slack Enterprise Grid: the org ID (E…) stands in for the workspace ID. Doug's member ID is U0B11KH32Q7.
+const SLACK = { team: 'E09SZNFKTBR', user: 'U0B11KH32Q7' };
+$('#feedback').onclick = () => {
+  if (!SLACK.team || !SLACK.user) { status('Slack link not set yet: add your workspace and member IDs.', 'warn'); return; }
+  const url = `slack://user?team=${SLACK.team}&id=${SLACK.user}`;
+  if (window.cep && cep.util) cep.util.openURLInDefaultBrowser(url); else window.open(url, '_blank', 'noopener');
+};
+
+/* ---------- templates (was: event social) ---------- */
+const SO = Object.assign({ name: '', light: true, dark: true, clear: true, minDrop: 0, folder: '', batch: [], folderId: '', tplId: '', values: {}, templateFile: '', templates: [] }, store.get('social', {}));
+const EXT_ROOT = (() => { try { return window.__adobe_cep__ ? window.__adobe_cep__.getSystemPath('extension') : ''; } catch (e) { return ''; } })();
+const saveSO = () => store.set('social', SO);
+const soText = (el, v) => { el.textContent = v; return el; };
+const soCount = () => (SO.light ? 1 : 0) + (SO.dark ? 1 : 0);
+
+// The catalogue: assets/templates.json. Folders can nest one level (folder > folder > templates).
+let CAT = { folders: [] }, CAT_FLAT = [];   // CAT_FLAT: [{ folderPath, folderId, ...template }]
+function catFlatten() {
+  CAT_FLAT = [];
+  (function walk(f, path, ids) {
+    (f.templates || []).forEach(t => CAT_FLAT.push(Object.assign({ folderPath: path.join(' / '), folderId: ids.join('/') }, t)));
+    (f.folders || []).forEach(sub => walk(sub, path.concat(sub.name), ids.concat(sub.id)));
+  })(CAT, [], []);
+}
+function catFolders() { const seen = {}, out = []; CAT_FLAT.forEach(t => { if (!seen[t.folderId]) { seen[t.folderId] = 1; out.push({ id: t.folderId, name: t.folderPath }); } }); return out; }
+const tpl = () => CAT_FLAT.find(t => t.id === SO.tplId) || CAT_FLAT[0] || null;
+const tplById = id => CAT_FLAT.find(t => t.id === id);
+const tplByNotion = name => CAT_FLAT.find(t => t.notion === name || t.name === name || t.id === name);
+const tplVals = t => (SO.values[t.id] = SO.values[t.id] || {});
+const fieldVal = (t, f) => { const v = tplVals(t)[f.name]; return v !== undefined ? v : (f.default !== undefined ? f.default : ''); };
+
+function catLoaded(j) { CAT = j; catFlatten(); if (!tplById(SO.tplId) && CAT_FLAT[0]) { SO.tplId = CAT_FLAT[0].id; } renderSocial(); }
+function catLoadNode() {   // fallback: read the file through the panel's Node layer (file:// fetch can be refused)
+  try { const fs = require('fs'), path = require('path'); return JSON.parse(fs.readFileSync(path.join(EXT_ROOT, 'assets', 'templates.json'), 'utf8')); } catch (e) { return null; }
+}
+fetch('assets/templates.json').then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  .catch(() => catLoadNode() || Promise.reject(new Error('could not read assets/templates.json')))
+  .then(j => { try { catLoaded(j); } catch (e) { $('#tHint').textContent = 'panel error: ' + e.message; } })
+  .catch(e => { $('#tHint').textContent = e.message; });
+
+function renderSocial() {
+  const t = tpl(); if (!t) return;
+  if (!SO.folderId || !catFolders().some(f => f.id === SO.folderId)) SO.folderId = t.folderId;
+  // folder picker + template buttons
+  $('#tFolder').innerHTML = catFolders().map(f => `<option value="${esc(f.id)}" ${f.id === SO.folderId ? 'selected' : ''}>${esc(f.name)}</option>`).join('');
+  $('#tList').innerHTML = CAT_FLAT.filter(x => x.folderId === SO.folderId).map(x => `<button type="button" data-tpl="${esc(x.id)}" class="${x.built === false ? 'soon' : ''}" aria-pressed="${x.id === t.id}" title="${esc(x.comp)}">${esc(x.name)}</button>`).join('');
+  $$('#tList button').forEach(b => b.onclick = () => { SO.tplId = b.dataset.tpl; saveSO(); renderSocial(); });
+  $('#tHint').textContent = `${CAT_FLAT.length} templates`;
+  // the form
+  $('#tName').textContent = t.name; $('#tComp').textContent = t.comp + (t.built === false ? ' · comp not built yet' : '');
+  const vals = tplVals(t);
+  $('#tFields').innerHTML = t.fields.map((f, i) => {
+    const v = fieldVal(t, f), id = 'tf' + i, lab = esc(f.name) + (f.hint ? ' · ' + esc(f.hint) : '');
+    if (f.type === 'checkbox') return `<label class="sw" style="margin:4px 0">${esc(f.name)} <input type="checkbox" id="${id}" data-f="${esc(f.name)}" data-type="checkbox" ${v === true || v === 'true' ? 'checked' : ''}></label>`;
+    if (f.type === 'number') return `<div><div class="flabel">${lab}</div><input class="field" type="number" id="${id}" data-f="${esc(f.name)}" data-type="number" min="${f.min ?? ''}" max="${f.max ?? ''}" step="${f.step ?? 1}" value="${esc(String(v))}"></div>`;
+    if (f.type === 'slider') return `<div><div class="flabel">${lab}</div><div class="fnum"><input type="range" id="${id}" data-f="${esc(f.name)}" data-type="${f.type}" min="${f.min ?? 0}" max="${f.max ?? 100}" step="${f.step ?? 1}" value="${esc(String(v))}"><output for="${id}">${esc(String(v))}</output></div></div>`;
+    if (f.multiline) return `<div><div class="flabel">${lab}</div><textarea class="field short" id="${id}" data-f="${esc(f.name)}" placeholder="${esc(f.placeholder || '')}">${esc(String(v))}</textarea></div>`;
+    return `<div><div class="flabel">${lab}</div><input class="field" id="${id}" data-f="${esc(f.name)}" placeholder="${esc(f.placeholder || '')}" value="${esc(String(v))}" autocomplete="off"></div>`;
+  }).join('') || '<div class="flabel">No fields: this template renders as-is.</div>';
+  $$('#tFields [data-f]').forEach(inp => {
+    const upd = () => { vals[inp.dataset.f] = inp.dataset.type === 'checkbox' ? inp.checked : (inp.dataset.type ? Number(inp.value) : inp.value); const o = inp.parentElement.querySelector('output'); if (o) o.textContent = inp.value; saveSO(); soLabel(); };
+    inp.oninput = upd; inp.onchange = upd;
+  });
+  $('#sName').value = SO.name;
+  const isEvent = t.kind === 'event';
+  $('#sClearRow').hidden = !isEvent; $('#sDropRow').hidden = !isEvent;
+  $('#sLight').checked = SO.light; $('#sDark').checked = SO.dark; $('#sClear').checked = SO.clear; $('#sDrop').value = SO.minDrop || 0;
+  $('#sDark').disabled = t.dark === false; if (t.dark === false) { $('#sDark').checked = false; }
+  $('#sFolder').textContent = SO.folder || 'motion finals › socials';
+  $('#sTplHint').textContent = SO.templates.length ? `Comps found in the project: ${SO.templates.join(', ')}` : 'Scan lists which template comps the project has.';
+  $('#sTplFile').textContent = SO.templateFile ? SO.templateFile.split('/').pop() : 'Built-in template project';
+  // batch
+  const list = $('#sBatch'); list.innerHTML = '';
+  if (!SO.batch.length) list.appendChild(soText(Object.assign(document.createElement('div'), { className: 'empty' }), 'Empty. Add posts here to render several in one go.'));
+  SO.batch.forEach((j, i) => {
+    const row = Object.assign(document.createElement('div'), { className: 'item' });
+    row.appendChild(soText(document.createElement('b'), (j.label || j.hero || '').replace(/\s*\n\s*/g, ' ')));
+    row.appendChild(soText(document.createElement('span'), j.tplName || j.template));
+    const edit = soText(document.createElement('button'), 'Edit'); edit.title = 'Move this post back into the form';
+    edit.onclick = () => { const tt = tplById(j.tplId); if (tt) { SO.tplId = tt.id; SO.values[tt.id] = Object.assign({}, j.fields); SO.name = j.name || ''; } SO.batch.splice(i, 1); saveSO(); renderSocial(); };
+    const del = soText(document.createElement('button'), '\u2715'); del.title = 'Remove from the batch';
+    del.onclick = () => { SO.batch.splice(i, 1); saveSO(); renderSocial(); };
+    row.appendChild(edit); row.appendChild(del); list.appendChild(row);
+  });
+  $('#sClearBatch').disabled = !SO.batch.length;
+  soLabel();
+}
+$('#tFolder').onchange = e => { SO.folderId = e.target.value; const first = CAT_FLAT.find(x => x.folderId === SO.folderId); if (first) SO.tplId = first.id; saveSO(); renderSocial(); };
+$('#sName').addEventListener('input', e => { SO.name = e.target.value; saveSO(); soLabel(); });
+
+// A job: what the host needs to fill one comp. Generic templates send fields + types; the event template also
+// sends top/hero/date/loc so the event pipeline (line split, glass clearance) keeps working unchanged.
+function soJob() {
+  const t = tpl(); if (!t) return null;
+  const fields = {}, types = {};
+  t.fields.forEach(f => { fields[f.layer || f.name] = fieldVal(t, f); types[f.layer || f.name] = f.type || 'text'; });
+  const first = t.fields.length ? String(fieldVal(t, t.fields[0])) : t.name;
+  const job = { tplId: t.id, tplName: t.name, template: t.comp, kind: t.kind || 'generic', name: SO.name.trim(), label: first.replace(/\s*\n\s*/g, ' '), fields, types };
+  if (t.kind === 'event') { const v = tplVals(t); job.top = (v['Top line'] || '').trim(); job.hero = (v['Event name'] || '').trim(); job.date = (v['Date chip'] || '').trim(); job.loc = (v['Location chip'] || '').trim(); job.label = job.hero.replace(/\s*\n\s*/g, ' '); }
+  return job;
+}
+const soFormFilled = () => { const t = tpl(); if (!t) return false; if (!t.fields.length) return true; if (t.kind === 'event') return !!(tplVals(t)['Event name'] || '').trim(); return t.fields.some(f => f.type === 'text' && String(fieldVal(t, f)).trim()); };
+// Render takes the batch plus the post in the form, if the form has an event name
+const soJobs = () => SO.batch.concat(soFormFilled() ? [soJob()] : []);
+function soLabel() {
+  const n = Math.max(1, soJobs().length), files = n * soCount();
+  $('#sGo').textContent = `Render ${n === 1 ? 'this post' : n + ' posts'}: ${files} file${files === 1 ? '' : 's'}`;
+}
+$('#sLight').onchange = e => { SO.light = e.target.checked; saveSO(); renderSocial(); };
+$('#sDark').onchange = e => { SO.dark = e.target.checked; saveSO(); renderSocial(); };
+$('#sClear').onchange = e => { SO.clear = e.target.checked; saveSO(); };
+$('#sDrop').onchange = e => { SO.minDrop = Math.max(0, Math.min(600, Math.round(+e.target.value || 0))); saveSO(); renderSocial(); };
+$('#sChoose').onclick = () => bridge.run('chooseFolder', { title: 'Choose where the social posts are saved' }, 'Opens a folder picker in After Effects.', (k, body) => { if (k === 'PATH') { SO.folder = body; saveSO(); renderSocial(); status('Folder set.', 'ok'); } });
+$('#sFolder').title = 'Right-click to go back to the default'; $('#sFolder').addEventListener('contextmenu', e => { e.preventDefault(); SO.folder = ''; saveSO(); renderSocial(); });
+$('#sAdd').onclick = () => {
+  if (!soFormFilled()) { status('Fill in the template first.', 'warn'); return; }
+  const j = soJob(); SO.batch.push(j); SO.values[j.tplId] = {}; SO.name = ''; saveSO(); renderSocial();
+  status(`Added. ${SO.batch.length} in the batch.`, 'ok');
+};
+$('#sClearBatch').onclick = () => { SO.batch = []; saveSO(); renderSocial(); };
+function soShow(r) {
+  const notes = (r.notes || []).slice(); if (r.failed) notes.unshift('Stopped at ' + r.failed);
+  $('#sNotesCard').hidden = !notes.length; $('#sNotes').innerHTML = '';
+  notes.forEach(n => $('#sNotes').appendChild(soText(document.createElement('li'), n)));
+  if (r.what === 'preview') {
+    $('#sPrev').innerHTML = ''; $('#sPrevCard').hidden = !(r.files || []).length;
+    $('#sPrevHint').textContent = 'the frame where the glass element comes closest';
+    (r.files || []).forEach(f => {
+      const fig = document.createElement('figure'), img = document.createElement('img'), url = 'file://' + encodeURI(f).replace(/#/g, '%23') + '?t=' + Date.now();
+      let tries = 0; img.onerror = () => { if (tries++ < 8) setTimeout(() => { img.src = url + tries; }, 400); };   // the still can land a moment after After Effects returns
+      img.src = url; img.alt = 'Preview still';
+      fig.appendChild(img); fig.appendChild(soText(document.createElement('figcaption'), /_dark\.png$/.test(f) ? 'Dark' : 'Light'));
+      $('#sPrev').appendChild(fig);
+    });
+    status(r.failed ? 'Preview stopped: ' + r.failed : 'Preview saved. The comp is back as it was.', r.failed ? 'warn' : 'ok');
+  } else if (r.what === 'apply') status('In the comp. Undo once to put it back.', 'ok');
+  else if (r.what === 'ame') status(r.failed ? `Sent ${r.made.length} of ${r.total} to Media Encoder, then stopped. See the notes.` : `${r.made.length} file${r.made.length === 1 ? '' : 's'} sent to Media Encoder → ${r.folder.split('/').pop()}. Your project is back; carry on.`, r.failed ? 'warn' : 'ok');
+  else status(r.failed ? `Rendered ${r.made.length} of ${r.total}, then stopped. See the notes.` : `Rendered ${r.made.length} file${r.made.length === 1 ? '' : 's'} to ${r.folder.split('/').pop()}. The comp is back as it was.`, r.failed ? 'warn' : 'ok');
+}
+function soRun(what) {
+  const jobs = what === 'render' ? soJobs() : (soFormFilled() ? [soJob()] : []);
+  if (!jobs.length) { status('Fill in the template first.', 'warn'); return; }
+  if (what !== 'render' && tpl().kind !== 'event') { status('Preview and Apply work on the event template for now. Use Send to Media Encoder.', 'warn'); return; }
+  if (!soCount()) { status('Tick Light, Dark or both.', 'warn'); return; }
+  const say = what === 'render' ? `Renders ${jobs.length * soCount()} file${jobs.length * soCount() === 1 ? '' : 's'} from the social-asset comp and puts the comp back`
+    : what === 'preview' ? 'Saves a still of each version and shows it here' : 'Puts this post into the social-asset comp as one undo step';
+  bridge.run('social', { what, jobs, light: SO.light, dark: SO.dark, clear: SO.clear, minDrop: SO.minDrop, folder: SO.folder }, say, (k, body) => {
+    if (k !== 'SOCIAL') return;
+    try { soShow(JSON.parse(body)); } catch (e) { status('After Effects answered, but the panel could not read it.', 'warn'); }
+  });
+}
+$('#sTplChoose').onclick = () => bridge.run('chooseFile', { title: 'Choose the social template project (.aep)' }, 'Opens a file picker in After Effects.', (k, body) => { if (k === 'PATH') { SO.templateFile = body; SO.templates = []; saveSO(); renderSocial(); status('Template project set. Press Scan to list its comps.', 'ok'); } });
+$('#sTplBuiltin').onclick = () => { SO.templateFile = ''; SO.templates = []; saveSO(); renderSocial(); status('Using the bundled template project.', 'ok'); };
+$('#sScan').onclick = () => bridge.run('socialScan', { root: EXT_ROOT, templateFile: SO.templateFile }, 'Lists the template comps in the bundled project.', (k, body) => {
+  if (k !== 'SOCIAL') return;
+  try { const r = JSON.parse(body); SO.templates = r.templates || []; saveSO(); renderSocial(); status(SO.templates.length ? `${SO.templates.length} template comp${SO.templates.length === 1 ? '' : 's'} found. Your project is back.` : 'No template comps found in that project.', SO.templates.length ? 'ok' : 'warn'); } catch (e) {}
+});
+$('#sAME').onclick = () => {
+  const jobs = soJobs();
+  if (!jobs.length) { status('Fill in the template first.', 'warn'); return; }
+  if (!soCount()) { status('Tick Light, Dark or both.', 'warn'); return; }
+  const n = jobs.length * soCount();
+  bridge.run('socialAME', { root: EXT_ROOT, templateFile: SO.templateFile, template: jobs[0].template, jobs, light: SO.light, dark: SO.dark, clear: SO.clear, minDrop: SO.minDrop, folder: SO.folder },
+    `Hands ${n} file${n === 1 ? '' : 's'} to Media Encoder and reopens your project`, (k, body) => {
+      if (k !== 'SOCIAL') return;
+      try { const r = JSON.parse(body); if (r.templates) { SO.templates = r.templates; saveSO(); renderSocial(); } soShow(r); notionAfterAME(jobs, r); } catch (e) { status('After Effects answered, but the panel could not read it.', 'warn'); }
+    });
+};
+/* ---------- Notion: Social posts database. Calls go through the panel's Node layer because api.notion.com
+   refuses browser-origin requests. The token lives in a file under the user's Library, never in the repo. ---------- */
+const NOTION = {
+  dataSource: '41dcaf6b-fadc-81cb-8c96-000bbbbbfd8d',                   // "Social posts" under Motion System
+  dbUrl: 'https://app.notion.com/p/41dcaf6bfadc8135a40df95667d3018d',
+  version: '2025-09-03',
+  node: (() => { try { return typeof require === 'function' ? { fs: require('fs'), path: require('path'), https: require('https'), os: require('os') } : null; } catch (e) { return null; } })(),
+  tokenFile() { return this.node.path.join(this.node.os.homedir(), 'Library', 'Application Support', 'Nscale Motion', 'notion.json'); },
+  token() { try { return JSON.parse(this.node.fs.readFileSync(this.tokenFile(), 'utf8')).token || ''; } catch (e) { return ''; } },
+  saveToken(t) { const f = this.tokenFile(); this.node.fs.mkdirSync(this.node.path.dirname(f), { recursive: true }); this.node.fs.writeFileSync(f, JSON.stringify({ token: t }), { mode: 0o600 }); },
+  call(method, path, body) {
+    return new Promise((resolve, reject) => {
+      const tok = this.token(); if (!tok) return reject(new Error('No Notion token saved. Open Connection below and paste it.'));
+      const data = body ? JSON.stringify(body) : null;
+      const req = this.node.https.request({ hostname: 'api.notion.com', path, method, headers: { 'Authorization': 'Bearer ' + tok, 'Notion-Version': this.version, 'Content-Type': 'application/json', ...(data ? { 'Content-Length': Buffer.byteLength(data) } : {}) } }, res => {
+        let out = ''; res.on('data', c => out += c); res.on('end', () => { let j = {}; try { j = JSON.parse(out); } catch (e) {} if (res.statusCode >= 200 && res.statusCode < 300) resolve(j); else reject(new Error(j.message || ('Notion said ' + res.statusCode))); });
+      });
+      req.on('error', reject); if (data) req.write(data); req.end();
+    });
+  },
+  text(prop) { return (prop && (prop.rich_text || prop.title) || []).map(t => t.plain_text).join(''); },
+  async body(pageId) {
+    // Heading 3 = field name; the paragraphs under it (until the next heading) = value, lines joined with \n
+    const fields = {}; let cur = null, cursor = null;
+    do {
+      const r = await this.call('GET', `/v1/blocks/${pageId}/children?page_size=100${cursor ? '&start_cursor=' + cursor : ''}`);
+      for (const b of r.results || []) {
+        if (b.type === 'heading_3' || b.type === 'heading_2' || b.type === 'heading_1') { cur = this.text(b[b.type]).trim(); if (cur) fields[cur] = fields[cur] || ''; continue; }
+        if (b.type === 'divider') { cur = null; continue; }
+        if (!cur) continue;
+        if (b.type === 'paragraph' || b.type === 'bulleted_list_item' || b.type === 'numbered_list_item' || b.type === 'quote') {
+          const t = this.text(b[b.type]); fields[cur] = fields[cur] ? fields[cur] + '\n' + t : t;
+        }
+      }
+      cursor = r.has_more ? r.next_cursor : null;
+    } while (cursor);
+    Object.keys(fields).forEach(k => { fields[k] = fields[k].replace(/\n+$/, '').replace(/^\n+/, ''); });
+    return fields;
+  },
+  async ready() {
+    const r = await this.call('POST', `/v1/data_sources/${this.dataSource}/query`, { filter: { property: 'Status', status: { equals: 'Ready' } }, page_size: 50 });
+    const rows = [];
+    for (const pg of r.results || []) {
+      const P = pg.properties, title = this.text(P.Post);
+      if (/^TEMPLATE\b/i.test(title)) continue;                                      // the template rows are never rendered
+      const fields = await this.body(pg.id);
+      rows.push({ id: pg.id, title, fields, name: this.text(P['File name']), template: (P.Template && P.Template.select && P.Template.select.name) || '', light: !!(P.Light && P.Light.checkbox), dark: !!(P.Dark && P.Dark.checkbox) });
+    }
+    return rows;
+  },
+  rt(v) { return { rich_text: [{ text: { content: String(v || '').slice(0, 1900) } }] }; },
+  async mark(id, status, extra) {
+    const props = { Status: { status: { name: status } } };
+    if (extra && extra.output !== undefined) props.Output = this.rt(extra.output);
+    if (extra && extra.notes !== undefined) props['Panel notes'] = this.rt(extra.notes);
+    if (extra && extra.by) props['Rendered by'] = this.rt(extra.by);
+    if (status !== 'Ready') props['Rendered at'] = { date: { start: new Date().toISOString() } };
+    return this.call('PATCH', `/v1/pages/${id}`, { properties: props });
+  }
+};
+function nState(msg, kind) { $('#nState').textContent = msg; $('#nState').style.color = kind === 'warn' ? 'var(--c-exit)' : kind === 'ok' ? 'var(--mint)' : ''; }
+if (!NOTION.node) { nState('Notion needs Node in the panel; this build has it off.', 'warn'); }
+else if (!NOTION.token()) nState('No token saved yet. Open Connection, paste the shared token, Save.');
+else nState('Connected (token saved on this Mac).');
+$('#nSave').onclick = () => { const t = $('#nToken').value.trim(); if (!t) { nState('Paste the token first.', 'warn'); return; } try { NOTION.saveToken(t); $('#nToken').value = ''; nState('Token saved. Press Test.', 'ok'); } catch (e) { nState('Could not save: ' + e.message, 'warn'); } };
+$('#nTest').onclick = async () => { nState('Testing…'); try { const rows = await NOTION.ready(); nState(`Connected. ${rows.length} row${rows.length === 1 ? '' : 's'} marked Ready.`, 'ok'); } catch (e) { nState(e.message, 'warn'); } };
+$('#nOpen').onclick = () => { if (window.cep && cep.util) cep.util.openURLInDefaultBrowser(NOTION.dbUrl); else window.open(NOTION.dbUrl, '_blank', 'noopener'); };
+$('#nPull').onclick = async () => {
+  nState('Loading…');
+  try {
+    const rows = await NOTION.ready();
+    if (!rows.length) { nState('Nothing marked Ready in Social posts.'); return; }
+    let added = 0;
+    const miss = [], unknown = [];
+    rows.forEach(r => {
+      if (SO.batch.some(b => b.notion === r.id)) return;
+      const t = tplByNotion(r.template); if (!t) { unknown.push(r.title + ' (' + r.template + ')'); return; }
+      const f = r.fields; if (!Object.keys(f).length && t.fields.length) miss.push(r.title);
+      const fields = {}, types = {};
+      t.fields.forEach(x => { const k = x.layer || x.name; const v = f[x.name] !== undefined ? f[x.name] : f[k]; fields[k] = v !== undefined ? v : (x.default !== undefined ? x.default : ''); types[k] = x.type || 'text'; });
+      const job = { tplId: t.id, tplName: t.name, template: t.comp, kind: t.kind || 'generic', name: r.name, label: r.title, fields, types, notion: r.id };
+      if (t.kind === 'event') { job.top = f['Top line'] || ''; job.hero = f.Heading || f['Event name'] || r.title; job.date = f['Date chip'] || ''; job.loc = f['Location chip'] || ''; }
+      SO.batch.push(job); added++;
+    });
+    if (unknown.length) nState(`No template called: ${unknown.join(', ')} — add it to assets/templates.json or fix the row's Template.`, 'warn');
+    if (miss.length) nState(`No fields found in: ${miss.join(', ')} — the page body needs a ### heading per field.`, 'warn');
+    else if (unknown.length) {}
+    const anyLight = rows.some(r => r.light), anyDark = rows.some(r => r.dark);
+    if (anyLight || anyDark) { SO.light = anyLight; SO.dark = anyDark; }
+    saveSO(); renderSocial();
+    if (!miss.length && !unknown.length) nState(`${added} added to the batch (${rows.length} Ready). Light/Dark set from the rows.`, 'ok');
+  } catch (e) { nState(e.message, 'warn'); }
+};
+// after a Media Encoder hand-off: write back to the rows that came from Notion
+async function notionAfterAME(jobs, r) {
+  const fromNotion = jobs.filter(j => j.notion); if (!fromNotion.length || !NOTION.node || !NOTION.token()) return;
+  const by = (() => { try { return NOTION.node.os.userInfo().username; } catch (e) { return ''; } })();
+  const made = r.made || [], folder = r.folder || '', notes = (r.notes || []).join(' · ');
+  let n = 0;
+  for (const j of fromNotion) {
+    const mine = made.filter(f => f.startsWith((j.name || '').toLowerCase()) || f.includes(j.name || '\u0000'));
+    const ok = mine.length > 0 && !(r.failed && r.failed.startsWith(j.name));
+    try { await NOTION.mark(j.notion, ok ? 'Sent to Media Encoder' : 'Failed', { output: ok ? folder + ' → ' + mine.join(', ') : (r.failed || 'no file made'), notes, by }); n++; } catch (e) {}
+  }
+  if (n) nState(`${n} Notion row${n === 1 ? '' : 's'} updated.`, 'ok');
+  // rows that went out are done: drop them from the batch
+  SO.batch = SO.batch.filter(b => !b.notion); saveSO(); renderSocial();
+}
+$('#sInsert').onclick = () => {
+  if (!soFormFilled()) { status('Fill in the template first.', 'warn'); return; }
+  const j = soJob();
+  bridge.run('socialInsert', { root: EXT_ROOT, templateFile: SO.templateFile, jobs: [j], light: SO.light, dark: SO.dark, clear: SO.clear, minDrop: SO.minDrop }, `Adds ${j.tplName} to the open comp as a precomp`);
+};
+$('#sPreview').onclick = () => soRun('preview');
+$('#sApply').onclick = () => soRun('apply');
+$('#sGo').onclick = () => soRun('render');
+renderSocial();
+
+/* ---------- update check: compares this panel's version with version.json on GitHub, once per open ---------- */
+(function () {
+  var REPO = 'dougturnerct-droid/nscale-motion', KEY = 'ae', EXT = 'com.nscale.motion.panel';
+  var URL = 'https://raw.githubusercontent.com/' + REPO + '/main/version.json?t=' + Date.now();
+  var BUILT = '2.6.0';   // written by build/sign.sh from the manifest
+  function mine() { try { var l = JSON.parse(window.__adobe_cep__.getExtensions(JSON.stringify([EXT]))); return (l && l[0] && l[0].version) || BUILT; } catch (e) { return BUILT; } }
+  function newer(a, b) { var x = String(a).split('.').map(Number), y = String(b).split('.').map(Number); for (var i = 0; i < 3; i++) { if ((x[i] || 0) > (y[i] || 0)) return true; if ((x[i] || 0) < (y[i] || 0)) return false; } return false; }
+  var cur = mine(); if (!window.fetch) { console.log('update check: no fetch'); return; }
+  console.log('update check: have ' + cur + ', asking ' + URL);
+  fetch(URL, { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (v) {
+    var latest = v && v[KEY]; console.log('update check: latest ' + latest); if (!latest || !newer(latest, cur)) return;
+    var line = v.install || ('curl -fsSL https://raw.githubusercontent.com/' + REPO + '/main/install.sh | sh');
+    var box = document.getElementById('updateBox'); if (!box) return;
+    document.getElementById('updateVer').textContent = latest + ' (you have ' + cur + ')';
+    box.setAttribute('data-on', '1');
+    document.getElementById('updateCopy').onclick = function () {
+      var done = function () { document.getElementById('updateCopy').textContent = 'Copied \u2014 paste into Terminal'; };
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(line).then(done, function () { window.prompt('Copy this line, paste it into Terminal:', line); });
+      else window.prompt('Copy this line, paste it into Terminal:', line);
+    };
+    var notes = v.notes || ('https://github.com/' + REPO + '/blob/main/CHANGELOG.md');
+    document.getElementById('updateNotes').onclick = function () { if (window.cep && cep.util) cep.util.openURLInDefaultBrowser(notes); else window.open(notes, '_blank', 'noopener'); };
+    document.getElementById('updateLater').onclick = function () { box.removeAttribute('data-on'); };
+  }).catch(function (e) { console.log('update check failed: ' + e); });
+})();
+</script>
+</body>
+</html>
