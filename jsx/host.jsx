@@ -23,12 +23,14 @@ var NSM_ROOT = (function () { try { return File($.fileName).parent.parent.parent
 var NSM_EXT = (function () { try { var f = File($.fileName); return f.exists ? f.parent.parent : null; } catch (e) { return null; } })();
 function nsmSetExt(p) { if (p && p.root) { var d = new Folder(String(p.root).replace(/[\/\\]+$/, "")); if (d.exists) NSM_EXT = d; } }
 // Run one of the scripts that ship with the panel (content/scripts). Names are fixed: letters, digits, _ and - only.
-function runBundled(name) {
+function runBundled(name, p) {
     if (!/^[A-Za-z0-9_\-]+\.jsx$/.test(String(name))) return "WARN:That isn't one of the panel's scripts.";
-    if (!NSM_ROOT) return "WARN:Couldn't find the panel's scripts folder.";
-    var f = new File(NSM_ROOT.fsName + "/scripts/" + name);
-    if (!f.exists) { try { f = new File(File($.fileName).parent.parent.fsName + "/scripts/" + name); } catch (e) {} }   // panel installed on its own: scripts sit inside it
-    if (!f.exists) return "WARN:" + name + " isn't in this version of the panel.";
+    nsmSetExt(p);                                                   // the panel passes its own folder; $.fileName is unreliable
+    var f = null;
+    if (NSM_EXT) f = new File(NSM_EXT.fsName + "/scripts/" + name);
+    if ((!f || !f.exists) && NSM_ROOT) f = new File(NSM_ROOT.fsName + "/scripts/" + name);
+    if (!f || !f.exists) { try { f = new File(File($.fileName).parent.parent.fsName + "/scripts/" + name); } catch (e) {} }
+    if (!f || !f.exists) return "WARN:" + name + " isn't in this version of the panel.";
     $.evalFile(f);
     return "OK:Ran " + name;
 }
@@ -1863,7 +1865,7 @@ function nsm_run(action, p) {
         if (action === "chooseScripts") { var sd = Folder.selectDialog("Choose the Scripts folder in Google Drive (Motion / Scripts)"); return sd ? "PATH:" + sd.fsName : "WARN:No folder chosen."; }
         if (action === "runLatest") return runLatestScript(p.folder);
         if (action === "buildMogrts") return nsmBuildPremiereTemplates(true);
-        if (action === "runBundled") return runBundled(p.name);
+        if (action === "runBundled") return runBundled(p.name, p);
         if (action === "social") return socialRun(p);
         if (action === "chooseFile") { var cf = File.openDialog(p.title || "Choose a file"); return cf ? "PATH:" + cf.fsName : "WARN:No file chosen."; }
         if (action === "socialAME") return socialAME(p);

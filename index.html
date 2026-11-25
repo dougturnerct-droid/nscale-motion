@@ -660,7 +660,7 @@ $$('#tmAt [data-at]').forEach(b => b.onclick = () => { tmAt = b.dataset.at; stor
 $('#tmCursor').checked = store.get('tmCursor', true);
 $('#tmCursor').onchange = () => store.set('tmCursor', $('#tmCursor').checked);
 renderTmAt();
-$$('[data-bundled]').forEach(b => b.onclick = () => bridge.run('runBundled', { name: b.dataset.bundled }, `Builds the ${b.dataset.what} templates and exports them to a folder you choose`));
+$$('[data-bundled]').forEach(b => b.onclick = () => bridge.run('runBundled', { name: b.dataset.bundled, root: EXT_ROOT }, `Builds the ${b.dataset.what} templates and exports them to a folder you choose`));
 $$('[data-tm]').forEach(b => b.onclick = () => {
   const id = b.dataset.tm, part = b.dataset.part, cursor = $('#tmCursor').checked;
   bridge.run('textMove', { id, part, at: tmAt, cursor }, `${TM_NAME[id]}${id === 'type' ? (cursor ? ' with cursor' : '') : ' ' + part} added from the ${tmAt === 'inpoint' ? 'layer in point' : 'playhead'}`);
