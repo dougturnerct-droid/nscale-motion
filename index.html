@@ -328,11 +328,6 @@ select.field{appearance:none;background:var(--base) url("data:image/svg+xml,%3Cs
       <div class="card"><div class="label">Type <span class="hint">character by character, with a cursor</span></div>
         <label class="sw" style="margin-bottom:10px">Add a cursor <input type="checkbox" id="tmCursor" checked></label>
         <div class="row"><button class="btn" data-tm="type" data-part="in">Type<small> 150f</small></button></div></div>
-      <div class="card"><div class="label">Premiere templates <span class="hint">for Nscale Motion in Premiere</span></div>
-        <p class="hint" style="margin:0 0 10px">Rebuilds the .mogrt files from their comps, in five sizes (16:9, 16:9 4K, 1:1, 4:5, 9:16). Open the project that holds the comp first, then choose the shared Mogrts folder.</p>
-        <div class="row"><button class="btn" data-bundled="nscale_lower_third_to_mogrt.jsx" data-what="lower thirds">Build lower thirds…</button><button class="btn" data-bundled="nscale_title_to_mogrt.jsx" data-what="titles">Build titles…</button></div>
-        <div class="row" style="margin-top:8px"><button class="btn" data-bundled="nscale_cluster_to_mogrt.jsx" data-what="cluster cards (open templates.aep first)">Build cluster cards…</button><button class="btn" data-bundled="nscale_text_moves_to_mogrt.jsx" data-what="text moves">Build text moves…</button></div>
-        <p class="hint" style="margin:8px 0 0">Cluster cards need assets/templates.aep open; they export 1:1 with the catalogue's fields. Text moves build their own comps in the open project, one per move, in 16:9, 1:1 and 9:16. Both go into the repo's premiere/Mogrts folder to ship with the Premiere panel.</p></div>
       <p class="hint" style="margin:2px 2px 0">Timings are the agreed 60 fps frames, converted to the comp's frame rate. Applying a move again replaces that move's animators. Typing reads the text when you press it: press again after editing the text.</p>
     </div>
 
@@ -450,6 +445,11 @@ select.field{appearance:none;background:var(--base) url("data:image/svg+xml,%3Cs
       </div>
       <button class="btn primary" id="sAME" title="Saves your project, fills the template in a temporary copy, hands each file to Media Encoder, reopens your project. After Effects is free while Media Encoder renders.">Send to Media Encoder</button>
       <button class="btn" id="sGo" title="Renders in After Effects' own queue from the comp that is open in this project. After Effects is busy until it finishes.">Render here instead</button>
+      <div class="card"><div class="label">Premiere <span class="hint">export as .mogrt for the Premiere panel</span></div>
+        <p class="hint" style="margin:0 0 10px">Rebuilds the .mogrt files from their comps, in five sizes (16:9, 16:9 4K, 1:1, 4:5, 9:16). Open the project that holds the comp first, then choose the shared Mogrts folder.</p>
+        <div class="row"><button class="btn" data-bundled="nscale_lower_third_to_mogrt.jsx" data-what="lower thirds">Build lower thirds…</button><button class="btn" data-bundled="nscale_title_to_mogrt.jsx" data-what="titles">Build titles…</button></div>
+        <div class="row" style="margin-top:8px"><button class="btn" data-bundled="nscale_cluster_to_mogrt.jsx" data-what="cluster cards (open templates.aep first)">Build cluster cards…</button><button class="btn" data-bundled="nscale_text_moves_to_mogrt.jsx" data-what="text moves">Build text moves…</button></div>
+        <p class="hint" style="margin:8px 0 0">Cluster cards need assets/templates.aep open; they export 1:1 with the catalogue's fields. Text moves build their own comps in the open project, one per move, in 16:9, 1:1 and 9:16. Both go into the repo's premiere/Mogrts folder to ship with the Premiere panel.</p></div>
     </div>
 
     <!-- ===== Send to Claude ===== -->
