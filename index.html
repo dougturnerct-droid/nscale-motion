@@ -281,7 +281,6 @@ select.field{appearance:none;background:var(--base) url("data:image/svg+xml,%3Cs
 .update small{color:var(--dim);font-weight:400}
 .update button{height:28px;padding:0 10px;border-radius:7px;border:1px solid var(--line2);background:var(--signal);color:#fff;font:500 12px var(--sans);cursor:pointer;white-space:nowrap}
 .update button.quiet{background:transparent;color:var(--dim);border-color:transparent}
-.t2list{display:flex;flex-direction:column;gap:2px}.t2row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px solid rgba(128,128,128,.22)}.t2row:last-child{border-bottom:0}.t2name{display:flex;flex-direction:column;min-width:0;gap:4px}.t2name b{font-weight:600}.t2name small{opacity:.6;font-size:11px;line-height:1.3}.t2row>.seg{flex:none;margin-top:2px}.t2row>.seg button{min-width:42px}.t2opt{margin-top:4px;font-size:12px}.t2opt.sw{justify-content:flex-start;gap:8px}.t2inline{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.t2inline label{display:flex;align-items:center;gap:6px}.t2inline .field{width:58px;padding:4px 6px;height:auto}.t2fields{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:12px}.t2fields label{display:flex;align-items:center;gap:5px;opacity:.9}.t2fields .field{width:54px;padding:4px 6px;height:auto;text-align:center}
 </style>
 </head>
 <body>
@@ -317,33 +316,22 @@ select.field{appearance:none;background:var(--base) url("data:image/svg+xml,%3Cs
 
     <!-- ===== Text moves: the house set ===== -->
     <div class="body" id="tab-text" hidden>
-      <div class="card"><div class="label">Timing <span class="hint" id="t2Moment"></span></div>
-        <div class="seg small" role="group" aria-label="Timing from" id="t2At"><button data-at="bars">Layer bars</button><button data-at="playhead">Playhead</button></div>
-        <div class="t2fields">
-          <label>xs <input class="field" id="t2fxs" inputmode="numeric" placeholder="–"></label>
-          <label>m <input class="field" id="t2fm" inputmode="numeric" placeholder="–"></label>
-          <label>l <input class="field" id="t2fl" inputmode="numeric" placeholder="–"></label>
-          <label>typing <input class="field" id="t2ftype" inputmode="numeric" placeholder="150"></label>
-          <button class="btn" id="t2fReset" title="Back to the tokens for this moment">Reset</button>
-        </div>
-        <p class="hint" style="margin:8px 0 0">Frames at 60 fps, converted to the comp. Blank = the token. Layer bars: In starts at the layer's in point, Out ends at its out point — trim the bar and press again. Playhead: In starts there, Out ends there.</p>
+      <div class="card"><div class="label">Start <span class="hint">select text layers first · Out is the In reversed</span></div>
+        <div class="seg small" role="group" aria-label="Start from" id="tmAt"><button data-at="playhead">Playhead</button><button data-at="inpoint">Layer in point</button></div>
       </div>
-      <div class="card"><div class="label">Moves <span class="hint">select text layers · Out is the In reversed</span></div>
-        <div class="t2list">
-          <div class="t2row"><div class="t2name"><b>Rise by word</b><small>words rise 24px and fade, m each, xs apart</small><label class="sw t2opt">Centre as it builds <input type="checkbox" id="t2Centre"></label></div><div class="seg small" data-move="word"><button data-part="in">In</button><button data-part="out">Out</button><button data-part="both">Both</button></div></div>
-          <div class="t2row"><div class="t2name"><b>Rise as one</b><small>the whole layer rises 24px and fades, l</small></div><div class="seg small" data-move="unit"><button data-part="in">In</button><button data-part="out">Out</button><button data-part="both">Both</button></div></div>
-          <div class="t2row"><div class="t2name"><b>Fade as one</b><small>opacity only, l</small></div><div class="seg small" data-move="fade"><button data-part="in">In</button><button data-part="out">Out</button><button data-part="both">Both</button></div></div>
-          <div class="t2row"><div class="t2name"><b>Cut by word</b><small>hard cuts, one word per xs, no movement</small></div><div class="seg small" data-move="cut"><button data-part="in">In</button><button data-part="out">Out</button><button data-part="both">Both</button></div></div>
-          <div class="t2row"><div class="t2name"><b>Slide as one</b><small>In from this side, Out to this side, with a fade, l</small><div class="t2opt t2inline"><div class="seg small" id="t2Dir"><button data-dir="left">← Left</button><button data-dir="right">Right →</button></div><label>px <input class="field" id="t2Dist" inputmode="numeric" value="120"></label></div></div><div class="seg small" data-move="slide"><button data-part="in">In</button><button data-part="out">Out</button><button data-part="both">Both</button></div></div>
-          <div class="t2row"><div class="t2name"><b>Scale as one</b><small>In from this size, Out to this size, around the text's centre, with a fade, l</small><div class="t2opt"><div class="seg small" id="t2Pct"><button data-pct="80">80%</button><button data-pct="120">120%</button></div></div></div><div class="seg small" data-move="scale"><button data-part="in">In</button><button data-part="out">Out</button><button data-part="both">Both</button></div></div>
-          <div class="t2row"><div class="t2name"><b>Typing</b><small>character by character; Out fades, s</small><div class="t2opt t2inline"><label class="sw">Cursor <input type="checkbox" id="t2Cursor" checked></label><label class="sw">Centred <input type="checkbox" id="t2TypeCentre"></label></div></div><div class="seg small" data-move="type"><button data-part="in">In</button><button data-part="out">Out</button><button data-part="both">Both</button></div></div>
-        </div>
-        <label class="sw" style="margin-top:10px">Spearmint tick on words, 2 frames behind <input type="checkbox" id="t2Tick"></label>
-        <p class="hint" style="margin:8px 0 0">Pressing a move again replaces it. Slide out to the left then slide the next layer in from the right (or out to 120% then in from 80%) carries the motion across the cut. Typing reads the text when you press it: press again after editing. The cursor's colour is a control on the cursor layer.</p>
-      </div>
+      <div class="card"><div class="label">Slide in by word <span class="hint">in from the right, words fade left to right</span></div>
+        <div class="row"><button class="btn" data-tm="word" data-part="in">In<small> 89f</small></button><button class="btn" data-tm="word" data-part="out">Out<small> 34f</small></button></div></div>
+      <div class="card"><div class="label">Rise by line <span class="hint">lines rise 30px and fade, top to bottom</span></div>
+        <div class="row"><button class="btn" data-tm="line" data-part="in">In<small> 144f</small></button><button class="btn" data-tm="line" data-part="out">Out<small> 55f</small></button></div></div>
+      <div class="card"><div class="label">Rise by word <span class="hint">words rise 40px and fade, soft overlap</span></div>
+        <div class="row"><button class="btn" data-tm="rise" data-part="in">In<small> 55f</small></button></div></div>
+      <div class="card"><div class="label">Type <span class="hint">character by character, with a cursor</span></div>
+        <label class="sw" style="margin-bottom:10px">Add a cursor <input type="checkbox" id="tmCursor" checked></label>
+        <div class="row"><button class="btn" data-tm="type" data-part="in">Type<small> 150f</small></button></div></div>
       <div class="card"><div class="label">Premiere templates <span class="hint">for Nscale Motion in Premiere</span></div>
         <p class="hint" style="margin:0 0 10px">Rebuilds the .mogrt files from their comps, in five sizes (16:9, 16:9 4K, 1:1, 4:5, 9:16). Open the project that holds the comp first, then choose the shared Mogrts folder.</p>
         <div class="row"><button class="btn" data-bundled="nscale_lower_third_to_mogrt.jsx" data-what="lower thirds">Build lower thirds…</button><button class="btn" data-bundled="nscale_title_to_mogrt.jsx" data-what="titles">Build titles…</button></div></div>
+      <p class="hint" style="margin:2px 2px 0">Timings are the agreed 60 fps frames, converted to the comp's frame rate. Applying a move again replaces that move's animators. Typing reads the text when you press it: press again after editing the text.</p>
     </div>
 
     <!-- ===== Timing & easing ===== -->
@@ -663,27 +651,21 @@ $$('.tab').forEach(t => t.onclick = () => {
 });
 
 /* ---------- text moves ---------- */
-const T2_NAME = { word: 'Rise by word', unit: 'Rise as one', fade: 'Fade as one', cut: 'Cut by word', slide: 'Slide as one', scale: 'Scale as one', type: 'Typing' };
-const t2 = { at: store.get('t2At', 'bars'), dir: store.get('t2Dir', 'left'), pct: store.get('t2Pct', '80') };
-function t2seg(sel, key, attr) { $$(sel + ' button').forEach(b => { b.setAttribute('aria-pressed', b.dataset[attr] === t2[key]); b.onclick = () => { t2[key] = b.dataset[attr]; store.set('t2' + key[0].toUpperCase() + key.slice(1), t2[key]); t2seg(sel, key, attr); }; }); }
-t2seg('#t2At', 'at', 'at'); t2seg('#t2Dir', 'dir', 'dir'); t2seg('#t2Pct', 'pct', 'pct');
-const t2checks = ['t2Centre', 't2Cursor', 't2TypeCentre', 't2Tick'], t2defaults = { t2Cursor: true };
-t2checks.forEach(id => { const el = $('#' + id); el.checked = store.get(id, !!t2defaults[id]); el.onchange = () => store.set(id, el.checked); });
-const t2fields = ['t2fxs', 't2fm', 't2fl', 't2ftype', 't2Dist'];
-t2fields.forEach(id => { const el = $('#' + id); const v = store.get(id, null); if (v !== null && v !== undefined) el.value = v; el.onchange = () => store.set(id, el.value); });
-$('#t2fReset').onclick = () => { ['t2fxs', 't2fm', 't2fl', 't2ftype'].forEach(id => { $('#' + id).value = ''; store.set(id, ''); }); status('Timings back to the tokens'); };
-const t2num = id => { const v = parseFloat($('#' + id).value); return isFinite(v) && v > 0 ? v : 0; };
-$$('#tab-text [data-move] button').forEach(b => b.onclick = () => {
-  const move = b.closest('[data-move]').dataset.move, part = b.dataset.part;
-  const o = { move, part, at: t2.at, mode: S.mode, tick: $('#t2Tick').checked, cursor: $('#t2Cursor').checked, centre: move === 'type' ? $('#t2TypeCentre').checked : $('#t2Centre').checked, dir: t2.dir, pct: t2.pct, dist: t2num('t2Dist') || 120, f: { xs: t2num('t2fxs'), m: t2num('t2fm'), l: t2num('t2fl'), type: t2num('t2ftype') } };
-  bridge.run('textMove2', o, `${T2_NAME[move]} ${part === 'both' ? 'in + out' : part} on the selected text layers, ${t2.at === 'bars' ? 'from the layer bars' : 'at the playhead'}`);
-});
-function renderT2Moment() { const el = $('#t2Moment'); if (el) el.textContent = (S.mode === 'productive' ? 'Productive' : 'Expressive') + ' · change on the Timing tab'; }
-renderT2Moment();
+const TM_NAME = { word: 'Slide in by word', line: 'Rise by line', rise: 'Rise by word', type: 'Type' };
+let tmAt = store.get('tmAt', 'playhead');
+function renderTmAt() { $$('#tmAt [data-at]').forEach(b => b.setAttribute('aria-pressed', b.dataset.at === tmAt)); }
+$$('#tmAt [data-at]').forEach(b => b.onclick = () => { tmAt = b.dataset.at; store.set('tmAt', tmAt); renderTmAt(); });
+$('#tmCursor').checked = store.get('tmCursor', true);
+$('#tmCursor').onchange = () => store.set('tmCursor', $('#tmCursor').checked);
+renderTmAt();
 $$('[data-bundled]').forEach(b => b.onclick = () => bridge.run('runBundled', { name: b.dataset.bundled }, `Builds the ${b.dataset.what} templates in five sizes and exports them to a folder you choose`));
+$$('[data-tm]').forEach(b => b.onclick = () => {
+  const id = b.dataset.tm, part = b.dataset.part, cursor = $('#tmCursor').checked;
+  bridge.run('textMove', { id, part, at: tmAt, cursor }, `${TM_NAME[id]}${id === 'type' ? (cursor ? ' with cursor' : '') : ' ' + part} added from the ${tmAt === 'inpoint' ? 'layer in point' : 'playhead'}`);
+});
 
 /* ---------- moment ---------- */
-$$('[data-mode]').forEach(b => b.onclick = () => { S.mode = b.dataset.mode; store.set('mode', S.mode); render(); renderT2Moment(); status(`Moment: ${S.mode === 'productive' ? 'Productive' : 'Expressive'}`); });
+$$('[data-mode]').forEach(b => b.onclick = () => { S.mode = b.dataset.mode; store.set('mode', S.mode); render(); status(`Moment: ${S.mode === 'productive' ? 'Productive' : 'Expressive'}`); });
 
 /* ---------- curve editor ---------- */
 const ED = { x0: 40, x1: 360, y0: 190, y1: 40 };

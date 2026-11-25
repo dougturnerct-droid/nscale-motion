@@ -1172,8 +1172,8 @@ function tmOut(comp, L, id, t0) {
     return d;
 }
 // typing: a "Typed %" slider drives it; Source Text shows only the typed part so the layer's width follows the typing
-function tmType(comp, L, t0, withCursor, f60) {
-    var d = tmSecs(comp, f60 && f60 > 0 ? f60 : 150), SL = "Typed %";
+function tmType(comp, L, t0, withCursor) {
+    var d = tmSecs(comp, 150), SL = "Typed %";
     var fx = L.property("ADBE Effect Parade");
     if (!fx.property(SL)) { fx.addProperty("ADBE Slider Control").name = SL; }
     var slider = L.property("ADBE Effect Parade").property(SL).property(1);
@@ -1793,127 +1793,6 @@ function socialFillGeneric(comp, job, name, notes) {
 function socialSetDark(comp, on) { try { comp.layer("Theme \u00b7 controls").property("ADBE Effect Parade").property("Dark mode").property(1).setValue(on ? 1 : 0); } catch (e) {} }
 
 
-// =====================================================================================================
-// TEXT MOVES v2 - a palette of moves for typography pieces, applied to the selected text layers. Every move
-// has an In and an Out that is the In reversed. Timing: the Timing tab's moment and the tokens, or the frame
-// overrides typed on the Text tab (60 fps frames, converted to the comp). Eases: token curves, green = enter,
-// red = exit. "at" = "bars": In starts at the layer in point, Out ends at the layer out point (trim the bar,
-// press again). "at" = "playhead": In starts at the playhead, Out ends at the playhead.
-// =====================================================================================================
-var T2_LABEL = { word: "Rise by word", unit: "Rise as one", fade: "Fade as one", cut: "Cut by word", slide: "Slide as one", scale: "Scale as one", type: "Typing" };
-function t2step(comp, o, key) { var f = o.f && o.f[key]; if (f && f > 0) return tmSecs(comp, f); return stepSeconds(comp, key, o.mode === "productive" ? "productive" : "expressive", true); }
-function t2keys(prop, t0, v0, t1, v1, bez, label) {
-    while (prop.numKeys) prop.removeKey(1);
-    prop.setValueAtTime(t0, v0); prop.setValueAtTime(t1, v1);
-    var k1 = prop.nearestKeyIndex(t0), k2 = prop.nearestKeyIndex(t1);
-    var dims = isSpatial(prop) ? 1 : (v0 instanceof Array ? v0.length : 1), dist = 0;
-    if (v0 instanceof Array) { for (var d = 0; d < v0.length; d++) dist += (v1[d] - v0[d]) * (v1[d] - v0[d]); dist = Math.sqrt(dist); } else dist = Math.abs(v1 - v0);
-    var e = bezierToEase(bez, dist || 1, Math.max(0.0001, t1 - t0));
-    function arr(sp, inf) { var a = []; for (var i = 0; i < dims; i++) a.push(new KeyframeEase(sp, inf)); return a; }
-    prop.setInterpolationTypeAtKey(k1, KeyframeInterpolationType.BEZIER, KeyframeInterpolationType.BEZIER);
-    prop.setInterpolationTypeAtKey(k2, KeyframeInterpolationType.BEZIER, KeyframeInterpolationType.BEZIER);
-    try { prop.setTemporalContinuousAtKey(k1, false); prop.setTemporalAutoBezierAtKey(k1, false); prop.setTemporalContinuousAtKey(k2, false); prop.setTemporalAutoBezierAtKey(k2, false); } catch (eT) {}
-    prop.setTemporalEaseAtKey(k1, arr(0, 0.1), arr(e.outSpeed, e.outInfluence));
-    prop.setTemporalEaseAtKey(k2, arr(e.inSpeed, e.inInfluence), arr(0, 0.1));
-    try { prop.setLabelAtKey(k1, label); prop.setLabelAtKey(k2, label); } catch (eL) {}
-}
-function t2linear(prop, t0, v0, t1, v1, label) {
-    while (prop.numKeys) prop.removeKey(1);
-    prop.setValueAtTime(t0, v0); prop.setValueAtTime(t1, v1);
-    var k1 = prop.nearestKeyIndex(t0), k2 = prop.nearestKeyIndex(t1);
-    prop.setInterpolationTypeAtKey(k1, KeyframeInterpolationType.LINEAR, KeyframeInterpolationType.LINEAR);
-    prop.setInterpolationTypeAtKey(k2, KeyframeInterpolationType.LINEAR, KeyframeInterpolationType.LINEAR);
-    try { prop.setLabelAtKey(k1, label); prop.setLabelAtKey(k2, label); } catch (eL) {}
-}
-function t2text(L) { try { return String(L.property("ADBE Text Properties").property("ADBE Text Document").value.text); } catch (e) { return ""; } }
-function t2words(L) { var w = t2text(L).replace(/\r|\n/g, " ").replace(/^\s+|\s+$/g, "").split(/\s+/); return Math.max(1, w.length); }
-function t2sep(L) { var P = L.property("ADBE Transform Group").property("ADBE Position"); try { return P.dimensionsSeparated; } catch (e) { return false; } }
-function t2clearTransform(L, part) {   // drop this part's keys (by label) on the transform; the other part's keys stay
-    var T = L.property("ADBE Transform Group"), names = ["ADBE Position", "ADBE Position_0", "ADBE Position_1", "ADBE Opacity", "ADBE Scale"], lab = part === "in" ? LABELS.enter : LABELS.exit;
-    for (var n = 0; n < names.length; n++) { var p = null; try { p = T.property(names[n]); } catch (e) {} if (!p) continue; for (var k = p.numKeys; k >= 1; k--) { var l = 0; try { l = p.keyLabel(k); } catch (e2) {} if (l === lab) p.removeKey(k); } }
-}
-function t2rest(prop, part) { if (!prop.numKeys) return prop.value; return part === "in" ? prop.keyValue(prop.numKeys) : prop.keyValue(1); }
-// keys an x/y offset on Position (separated or not) from rest+from to rest (in) or rest to rest+to (out)
-function t2posMove(L, part, t0, t1, dx, dy, bez, lab) {
-    var T = L.property("ADBE Transform Group");
-    if (t2sep(L)) {
-        if (dx) { var px = T.property("ADBE Position_0"), rx = t2rest(px, part); t2keys(px, t0, part === "in" ? rx + dx : rx, t1, part === "in" ? rx : rx + dx, bez, lab); }
-        if (dy) { var py = T.property("ADBE Position_1"), ry = t2rest(py, part); t2keys(py, t0, part === "in" ? ry + dy : ry, t1, part === "in" ? ry : ry + dy, bez, lab); }
-    } else {
-        var P = T.property("ADBE Position"), r = t2rest(P, part), off = [r[0] + dx, r[1] + dy], rest = [r[0], r[1]];
-        t2keys(P, t0, part === "in" ? off : rest, t1, part === "in" ? rest : off, bez, lab);
-    }
-}
-// puts the anchor at the text's centre without moving it on screen (for scale moves)
-function t2centreAnchor(L) {
-    var T = L.property("ADBE Transform Group"), A = T.property("ADBE Anchor Point"), r = L.sourceRectAtTime(L.inPoint, false);
-    var want = [r.left + r.width / 2, r.top + r.height / 2], a = A.value;
-    if (Math.abs(want[0] - a[0]) < 0.5 && Math.abs(want[1] - a[1]) < 0.5) return;
-    var sc = T.property("ADBE Scale").value, d = [(want[0] - a[0]) * sc[0] / 100, (want[1] - a[1]) * sc[1] / 100];
-    A.setValue(want);
-    if (t2sep(L)) { var px = T.property("ADBE Position_0"), py = T.property("ADBE Position_1"); if (!px.numKeys) px.setValue(px.value + d[0]); if (!py.numKeys) py.setValue(py.value + d[1]); }
-    else { var P = T.property("ADBE Position"); if (!P.numKeys) P.setValue([P.value[0] + d[0], P.value[1] + d[1]]); }
-}
-function t2justify(L, centre) {
-    var tp = L.property("ADBE Text Properties").property("ADBE Text Document"), d = tp.value, want = centre ? ParagraphJustification.CENTER_JUSTIFY : null;
-    if (want && d.justification !== want) { d.justification = want; tp.setValue(d); }
-}
-function t2move(comp, L, o) {
-    var mode = o.mode === "productive" ? "productive" : "expressive", part = o.part === "out" ? "out" : "in", id = o.move;
-    var bez = curveBez(mode, part === "in" ? "enter" : "exit"), lab = part === "in" ? LABELS.enter : LABELS.exit;
-    var L_ = t2step(comp, o, "l"), M_ = t2step(comp, o, "m"), XS = t2step(comp, o, "xs"), RISE = 24;
-    var t0, t1;
-    function span(d) { if (part === "in") { t0 = o.at === "bars" ? L.inPoint : comp.time; t1 = t0 + d; } else { t1 = o.at === "bars" ? L.outPoint : comp.time; t0 = t1 - d; } }
-    var T = L.property("ADBE Transform Group"), op = T.property("ADBE Opacity");
-    function fadeKeys() { t2keys(op, t0, part === "in" ? 0 : 100, t1, part === "in" ? 100 : 0, bez, lab); }
-    if (id === "unit" || id === "fade" || id === "slide" || id === "scale") {
-        span(L_); t2clearTransform(L, part); fadeKeys();
-        if (id === "unit") t2posMove(L, part, t0, t1, 0, RISE, bez, lab);
-        if (id === "slide") { var dist = Math.abs(parseFloat(o.dist)) || 120, dir = o.dir === "right" ? 1 : -1; t2posMove(L, part, t0, t1, dir * dist, 0, bez, lab); }
-        if (id === "scale") {
-            t2centreAnchor(L); var sc = T.property("ADBE Scale"), pct = parseFloat(o.pct) || 80, rest = t2rest(sc, part), from = [rest[0] * pct / 100, rest[1] * pct / 100];
-            t2keys(sc, t0, part === "in" ? from : rest, t1, part === "in" ? rest : from, bez, lab);
-        }
-        return t1 - t0;
-    }
-    if (id === "type") {
-        if (o.centre) t2justify(L, true);
-        if (part === "in") { span(0); var r3 = tmType(comp, L, t0, o.cursor !== false, o.f && o.f.type); return r3.d; }
-        span(t2step(comp, o, "s")); t2clearTransform(L, part); fadeKeys(); return t1 - t0;
-    }
-    // per-word animators: the range selector's offset sweeps through the words
-    var n = t2words(L), per = id === "cut" ? 0 : M_, total = id === "cut" ? XS * n : per + XS * (n - 1);
-    span(total);
-    var nm = part === "in" ? "T2 In" : "T2 Out";
-    tmRemove(L, [nm, nm + " colour", nm + " centre"]);
-    var props = [["ADBE Text Opacity", 0]]; if (id !== "cut") props.push(["ADBE Text Position 3D", [0, RISE, 0]]);
-    var smooth = id === "cut" ? 0 : Math.round(Math.min(100, (per / total) * 100));
-    var A = tmAdd(L, nm, props, { based: 3, smooth: smooth });
-    var off = A.property("ADBE Text Selectors").property(1).property("ADBE Text Percent Offset");
-    if (id === "cut") t2linear(off, t0, part === "in" ? 0 : -100, t1, part === "in" ? 100 : 0, lab);
-    else t2keys(off, t0, part === "in" ? 0 : -100, t1, part === "in" ? 100 : 0, bez, lab);
-    var offRef = 'text.animator("' + nm + '").selector("Range Selector 1").offset';
-    if (o.tick) tmAdd(L, nm + " colour", [["ADBE Text Fill Color", TM_SPEARMINT]], { based: 3, smooth: 0, expr: offRef + '.valueAtTime(time ' + (part === "in" ? "-" : "+") + ' framesToTime(2))' });
-    if (o.centre && id === "word") {
-        // the line slides so the words shown so far stay centred on the layer's position: the hidden share of the line
-        // (what the selector covers) times half the line width, right while building, left while leaving
-        t2justify(L, true);
-        var C = tmAdd(L, nm + " centre", [["ADBE Text Position 3D", [0, 0, 0]]], { based: 4, smooth: 0, expr: offRef });
-        C.property("ADBE Text Animator Properties").property("ADBE Text Position 3D").expression =
-            'var w = thisLayer.sourceRectAtTime(time, false).width; [' + (part === "in" ? "" : "-") + 'w / 2, 0, 0]';
-    }
-    return t1 - t0;
-}
-function textMove2(comp, o) {
-    var layers = [];
-    for (var i = 0; i < comp.selectedLayers.length; i++) if (comp.selectedLayers[i] instanceof TextLayer) layers.push(comp.selectedLayers[i]);
-    if (!layers.length) return "WARN:Select one or more text layers.";
-    if (!T2_LABEL[o.move]) return "WARN:Unknown move " + o.move + ".";
-    var parts = o.part === "both" ? ["in", "out"] : [o.part === "out" ? "out" : "in"], d = 0;
-    for (var j = 0; j < layers.length; j++) for (var p = 0; p < parts.length; p++) { var q = {}; for (var k in o) if (o.hasOwnProperty(k)) q[k] = o[k]; q.part = parts[p]; d = t2move(comp, layers[j], q); }
-    var f = Math.round(d / comp.frameDuration);
-    return "OK:" + T2_LABEL[o.move] + " " + (o.part === "both" ? "in + out" : parts[0]) + " on " + layers.length + " layer" + (layers.length === 1 ? "" : "s") + " \u00b7 " + f + "f \u00b7 " + (o.at === "bars" ? "from the layer bars" : "at the playhead");
-}
 // Add a filled template to the open project as a precomp (and into the active comp at the playhead).
 // The bundled template project is imported once, into a folder called "Nscale templates".
 function socialInsert(p) {
@@ -2004,7 +1883,6 @@ function nsm_run(action, p) {
         if (action === "anchor") { app.beginUndoGroup("Nscale anchor point"); try { return setAnchor(comp, p.point || "c"); } finally { app.endUndoGroup(); } }
         if (action === "readCurve") return readCurve(comp);
         if (action === "textMove") { app.beginUndoGroup("Nscale text move"); try { return textMove(comp, p); } finally { app.endUndoGroup(); } }
-        if (action === "textMove2") { app.beginUndoGroup("Nscale text move"); try { return textMove2(comp, p); } finally { app.endUndoGroup(); } }
         if (action === "review") { app.beginUndoGroup("Nscale review box"); try { return makeReview(comp, p); } finally { app.endUndoGroup(); } }
         if (action === "reviewRemove") { app.beginUndoGroup("Nscale remove review box"); try { return removeReview(comp); } finally { app.endUndoGroup(); } }
         if (action === "themeState") return themeState(comp);

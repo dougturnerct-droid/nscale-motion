@@ -27,13 +27,8 @@ After Effects panel 2.6.0 · Premiere panel 1.3.0
   in and out to the motion guidelines, with a transparent background for footage behind.
 - "Add to open comp" drops the filled template into the comp you have open as a precomp at
   the playhead, so screens can be sequenced into each other; one undo step.
-- The Text tab is now a palette of **moves** instead of roles, applied to the selected text layers:
-  Rise by word (with "Centre as it builds" for single lines), Rise as one, Fade as one, Cut by word,
-  Slide as one (left/right, distance in px), Scale as one (from/to 80 % or 120 %, around the text's
-  centre), Typing (cursor, centred option). Every move has In, Out (the In reversed) and Both.
-  Timing follows the Timing tab's moment and the tokens, with xs / m / l / typing frame overrides on
-  the tab. "Layer bars" starts the In at the layer's in point and ends the Out at its out point, so
-  a piece is re-timed by trimming bars and pressing again. Spearmint tick on words, two frames behind.
+- Text tab: the four moves are named for what they do rather than who they are for (Slide in by
+  word, Rise by line, Rise by word, Type); the animations are unchanged.
 - Animated figures end on what you type: a keyframed count (the stat on 01/05, racks and MW
   on 02) is re-keyed to the typed value rather than overwritten.
 
