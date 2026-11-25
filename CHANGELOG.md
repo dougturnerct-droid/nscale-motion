@@ -5,7 +5,7 @@ the Premiere panel version is noted where it changed. Install or update with the
 
 ## 2.6.0 — 25 Nov 2026
 
-After Effects panel 2.6.0 · Premiere panel 1.3.0
+After Effects panel 2.6.0 · Premiere panel 1.4.0
 
 - Social: "Send to Media Encoder". Saves your project, fills the template in a temporary
   copy, hands each light/dark file to Media Encoder, and reopens your project within a few
@@ -27,6 +27,8 @@ After Effects panel 2.6.0 · Premiere panel 1.3.0
   in and out to the motion guidelines, with a transparent background for footage behind.
 - "Add to open comp" drops the filled template into the comp you have open as a precomp at
   the playhead, so screens can be sequenced into each other; one undo step.
+- Premiere panel 1.4.0: ships the five cluster cards (1:1) and the four text moves (16:9, 1:1,
+  9:16) as templates alongside the lower third and title.
 - Premiere: the cluster cards and the four text moves can be exported as .mogrt files from the
   Text tab (Build cluster cards, Build text moves). Cluster cards go out 1:1 with the catalogue's
   fields as Essential Graphics controls and the count-ups intact; text moves build one comp per

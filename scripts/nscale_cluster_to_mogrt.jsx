@@ -35,7 +35,7 @@
     for (var i = 0; i < list.length; i++) {
         var T = list[i], src = compNamed(T.comp);
         if (!src) { failed.push(T.name + ": no comp called \"" + T.comp + "\" in this project"); continue; }
-        var name = "Nscale \u00b7 " + T.name + " \u00b7 1:1", file = "Nscale - " + T.name.replace(/[\/:]/g, "-") + " - 1x1.mogrt";
+        var file = "Nscale - " + T.name.replace(/[\/:]/g, "-") + " - 1x1", name = file;   // the export is named after the template name, so keep it file-safe
         try {
             var old = compNamed(name); if (old) old.remove();
             var c = src.duplicate(); c.name = name; c.parentFolder = folder;
@@ -75,8 +75,8 @@
     app.endUndoGroup();
     for (var b = 0; b < built.length; b++) {
         var B = built[b], cc = compNamed(B.name); if (!cc) { failed.push(B.name + ": comp lost before export"); continue; }
-        var ok = false; try { ok = cc.exportAsMotionGraphicsTemplate(true, out.fsName + "/" + B.file); } catch (e4) { failed.push(B.name + ": " + e4.toString()); continue; }
-        if (ok) made.push(B.file + " (" + B.fields + " fields)"); else failed.push(B.name + ": export refused (save the project, then run again)");
+        var ok = false; try { ok = cc.exportAsMotionGraphicsTemplate(true, out.fsName); } catch (e4) { failed.push(B.name + ": " + e4.toString()); continue; }
+        if (ok) made.push(B.file + ".mogrt (" + B.fields + " fields)"); else failed.push(B.name + ": export refused (save the project, then run again)");
     }
     alert((made.length ? "Exported to " + out.fsName + ":\n- " + made.join("\n- ") : "Nothing exported.") + (failed.length ? "\n\nProblems:\n- " + failed.join("\n- ") : "") + (notes.length ? "\n\nNotes:\n- " + notes.join("\n- ") : "") + "\n\nThe comps are in the project folder \"" + FOLDER + "\".", "Nscale cluster mogrts");
 })();

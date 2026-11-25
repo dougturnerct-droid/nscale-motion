@@ -17,7 +17,7 @@
     var folder = folderNamed(FOLDER) || app.project.items.addFolder(FOLDER), built = [];
     for (var m = 0; m < MOVES.length; m++) for (var s = 0; s < SIZES.length; s++) {
         var id = MOVES[m][0], label = MOVES[m][1], S = SIZES[s], W = S[1], H = S[2];
-        var name = "Nscale \u00b7 Text \u00b7 " + label + " \u00b7 " + S[0].replace("x", ":"), file = "Nscale - Text " + label + " - " + S[0] + ".mogrt";
+        var file = "Nscale - Text " + label + " - " + S[0], name = file;   // the export is named after the template name, so keep it file-safe
         try {
             var old = compNamed(name); if (old) old.remove();
             var c = app.project.items.addComp(name, W, H, 1, DUR, FPS); c.parentFolder = folder;
@@ -42,8 +42,8 @@
     app.endUndoGroup();
     for (var b = 0; b < built.length; b++) {
         var B = built[b], cc = compNamed(B.name); if (!cc) { failed.push(B.name + ": comp lost before export"); continue; }
-        var ok = false; try { ok = cc.exportAsMotionGraphicsTemplate(true, out.fsName + "/" + B.file); } catch (e4) { failed.push(B.name + ": " + e4.toString()); continue; }
-        if (ok) made.push(B.file); else failed.push(B.name + ": export refused (save the project, then run again)");
+        var ok = false; try { ok = cc.exportAsMotionGraphicsTemplate(true, out.fsName); } catch (e4) { failed.push(B.name + ": " + e4.toString()); continue; }
+        if (ok) made.push(B.file + ".mogrt"); else failed.push(B.name + ": export refused (save the project, then run again)");
     }
     alert((made.length ? "Exported to " + out.fsName + ":\n- " + made.join("\n- ") : "Nothing exported.") + (failed.length ? "\n\nProblems:\n- " + failed.join("\n- ") : "") + (notes.length ? "\n\nNotes:\n- " + notes.join("\n- ") : "") + "\n\nRise by word and Type have no Out in the panel, so those clips cut at the end.", "Nscale text mogrts");
 })();
