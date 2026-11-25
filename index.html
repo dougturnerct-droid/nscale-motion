@@ -281,6 +281,7 @@ select.field{appearance:none;background:var(--base) url("data:image/svg+xml,%3Cs
 .update small{color:var(--dim);font-weight:400}
 .update button{height:28px;padding:0 10px;border-radius:7px;border:1px solid var(--line2);background:var(--signal);color:#fff;font:500 12px var(--sans);cursor:pointer;white-space:nowrap}
 .update button.quiet{background:transparent;color:var(--dim);border-color:transparent}
+.t2list{display:flex;flex-direction:column;gap:6px}.t2row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line,rgba(128,128,128,.25))}.t2row:last-child{border-bottom:0}.t2name{display:flex;flex-direction:column;min-width:0}.t2name b{font-weight:600}.t2name small{opacity:.6;font-size:11px;line-height:1.3}.t2row .seg button{min-width:44px}
 </style>
 </head>
 <body>
@@ -316,22 +317,22 @@ select.field{appearance:none;background:var(--base) url("data:image/svg+xml,%3Cs
 
     <!-- ===== Text moves: the house set ===== -->
     <div class="body" id="tab-text" hidden>
-      <div class="card"><div class="label">Start <span class="hint">select text layers first</span></div>
-        <div class="seg small" role="group" aria-label="Start from" id="tmAt"><button data-at="playhead">Playhead</button><button data-at="inpoint">Layer in point</button></div>
+      <div class="card"><div class="label">Timing <span class="hint" id="t2Moment"></span></div>
+        <div class="seg small" role="group" aria-label="Timing from" id="t2At"><button data-at="bars">Layer bars</button><button data-at="playhead">Playhead</button></div>
+        <p class="hint" style="margin:8px 0 0">Layer bars: In starts at the layer's in point, Out ends at its out point — trim the bar and press the move again to re-time. Playhead: In starts there, Out ends there.</p>
       </div>
-      <div class="card"><div class="label">Headline · by word <span class="hint">titles, social</span></div>
-        <div class="row"><button class="btn" data-tm="word" data-part="in">In<small> 89f</small></button><button class="btn" data-tm="word" data-part="out">Out<small> 34f</small></button></div></div>
-      <div class="card"><div class="label">Body copy · by line <span class="hint">paragraphs, lower thirds</span></div>
-        <div class="row"><button class="btn" data-tm="line" data-part="in">In<small> 144f</small></button><button class="btn" data-tm="line" data-part="out">Out<small> 55f</small></button></div></div>
-      <div class="card"><div class="label">Short line · rise by word <span class="hint">labels, captions</span></div>
-        <div class="row"><button class="btn" data-tm="rise" data-part="in">In<small> 55f</small></button></div></div>
-      <div class="card"><div class="label">Typing · with cursor <span class="hint">prompts, terminal lines</span></div>
-        <label class="sw" style="margin-bottom:10px">Add a cursor <input type="checkbox" id="tmCursor" checked></label>
-        <div class="row"><button class="btn" data-tm="type" data-part="in">Type<small> 150f</small></button></div></div>
+      <div class="card"><div class="label">Moves <span class="hint">select text layers · Out is the In reversed</span></div>
+        <div class="t2list" id="t2Moves"></div>
+        <div class="row" style="margin-top:10px"><label class="sw">Spearmint tick on words <input type="checkbox" id="t2Tick"></label><label class="sw">Cursor on typing <input type="checkbox" id="t2Cursor" checked></label></div>
+      </div>
+      <div class="card"><div class="label">Add a line <span class="hint">house style, sized to the comp, at the playhead</span></div>
+        <input class="field" id="t2Text" placeholder="Type the line (optional)" style="margin-bottom:8px" aria-label="Line text">
+        <div class="row"><button class="btn" data-add="headline">Headline</button><button class="btn" data-add="subhead">Subhead</button><button class="btn" data-add="tag">Tag + rule</button><button class="btn" data-add="url">URL</button></div>
+      </div>
       <div class="card"><div class="label">Premiere templates <span class="hint">for Nscale Motion in Premiere</span></div>
         <p class="hint" style="margin:0 0 10px">Rebuilds the .mogrt files from their comps, in five sizes (16:9, 16:9 4K, 1:1, 4:5, 9:16). Open the project that holds the comp first, then choose the shared Mogrts folder.</p>
         <div class="row"><button class="btn" data-bundled="nscale_lower_third_to_mogrt.jsx" data-what="lower thirds">Build lower thirds…</button><button class="btn" data-bundled="nscale_title_to_mogrt.jsx" data-what="titles">Build titles…</button></div></div>
-      <p class="hint" style="margin:2px 2px 0">Timings are the agreed 60 fps frames, converted to the comp's frame rate. Applying a move again replaces that move's animators. Typing reads the text when you press it: press again after editing the text.</p>
+      <p class="hint" style="margin:2px 2px 0">Timings are the motion tokens for the moment chosen on the Timing tab, snapped to the comp's frame rate. Pressing a move again replaces it. Typing reads the text when you press it: press again after editing.</p>
     </div>
 
     <!-- ===== Timing & easing ===== -->
@@ -651,21 +652,24 @@ $$('.tab').forEach(t => t.onclick = () => {
 });
 
 /* ---------- text moves ---------- */
-const TM_NAME = { word: 'Headline · by word', line: 'Body copy · by line', rise: 'Short line · rise by word', type: 'Typing · with cursor' };
-let tmAt = store.get('tmAt', 'playhead');
-function renderTmAt() { $$('#tmAt [data-at]').forEach(b => b.setAttribute('aria-pressed', b.dataset.at === tmAt)); }
-$$('#tmAt [data-at]').forEach(b => b.onclick = () => { tmAt = b.dataset.at; store.set('tmAt', tmAt); renderTmAt(); });
-$('#tmCursor').checked = store.get('tmCursor', true);
-$('#tmCursor').onchange = () => store.set('tmCursor', $('#tmCursor').checked);
-renderTmAt();
-$$('[data-bundled]').forEach(b => b.onclick = () => bridge.run('runBundled', { name: b.dataset.bundled }, `Builds the ${b.dataset.what} templates in five sizes and exports them to a folder you choose`));
-$$('[data-tm]').forEach(b => b.onclick = () => {
-  const id = b.dataset.tm, part = b.dataset.part, cursor = $('#tmCursor').checked;
-  bridge.run('textMove', { id, part, at: tmAt, cursor }, `${TM_NAME[id]}${id === 'type' ? (cursor ? ' with cursor' : '') : ' ' + part} added from the ${tmAt === 'inpoint' ? 'layer in point' : 'playhead'}`);
+const T2 = [['word', 'Rise by word', 'words rise and fade, m each, xs apart'], ['line', 'Rise by line', 'lines rise and fade, l each, xs apart'], ['unit', 'Rise as one', 'the whole layer rises 24px and fades, l'], ['fade', 'Fade as one', 'opacity only, l'], ['slide', 'Slide in as one', 'from the left by the carry-through distance, l'], ['cut', 'Cut by word', 'hard cuts, one word per xs, no movement'], ['type', 'Typing', 'character by character, with a cursor']];
+let t2At = store.get('t2At', 'bars');
+function renderT2At() { $$('#t2At [data-at]').forEach(b => b.setAttribute('aria-pressed', b.dataset.at === t2At)); }
+$$('#t2At [data-at]').forEach(b => b.onclick = () => { t2At = b.dataset.at; store.set('t2At', t2At); renderT2At(); });
+$('#t2Tick').checked = store.get('t2Tick', false); $('#t2Tick').onchange = () => store.set('t2Tick', $('#t2Tick').checked);
+$('#t2Cursor').checked = store.get('t2Cursor', true); $('#t2Cursor').onchange = () => store.set('t2Cursor', $('#t2Cursor').checked);
+$('#t2Moves').innerHTML = T2.map(([id, name, hint]) => `<div class="t2row"><div class="t2name"><b>${name}</b><small>${hint}</small></div><div class="seg small"><button data-move="${id}" data-part="in">In</button><button data-move="${id}" data-part="out">Out</button><button data-move="${id}" data-part="both">Both</button></div></div>`).join('');
+$$('#t2Moves [data-move]').forEach(b => b.onclick = () => {
+  const move = b.dataset.move, part = b.dataset.part, name = T2.find(m => m[0] === move)[1];
+  bridge.run('textMove2', { move, part, at: t2At, mode: S.mode, tick: $('#t2Tick').checked, cursor: $('#t2Cursor').checked }, `${name} ${part === 'both' ? 'in + out' : part} on the selected text layers, ${t2At === 'bars' ? 'from the layer bars' : 'at the playhead'}`);
 });
+$$('[data-add]').forEach(b => b.onclick = () => bridge.run('textAdd', { kind: b.dataset.add, text: $('#t2Text').value, mode: S.mode }, `Adds a ${b.textContent.toLowerCase()} layer in the house style at the playhead`));
+function renderT2Moment() { const el = $('#t2Moment'); if (el) el.textContent = (S.mode === 'productive' ? 'Productive' : 'Expressive') + ' · change on the Timing tab'; }
+renderT2At(); renderT2Moment();
+$$('[data-bundled]').forEach(b => b.onclick = () => bridge.run('runBundled', { name: b.dataset.bundled }, `Builds the ${b.dataset.what} templates in five sizes and exports them to a folder you choose`));
 
 /* ---------- moment ---------- */
-$$('[data-mode]').forEach(b => b.onclick = () => { S.mode = b.dataset.mode; store.set('mode', S.mode); render(); status(`Moment: ${S.mode === 'productive' ? 'Productive' : 'Expressive'}`); });
+$$('[data-mode]').forEach(b => b.onclick = () => { S.mode = b.dataset.mode; store.set('mode', S.mode); render(); renderT2Moment(); status(`Moment: ${S.mode === 'productive' ? 'Productive' : 'Expressive'}`); });
 
 /* ---------- curve editor ---------- */
 const ED = { x0: 40, x1: 360, y0: 190, y1: 40 };
