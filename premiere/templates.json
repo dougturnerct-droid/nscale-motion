@@ -95,7 +95,393 @@
           "optional": true
         }
       ]
+    },
+    {
+      "id": "cluster-01",
+      "name": "01 Stat card",
+      "use": "Cluster handover card, 1:1. Latest cluster handover",
+      "file": "Nscale - 01 Stat card - {format}.mogrt",
+      "match": "01 Stat card",
+      "formats": [
+        "1x1"
+      ],
+      "fields": [
+        {
+          "label": "Tag",
+          "param": "Tag",
+          "placeholder": "Latest cluster handover"
+        },
+        {
+          "label": "Card title",
+          "param": "Card title",
+          "placeholder": "United States"
+        },
+        {
+          "label": "Stat",
+          "param": "Stat",
+          "placeholder": "18K"
+        },
+        {
+          "label": "Stat caption",
+          "param": "Stat caption",
+          "placeholder": "GPUs, now handed over."
+        },
+        {
+          "label": "Show logo",
+          "param": "Show logo",
+          "type": "checkbox",
+          "default": true
+        },
+        {
+          "label": "Dark mode",
+          "param": "Dark mode",
+          "type": "checkbox",
+          "default": true
+        }
+      ]
+    },
+    {
+      "id": "cluster-02",
+      "name": "02 Rack grid",
+      "use": "Cluster handover card, 1:1. The build",
+      "file": "Nscale - 02 Rack grid - {format}.mogrt",
+      "match": "02 Rack grid",
+      "formats": [
+        "1x1"
+      ],
+      "fields": [
+        {
+          "label": "Tag",
+          "param": "Tag",
+          "placeholder": "The build"
+        },
+        {
+          "label": "Headline",
+          "param": "Headline",
+          "placeholder": "Every rack installed,\ncabled and powered.",
+          "multiline": true
+        },
+        {
+          "label": "Racks",
+          "param": "Racks",
+          "type": "slider",
+          "min": 0,
+          "max": 5000,
+          "default": 43
+        },
+        {
+          "label": "Racks total",
+          "param": "Racks total",
+          "type": "slider",
+          "min": 1,
+          "max": 5000,
+          "default": 72
+        },
+        {
+          "label": "MW",
+          "param": "MW",
+          "type": "slider",
+          "min": 0,
+          "max": 2000,
+          "default": 40
+        },
+        {
+          "label": "MW total",
+          "param": "MW total",
+          "type": "slider",
+          "min": 1,
+          "max": 2000,
+          "default": 60
+        },
+        {
+          "label": "Dark mode",
+          "param": "Dark mode",
+          "type": "checkbox",
+          "default": true
+        }
+      ]
+    },
+    {
+      "id": "cluster-03",
+      "name": "03 Spec table",
+      "use": "Cluster handover card, 1:1. Powered by",
+      "file": "Nscale - 03 Spec table - {format}.mogrt",
+      "match": "03 Spec table",
+      "formats": [
+        "1x1"
+      ],
+      "fields": [
+        {
+          "label": "Tag",
+          "param": "Tag",
+          "placeholder": "Powered by"
+        },
+        {
+          "label": "Headline",
+          "param": "Headline",
+          "placeholder": "NVIDIA\nGB300",
+          "multiline": true
+        },
+        {
+          "label": "Row 1 label",
+          "param": "Row 1 label",
+          "placeholder": "GPUs"
+        },
+        {
+          "label": "Row 1 value",
+          "param": "Row 1 value",
+          "placeholder": "18,000"
+        },
+        {
+          "label": "Row 2 label",
+          "param": "Row 2 label",
+          "placeholder": "Platform"
+        },
+        {
+          "label": "Row 2 value",
+          "param": "Row 2 value",
+          "placeholder": "NVIDIA GB300"
+        },
+        {
+          "label": "Row 3 label",
+          "param": "Row 3 label",
+          "placeholder": "Location"
+        },
+        {
+          "label": "Row 3 value",
+          "param": "Row 3 value",
+          "placeholder": "United States"
+        },
+        {
+          "label": "Row 4 label",
+          "param": "Row 4 label",
+          "placeholder": "Fabric"
+        },
+        {
+          "label": "Row 4 value",
+          "param": "Row 4 value",
+          "placeholder": "[InfiniBand / Spectrum-X]"
+        },
+        {
+          "label": "Status label",
+          "param": "Status label",
+          "placeholder": "Status"
+        },
+        {
+          "label": "Status",
+          "param": "Status",
+          "placeholder": "Live"
+        },
+        {
+          "label": "Dark mode",
+          "param": "Dark mode",
+          "type": "checkbox",
+          "default": true
+        }
+      ]
+    },
+    {
+      "id": "cluster-04",
+      "name": "04 Test results",
+      "use": "Cluster handover card, 1:1. Testing",
+      "file": "Nscale - 04 Test results - {format}.mogrt",
+      "match": "04 Test results",
+      "formats": [
+        "1x1"
+      ],
+      "fields": [
+        {
+          "label": "Tag",
+          "param": "Tag",
+          "placeholder": "Testing"
+        },
+        {
+          "label": "Headline",
+          "param": "Headline",
+          "placeholder": "Validated to perform reliably and securely at scale.",
+          "multiline": true
+        },
+        {
+          "label": "Test 1",
+          "param": "Test 1",
+          "placeholder": "Test 45.1"
+        },
+        {
+          "label": "Result 1",
+          "param": "Result 1",
+          "placeholder": "Passed"
+        },
+        {
+          "label": "Test 2",
+          "param": "Test 2",
+          "placeholder": "Test 45.1"
+        },
+        {
+          "label": "Result 2",
+          "param": "Result 2",
+          "placeholder": "Passed"
+        },
+        {
+          "label": "Test 3",
+          "param": "Test 3",
+          "placeholder": "Test 47.1"
+        },
+        {
+          "label": "Result 3",
+          "param": "Result 3",
+          "placeholder": "Passed"
+        },
+        {
+          "label": "Dark mode",
+          "param": "Dark mode",
+          "type": "checkbox",
+          "default": true
+        }
+      ]
+    },
+    {
+      "id": "cluster-05",
+      "name": "05 Handover",
+      "use": "Cluster handover card, 1:1. Handover",
+      "file": "Nscale - 05 Handover - {format}.mogrt",
+      "match": "05 Handover",
+      "formats": [
+        "1x1"
+      ],
+      "fields": [
+        {
+          "label": "Tag",
+          "param": "Tag",
+          "placeholder": "Handover"
+        },
+        {
+          "label": "Card title",
+          "param": "Card title",
+          "placeholder": "Production ready"
+        },
+        {
+          "label": "Stat",
+          "param": "Stat",
+          "placeholder": "18K"
+        },
+        {
+          "label": "Stat caption",
+          "param": "Stat caption",
+          "placeholder": "NVIDIA GB300 GPUs. All on Nscale."
+        },
+        {
+          "label": "Show logo",
+          "param": "Show logo",
+          "type": "checkbox",
+          "default": false
+        },
+        {
+          "label": "Dark mode",
+          "param": "Dark mode",
+          "type": "checkbox",
+          "default": true
+        }
+      ]
+    },
+    {
+      "id": "end-card",
+      "name": "End card",
+      "use": "Cluster handover card, 1:1. No fields.",
+      "file": "Nscale - End card - {format}.mogrt",
+      "match": "End card",
+      "formats": [
+        "1x1"
+      ],
+      "fields": [
+        {
+          "label": "Dark mode",
+          "param": "Dark mode",
+          "type": "checkbox",
+          "default": true
+        }
+      ]
+    },
+    {
+      "id": "text-word",
+      "name": "Text · Slide in by word",
+      "use": "A headline with the Slide in by word move from the After Effects panel. In and out are protected, so trimming the clip only changes the hold.",
+      "file": "Nscale - Text Slide in by word - {format}.mogrt",
+      "match": "Text Slide in by word",
+      "formats": [
+        "16x9",
+        "1x1",
+        "9x16"
+      ],
+      "fields": [
+        {
+          "label": "Text",
+          "param": "Text",
+          "placeholder": "Your headline here",
+          "multiline": true
+        }
+      ]
+    },
+    {
+      "id": "text-line",
+      "name": "Text · Rise by line",
+      "use": "A headline with the Rise by line move from the After Effects panel. In and out are protected, so trimming the clip only changes the hold.",
+      "file": "Nscale - Text Rise by line - {format}.mogrt",
+      "match": "Text Rise by line",
+      "formats": [
+        "16x9",
+        "1x1",
+        "9x16"
+      ],
+      "fields": [
+        {
+          "label": "Text",
+          "param": "Text",
+          "placeholder": "Your headline here",
+          "multiline": true
+        }
+      ]
+    },
+    {
+      "id": "text-rise",
+      "name": "Text · Rise by word",
+      "use": "A headline with the Rise by word move from the After Effects panel. In and out are protected, so trimming the clip only changes the hold.",
+      "file": "Nscale - Text Rise by word - {format}.mogrt",
+      "match": "Text Rise by word",
+      "formats": [
+        "16x9",
+        "1x1",
+        "9x16"
+      ],
+      "fields": [
+        {
+          "label": "Text",
+          "param": "Text",
+          "placeholder": "Your headline here",
+          "multiline": true
+        }
+      ]
+    },
+    {
+      "id": "text-type",
+      "name": "Text · Type",
+      "use": "A headline with the Type move from the After Effects panel. In and out are protected, so trimming the clip only changes the hold.",
+      "file": "Nscale - Text Type - {format}.mogrt",
+      "match": "Text Type",
+      "formats": [
+        "16x9",
+        "1x1",
+        "9x16"
+      ],
+      "fields": [
+        {
+          "label": "Text",
+          "param": "Text",
+          "placeholder": "Your headline here",
+          "multiline": true
+        }
+      ]
     }
   ],
-  "_fields": "Field types: text (default), slider (min/max/default) and checkbox (default). param must match the Essential Graphics name exactly."
+  "_fields": "Field types: text (default), slider (min/max/default) and checkbox (default). param must match the Essential Graphics name exactly.",
+  "_formats_note": "A template with a \"formats\" list only exists in those sizes; the panel marks the others as missing."
 }

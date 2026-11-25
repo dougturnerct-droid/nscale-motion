@@ -27,6 +27,12 @@ After Effects panel 2.6.0 · Premiere panel 1.3.0
   in and out to the motion guidelines, with a transparent background for footage behind.
 - "Add to open comp" drops the filled template into the comp you have open as a precomp at
   the playhead, so screens can be sequenced into each other; one undo step.
+- Premiere: the cluster cards and the four text moves can be exported as .mogrt files from the
+  Text tab (Build cluster cards, Build text moves). Cluster cards go out 1:1 with the catalogue's
+  fields as Essential Graphics controls and the count-ups intact; text moves build one comp per
+  move in 16:9, 1:1 and 9:16 with a "Text" field. In and out are protected regions. The Premiere
+  panel lists them once the files are in its Mogrts folder.
+- Motion library: a November tooling entry in the changelog (templates, counts, text moves, 60 fps).
 - Text tab: the four moves are named for what they do rather than who they are for (Slide in by
   word, Rise by line, Rise by word, Type); the animations are unchanged.
 - Animated figures end on what you type: a keyframed count (the stat on 01/05, racks and MW
