@@ -1,0 +1,380 @@
+{
+  "_about": "Templates offered in the After Effects panel's Templates tab. Each template is a comp in assets/templates.aep. Text fields fill the text layer of the same 'layer' name; number/slider/checkbox fields set the effect control of that name on the 'Theme - controls' layer. 'kind: event' uses the event pipeline (hero line split, glass clearance).",
+  "folders": [
+    {
+      "id": "data-centres",
+      "name": "Data centres",
+      "folders": [
+        {
+          "id": "cluster-handover",
+          "name": "Cluster handover",
+          "templates": [
+            {
+              "id": "cluster-01",
+              "name": "01 Stat card",
+              "comp": "cluster-01 · stat card",
+              "notion": "Cluster 01 Stat card",
+              "size": "1x1",
+              "dark": true,
+              "fields": [
+                {
+                  "name": "Tag",
+                  "layer": "Tag label",
+                  "type": "text",
+                  "placeholder": "Latest cluster handover"
+                },
+                {
+                  "name": "Card title",
+                  "layer": "Card title",
+                  "type": "text",
+                  "placeholder": "United States"
+                },
+                {
+                  "name": "Stat",
+                  "layer": "Stat",
+                  "type": "text",
+                  "placeholder": "18K",
+                  "hint": "number then suffix, e.g. 18K or 2,400 - the count-up ends on this number"
+                },
+                {
+                  "name": "Stat caption",
+                  "layer": "Stat caption",
+                  "type": "text",
+                  "placeholder": "GPUs, now handed over."
+                },
+                {
+                  "name": "Show logo",
+                  "layer": "Show logo",
+                  "type": "checkbox",
+                  "default": true
+                }
+              ],
+              "built": true
+            },
+            {
+              "id": "cluster-02",
+              "name": "02 Rack grid",
+              "comp": "cluster-02 · rack grid",
+              "notion": "Cluster 02 Rack grid",
+              "size": "1x1",
+              "dark": true,
+              "built": true,
+              "fields": [
+                {
+                  "name": "Tag",
+                  "layer": "Tag label",
+                  "type": "text",
+                  "placeholder": "The build"
+                },
+                {
+                  "name": "Headline",
+                  "layer": "Headline",
+                  "type": "text",
+                  "placeholder": "Every rack installed,\ncabled and powered.",
+                  "multiline": true
+                },
+                {
+                  "name": "Racks",
+                  "layer": "Racks",
+                  "type": "number",
+                  "min": 0,
+                  "max": 5000,
+                  "default": 43,
+                  "hint": "live now; the grid fills to Racks / Racks total (the count-up ends here)"
+                },
+                {
+                  "name": "Racks total",
+                  "layer": "Racks total",
+                  "type": "number",
+                  "min": 1,
+                  "max": 5000,
+                  "default": 72
+                },
+                {
+                  "name": "MW",
+                  "layer": "MW",
+                  "type": "number",
+                  "min": 0,
+                  "max": 2000,
+                  "default": 40,
+                  "hint": "(the count-up ends here)"
+                },
+                {
+                  "name": "MW total",
+                  "layer": "MW total",
+                  "type": "number",
+                  "min": 1,
+                  "max": 2000,
+                  "default": 60
+                }
+              ]
+            },
+            {
+              "id": "cluster-03",
+              "name": "03 Spec table",
+              "comp": "cluster-03 · spec table",
+              "notion": "Cluster 03 Spec table",
+              "size": "1x1",
+              "dark": true,
+              "built": true,
+              "fields": [
+                {
+                  "name": "Tag",
+                  "layer": "Tag label",
+                  "type": "text",
+                  "placeholder": "Powered by"
+                },
+                {
+                  "name": "Headline",
+                  "layer": "Headline",
+                  "type": "text",
+                  "placeholder": "NVIDIA\nGB300",
+                  "multiline": true
+                },
+                {
+                  "name": "Row 1 label",
+                  "layer": "Row 1 label",
+                  "type": "text",
+                  "placeholder": "GPUs"
+                },
+                {
+                  "name": "Row 1 value",
+                  "layer": "Row 1 value",
+                  "type": "text",
+                  "placeholder": "18,000"
+                },
+                {
+                  "name": "Row 2 label",
+                  "layer": "Row 2 label",
+                  "type": "text",
+                  "placeholder": "Platform"
+                },
+                {
+                  "name": "Row 2 value",
+                  "layer": "Row 2 value",
+                  "type": "text",
+                  "placeholder": "NVIDIA GB300"
+                },
+                {
+                  "name": "Row 3 label",
+                  "layer": "Row 3 label",
+                  "type": "text",
+                  "placeholder": "Location"
+                },
+                {
+                  "name": "Row 3 value",
+                  "layer": "Row 3 value",
+                  "type": "text",
+                  "placeholder": "United States"
+                },
+                {
+                  "name": "Row 4 label",
+                  "layer": "Row 4 label",
+                  "type": "text",
+                  "placeholder": "Fabric"
+                },
+                {
+                  "name": "Row 4 value",
+                  "layer": "Row 4 value",
+                  "type": "text",
+                  "placeholder": "[InfiniBand / Spectrum-X]"
+                },
+                {
+                  "name": "Status label",
+                  "layer": "Status label",
+                  "type": "text",
+                  "placeholder": "Status"
+                },
+                {
+                  "name": "Status",
+                  "layer": "Status",
+                  "type": "text",
+                  "placeholder": "Live"
+                }
+              ]
+            },
+            {
+              "id": "cluster-04",
+              "name": "04 Test results",
+              "comp": "cluster-04 · tests",
+              "notion": "Cluster 04 Test results",
+              "size": "1x1",
+              "dark": true,
+              "built": true,
+              "fields": [
+                {
+                  "name": "Tag",
+                  "layer": "Tag label",
+                  "type": "text",
+                  "placeholder": "Testing"
+                },
+                {
+                  "name": "Headline",
+                  "layer": "Headline",
+                  "type": "text",
+                  "placeholder": "Validated to perform reliably and securely at scale.",
+                  "multiline": true,
+                  "hint": "wraps at the panel width"
+                },
+                {
+                  "name": "Test 1",
+                  "layer": "Test 1",
+                  "type": "text",
+                  "placeholder": "Test 45.1"
+                },
+                {
+                  "name": "Result 1",
+                  "layer": "Result 1",
+                  "type": "text",
+                  "placeholder": "Passed",
+                  "hint": "shows \"Running\" until its test passes"
+                },
+                {
+                  "name": "Test 2",
+                  "layer": "Test 2",
+                  "type": "text",
+                  "placeholder": "Test 45.1"
+                },
+                {
+                  "name": "Result 2",
+                  "layer": "Result 2",
+                  "type": "text",
+                  "placeholder": "Passed",
+                  "hint": "shows \"Running\" until its test passes"
+                },
+                {
+                  "name": "Test 3",
+                  "layer": "Test 3",
+                  "type": "text",
+                  "placeholder": "Test 47.1"
+                },
+                {
+                  "name": "Result 3",
+                  "layer": "Result 3",
+                  "type": "text",
+                  "placeholder": "Passed",
+                  "hint": "shows \"Running\" until its test passes"
+                }
+              ]
+            },
+            {
+              "id": "cluster-05",
+              "name": "05 Handover",
+              "comp": "cluster-05 · handover",
+              "notion": "Cluster 05 Handover",
+              "size": "1x1",
+              "dark": true,
+              "fields": [
+                {
+                  "name": "Tag",
+                  "layer": "Tag label",
+                  "type": "text",
+                  "placeholder": "Handover"
+                },
+                {
+                  "name": "Card title",
+                  "layer": "Card title",
+                  "type": "text",
+                  "placeholder": "Production ready"
+                },
+                {
+                  "name": "Stat",
+                  "layer": "Stat",
+                  "type": "text",
+                  "placeholder": "18K",
+                  "hint": "number then suffix, e.g. 18K or 2,400 - the count-up ends on this number"
+                },
+                {
+                  "name": "Stat caption",
+                  "layer": "Stat caption",
+                  "type": "text",
+                  "placeholder": "NVIDIA GB300 GPUs. All on Nscale."
+                },
+                {
+                  "name": "Show logo",
+                  "layer": "Show logo",
+                  "type": "checkbox",
+                  "default": false
+                }
+              ],
+              "built": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "social",
+      "name": "Social",
+      "folders": [
+        {
+          "id": "events",
+          "name": "Events",
+          "templates": [
+            {
+              "id": "event-post",
+              "name": "Event post",
+              "comp": "social-asset",
+              "notion": "Event post",
+              "kind": "event",
+              "size": "1x1",
+              "dark": true,
+              "fields": [
+                {
+                  "name": "Top line",
+                  "layer": "Top line",
+                  "type": "text",
+                  "placeholder": "Gold Sponsor"
+                },
+                {
+                  "name": "Event name",
+                  "layer": "Heading",
+                  "type": "text",
+                  "placeholder": "NVIDIA GTC\nWashington, D.C.",
+                  "multiline": true,
+                  "hint": "press return to choose the line break; one long line is split for you"
+                },
+                {
+                  "name": "Date chip",
+                  "layer": "Date chip",
+                  "type": "text",
+                  "placeholder": "December 8–10"
+                },
+                {
+                  "name": "Location chip",
+                  "layer": "Location chip",
+                  "type": "text",
+                  "placeholder": "Las Vegas",
+                  "hint": "blank hides it"
+                }
+              ],
+              "built": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "brand",
+      "name": "Brand",
+      "folders": [
+        {
+          "id": "sign-off",
+          "name": "Sign-off",
+          "templates": [
+            {
+              "id": "end-card",
+              "name": "End card",
+              "comp": "end card",
+              "notion": "End card",
+              "size": "1x1",
+              "dark": true,
+              "built": true,
+              "fields": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

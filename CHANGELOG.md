@@ -3,14 +3,14 @@
 Newest first. Each heading is the After Effects panel version, which is also the release tag;
 the Premiere panel version is noted where it changed. Install or update with the line in the README.
 
-## 2.6.0 — 19 Nov 2026
+## 2.6.0 — 25 Nov 2026
 
 After Effects panel 2.6.0 · Premiere panel 1.3.0
 
 - Social: "Send to Media Encoder". Saves your project, fills the template in a temporary
   copy, hands each light/dark file to Media Encoder, and reopens your project within a few
   seconds. After Effects stays free while Media Encoder renders.
-- Social: the template project ships inside the panel (`assets/social-templates.aep`), so
+- Social: the template project ships inside the panel (`assets/templates.aep`), so
   you no longer open it yourself. Choose overrides it with another .aep; Built-in goes back.
 - Social: a Template picker lists every comp in the project that has `Theme · controls`;
   press Scan to refresh the list.
@@ -20,8 +20,15 @@ After Effects panel 2.6.0 · Premiere panel 1.3.0
   and the text under each heading is the copy. After a Media Encoder hand-off the rows are
   marked "Sent to Media Encoder" (or Failed) with the output path, who sent it and when. Needs
   the shared Notion token pasted once per Mac, under Connection in the Social tab.
-- Social: template comps other than the event one are filled generically — each field goes to
-  the text layer of the same name.
+- The Social tab is now **Templates**, with folders: Data centres / Cluster handover (01 Stat
+  card, 02 Rack grid, 03 Spec table, 04 Test results, 05 Handover), Social / Events (Event
+  post), Brand / Sign-off (End card). Pick a template and its form appears; every field goes
+  to the text layer or control of the same name. The cluster cards are 1:1, 60 fps, animated
+  in and out to the motion guidelines, with a transparent background for footage behind.
+- "Add to open comp" drops the filled template into the comp you have open as a precomp at
+  the playhead, so screens can be sequenced into each other; one undo step.
+- Animated figures end on what you type: a keyframed count (the stat on 01/05, racks and MW
+  on 02) is re-keyed to the typed value rather than overwritten.
 
 ## 2.5.2 — 19 Nov 2026
 
