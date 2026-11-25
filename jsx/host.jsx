@@ -1762,17 +1762,30 @@ function socialGenericRun(p) {
     return "SOCIAL:" + js({ what: "ame", notes: notes, made: made, files: [], failed: failed, folder: outFolder.fsName, total: jobs.length * MODES.length });
 }
 // Fill a template comp from a job: text fields -> text layer of that name; number/slider/checkbox -> control on Theme - controls
+// Fills a duplicated template comp from the form. Text fields -> the text layer of that name (expressions on the
+// layer keep working: they read the new value). Numbers/sliders -> the control of that name on Theme - controls;
+// when the control is keyframed (an animated count-up) the LAST keyframe takes the value, so the animation ends on
+// the typed figure. The "Stat" field also re-keys a "Count" control (cards 01/05) to the number in the text.
 function socialFillGeneric(comp, job, name, notes) {
     var fields = job.fields || {}, types = job.types || {}, unset = [], ctl = null; try { ctl = comp.layer("Theme \u00b7 controls"); } catch (eC) {}
     function setText(L, text) { var tp = L.property("ADBE Text Properties").property("ADBE Text Document"); var d = tp.value; d.text = String(text).replace(/\r\n|\n/g, "\r"); tp.setValue(d); }
+    function setNum(prop, num) { if (prop.numKeys >= 2) prop.setValueAtKey(prop.numKeys, num); else if (prop.numKeys === 1) prop.setValueAtKey(1, num); else prop.setValue(num); }
+    function control(nm) { var fx = null; try { fx = ctl && ctl.property("ADBE Effect Parade").property(nm); } catch (eF) {} return fx ? fx.property(1) : null; }
     for (var k in fields) {
         if (!fields.hasOwnProperty(k)) continue;
         var ty = types[k] || "text", v = fields[k];
-        if (ty === "text") { var L = null; try { L = comp.layer(k); } catch (eL) {} if (L && L instanceof TextLayer) setText(L, v); else unset.push(k); continue; }
-        var fx = null; try { fx = ctl && ctl.property("ADBE Effect Parade").property(k); } catch (eF) {}
-        if (!fx) { unset.push(k); continue; }
-        if (ty === "checkbox") fx.property(1).setValue(v === true || v === "true" || v === 1 ? 1 : 0);
-        else { var num = parseFloat(v); if (isFinite(num)) fx.property(1).setValue(num); }
+        if (ty === "text") {
+            var L = null; try { L = comp.layer(k); } catch (eL) {}
+            if (L && L instanceof TextLayer) {
+                setText(L, v);
+                if (k === "Stat") { var m = String(v).match(/^\s*([0-9][0-9,\.]*)/), cnt = control("Count"); if (m && cnt) setNum(cnt, parseFloat(m[1].replace(/,/g, ""))); }
+            } else unset.push(k);
+            continue;
+        }
+        var prop = control(k);
+        if (!prop) { unset.push(k); continue; }
+        if (ty === "checkbox") prop.setValue(v === true || v === "true" || v === 1 ? 1 : 0);
+        else { var num = parseFloat(v); if (isFinite(num)) setNum(prop, num); }
     }
     if (unset.length) notes.push(name + ": nothing called " + unset.join(", ") + " in " + comp.name + " (text layer, or control on Theme \u00b7 controls)");
     return unset;

@@ -33,7 +33,8 @@
                   "name": "Stat",
                   "layer": "Stat",
                   "type": "text",
-                  "placeholder": "18K"
+                  "placeholder": "18K",
+                  "hint": "number then suffix, e.g. 18K or 2,400 - the count-up ends on this number"
                 },
                 {
                   "name": "Stat caption",
@@ -47,7 +48,8 @@
                   "type": "checkbox",
                   "default": true
                 }
-              ]
+              ],
+              "built": true
             },
             {
               "id": "cluster-02",
@@ -78,7 +80,7 @@
                   "min": 0,
                   "max": 5000,
                   "default": 43,
-                  "hint": "live now; the grid fills to Racks / Racks total"
+                  "hint": "live now; the grid fills to Racks / Racks total (the count-up ends here)"
                 },
                 {
                   "name": "Racks total",
@@ -94,7 +96,8 @@
                   "type": "number",
                   "min": 0,
                   "max": 2000,
-                  "default": 40
+                  "default": 40,
+                  "hint": "(the count-up ends here)"
                 },
                 {
                   "name": "MW total",
@@ -197,7 +200,7 @@
               "notion": "Cluster 04 Test results",
               "size": "1x1",
               "dark": true,
-              "built": false,
+              "built": true,
               "fields": [
                 {
                   "name": "Tag",
@@ -209,16 +212,9 @@
                   "name": "Headline",
                   "layer": "Headline",
                   "type": "text",
-                  "placeholder": "Validated to perform\nreliably and securely\nat scale.",
-                  "multiline": true
-                },
-                {
-                  "name": "Progress",
-                  "layer": "Progress",
-                  "type": "slider",
-                  "min": 0,
-                  "max": 100,
-                  "default": 100
+                  "placeholder": "Validated to perform reliably and securely at scale.",
+                  "multiline": true,
+                  "hint": "wraps at the panel width"
                 },
                 {
                   "name": "Test 1",
@@ -230,7 +226,8 @@
                   "name": "Result 1",
                   "layer": "Result 1",
                   "type": "text",
-                  "placeholder": "Passed"
+                  "placeholder": "Passed",
+                  "hint": "shows \"Running\" until its test passes"
                 },
                 {
                   "name": "Test 2",
@@ -242,7 +239,8 @@
                   "name": "Result 2",
                   "layer": "Result 2",
                   "type": "text",
-                  "placeholder": "Passed"
+                  "placeholder": "Passed",
+                  "hint": "shows \"Running\" until its test passes"
                 },
                 {
                   "name": "Test 3",
@@ -254,14 +252,15 @@
                   "name": "Result 3",
                   "layer": "Result 3",
                   "type": "text",
-                  "placeholder": "Passed"
+                  "placeholder": "Passed",
+                  "hint": "shows \"Running\" until its test passes"
                 }
               ]
             },
             {
               "id": "cluster-05",
               "name": "05 Handover",
-              "comp": "cluster-01 · stat card",
+              "comp": "cluster-05 · handover",
               "notion": "Cluster 05 Handover",
               "size": "1x1",
               "dark": true,
@@ -282,7 +281,8 @@
                   "name": "Stat",
                   "layer": "Stat",
                   "type": "text",
-                  "placeholder": "18K"
+                  "placeholder": "18K",
+                  "hint": "number then suffix, e.g. 18K or 2,400 - the count-up ends on this number"
                 },
                 {
                   "name": "Stat caption",
@@ -296,17 +296,8 @@
                   "type": "checkbox",
                   "default": false
                 }
-              ]
-            },
-            {
-              "id": "cluster-06",
-              "name": "06 End card",
-              "comp": "cluster-06 · end card",
-              "notion": "Cluster 06 End card",
-              "size": "1x1",
-              "dark": true,
-              "built": false,
-              "fields": []
+              ],
+              "built": true
             }
           ]
         }
@@ -356,7 +347,30 @@
                   "placeholder": "Las Vegas",
                   "hint": "blank hides it"
                 }
-              ]
+              ],
+              "built": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "brand",
+      "name": "Brand",
+      "folders": [
+        {
+          "id": "sign-off",
+          "name": "Sign-off",
+          "templates": [
+            {
+              "id": "end-card",
+              "name": "End card",
+              "comp": "end card",
+              "notion": "End card",
+              "size": "1x1",
+              "dark": true,
+              "built": true,
+              "fields": []
             }
           ]
         }
