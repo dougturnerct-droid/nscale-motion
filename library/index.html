@@ -408,6 +408,9 @@ table.t td.m-productive,table.t td.m-expressive{background:color-mix(in srgb,var
   .props,.form{grid-template-columns:1fr;gap:4px 0}
   .props dt{margin-top:8px}
 }
+.shareov{position:fixed;inset:0;background:rgba(2,6,18,.45);z-index:40;display:grid;place-items:center;padding:16px}
+.sharebox{background:var(--bg);border:1px solid var(--line-strong);border-radius:var(--r-shell);padding:20px;width:min(460px,100%);box-shadow:var(--shadow)}
+.sharebox .list{margin:6px 0;max-height:220px;overflow:auto}
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{transition:none!important;animation:none!important}
 }
@@ -426,7 +429,7 @@ table.t td.m-productive,table.t td.m-expressive{background:color-mix(in srgb,var
   </nav>
   <div class="scrim" id="scrim"></div>
   <main class="main" id="main">
-    <div class="topbar"><button class="btn small iconbtn menu" id="menuBtn" aria-controls="side" aria-label="Open the library menu"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"/></svg></button><button class="btn small iconbtn" id="backBtn" aria-label="Back" title="Back"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5L5.5 8l4.5 4.5"/></svg></button><div class="crumbs" id="crumbs"></div><div class="tools" id="tools"></div></div>
+    <div class="topbar"><button class="btn small iconbtn menu" id="menuBtn" aria-controls="side" aria-label="Open the library menu"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M2.5 4.5h11M2.5 8h11M2.5 11.5h11"/></svg></button><button class="btn small iconbtn" id="backBtn" aria-label="Back" title="Back"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5L5.5 8l4.5 4.5"/></svg></button><div class="crumbs" id="crumbs"></div><div class="tools" id="tools"></div><button class="btn small" id="shareBtn" title="Share the page you are on">Share this page</button></div>
     <div id="page"></div>
   </main>
 </div>
@@ -744,7 +747,7 @@ const stClass = s => 'st-' + String(s || '').split(' ')[0];
 const modeChip = n => { const k = String(n || '').toLowerCase(); return ['productive', 'expressive', 'both'].includes(k) ? `<span class="mode m-${k}">${esc(n)}</span>` : esc(n || ''); };
 
 /* ---------- store: shared db, with an on-device fallback for previews ---------- */
-const COLS = ['pages', 'audit', 'feedback', 'background', 'files', 'lab', 'media', 'scores', 'type'];
+const COLS = ['pages', 'audit', 'feedback', 'background', 'files', 'lab', 'media', 'scores', 'type', 'behaviours', 'shares'];
 const Store = { db: null, user: null, me: null, canWrite: true, canEdit: false, local: true, assets: null, downloads: null, names: {} };
 COLS.forEach(c => { Store[c] = {}; });
 function loadLocal() { try { const d = JSON.parse(localStorage.getItem('nscale-motion-library') || '{}'); COLS.forEach(c => { Store[c] = d[c] || {}; }); } catch (e) {} }
@@ -760,7 +763,7 @@ async function del(col, id) {
   try { await Store.db.doc(col + '/' + id).delete(); return true; } catch (e) { toast('Could not delete.'); return false; }
 }
 let changeT = 0;
-function changed() { clearTimeout(changeT); changeT = setTimeout(() => { renderTree(); route(true); }, 60); }
+function changed() { clearTimeout(changeT); changeT = setTimeout(() => { renderTree(); route(true); if (typeof checkShares === 'function') checkShares(); }, 60); }
 async function nameOf(id) {
   if (!id || id === 'me') return 'You';
   if (Store.names[id]) return Store.names[id];
@@ -912,12 +915,14 @@ function treeModel() {
   const tags = allTags();
   const team = parent => teamChildren(parent).map(([id, p]) => ({ key: 'page/' + id, label: p.title || 'Untitled', ic: '', kids: team(id) }));
   return [
+    { key: 'how', label: 'How we move' },
     { key: 'overview', label: 'Overview' },
     { key: 'principles', label: 'Principles' },
     { key: 'timing', label: 'Timing' },
     { key: 'curves', label: 'Curves' },
     { key: 'moves', label: 'Moves', group: true, kids: MOVE_ORDER.map(m => ({ key: 'move/' + m, label: MOVE_NAMES[m], ic: 'mv', ct: usedIn(m).length || '' })) },
     { key: 'convergence', label: 'Convergence', group: true, kids: Object.entries(MEETS).map(([k, m]) => ({ key: 'meet/' + k, label: m.name, ic: m.status === 'decided' ? 'mv' : 'pr' })) },
+    { key: 'behaviours', label: 'Behaviours', ct: Object.keys(Store.behaviours).length || '', kids: JOBS.map(j => ({ key: 'behaviours?job=' + encodeURIComponent(j.name), label: j.name, ct: behRows(j.name).length || '', kids: behRows(j.name).map(([id, b]) => ({ key: 'behaviour/' + id, label: b.name || 'Untitled', ic: 'mv' })) })) },
     { key: 'audit', label: 'Audit', ct: Object.keys(Store.audit).length, kids: [...CHANNELS, 'Unsorted'].filter(c => auditBy[c]).map(c => ({ key: 'audit?channel=' + encodeURIComponent(c), label: c, ct: auditBy[c].length, kids: auditBy[c].sort((a, b) => (a[1].element || '').localeCompare(b[1].element || '')).map(([id, a]) => ({ key: 'audit/' + id, label: a.element || 'Untitled', ic: 'au' })) })) },
     { key: 'type', label: 'Type behaviour', ct: Object.keys(Store.type).length || '', kids: [{ key: 'type/roles', label: 'Roles and social scale', ic: 'mv' }, ...typePieces().map(pc => ({ key: 'type?piece=' + encodeURIComponent(pc), label: pc, ct: typeRows(pc).length, kids: typeRows(pc).map(([id, t]) => ({ key: 'type/' + id, label: (t.order ? t.order + '. ' : '') + (t.situation || 'Untitled'), ic: 'au' })) }))] },
     { key: 'game', label: 'Does it move? The game' },
@@ -1056,6 +1061,7 @@ function curveTable() {
 }
 function graphSVG(id) { const g = graphs(10, 18, 260, 90, id, 1.2); return `<svg viewBox="0 0 280 230" class="stage" role="img" aria-label="Value and speed graph for ${esc(CURVES[id].name)}">${STYLE}${g}</svg>`; }
 const PAGES = {
+  how() { return howPage(); },
   overview() {
     crumbs([['Overview']]); tools('');
     return `<div class="doc"><h1 class="title">One motion language for Nscale</h1>
@@ -1067,6 +1073,7 @@ const PAGES = {
         <a href="#/moves"><div class="k">Moves</div><div class="d">Eleven moves and one response. Everything is built from these.</div></a>
         <a href="#/timing"><div class="k">Timing</div><div class="d">One Fibonacci scale. Expressive is two steps up.</div></a>
         <a href="#/curves"><div class="k">Curves</div><div class="d">A family per moment: enter, exit, move, line.</div></a>
+        <a href="#/behaviours"><div class="k">Behaviours</div><div class="d">Named line behaviours by job, rolled up from the audit.</div></a>
         <a href="#/audit"><div class="k">Audit</div><div class="d">Every place Nscale moves, and how.</div></a>
         <a href="#/game"><div class="k">Does it move?</div><div class="d">Learn the decision tool by playing it.</div></a>
         <a href="#/lab"><div class="k">Lab</div><div class="d">Build a quick animation with the real tokens.</div></a>
@@ -1146,7 +1153,57 @@ document.addEventListener('click', async e => {
   b.innerHTML = ICON_TICK; b.classList.add('done'); b.setAttribute('aria-label', 'Copied');
   clearTimeout(b._t); b._t = setTimeout(() => { b.innerHTML = ICON_COPY; b.classList.remove('done'); b.setAttribute('aria-label', 'Copy ' + v); }, 1600);
 });
-$('#backBtn').onclick = () => { if (history.length > 1) history.back(); else location.hash = '#/overview'; };
+$('#backBtn').onclick = () => { if (history.length > 1) history.back(); else location.hash = '#/how'; };
+/* Sharing a page. claude.ai drops anything after the library link, so a link can't carry the page.
+   Instead the sender picks people; the share is saved, and the next time each of them opens the library
+   it opens on that page for them. The link itself is always the plain library link. */
+const LIB_URL = 'https://claude.ai/artifact/DDnXbWJU8q7JQuXTmTNmiF';
+async function copyText(v) { try { await navigator.clipboard.writeText(v); return true; } catch (err) { const ta = document.createElement('textarea'); ta.value = v; document.body.appendChild(ta); ta.select(); let ok = false; try { ok = document.execCommand('copy'); } catch (e2) {} ta.remove(); return ok; } }
+function pageTitleNow() { const c = document.querySelector('#crumbs > span:last-child'); return (c && c.textContent.trim()) || 'How we move'; }
+$('#shareBtn').onclick = () => {
+  const route = (location.hash.slice(2) || 'how').split('?edit')[0], title = pageTitleNow(), sel = new Map();
+  const ov = document.createElement('div'); ov.className = 'shareov';
+  ov.innerHTML = `<div class="sharebox" role="dialog" aria-modal="true" aria-label="Share this page"><h3 style="margin:0 0 4px">Share “${esc(title)}”</h3>
+    <p class="note" style="margin:0 0 12px">Pick people. The next time they open the library link, it opens on this page for them.</p>
+    <input class="in" id="shQ" placeholder="Search people by name" autocomplete="off" aria-label="Search people">
+    <ul class="list" id="shHits"></ul><div class="tags" id="shSel" style="margin:6px 0 14px"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap"><button class="btn small" id="shCancel">Cancel</button><button class="btn small solid" id="shGo" disabled>Share and copy link</button></div></div>`;
+  document.body.appendChild(ov);
+  const close = () => ov.remove(), q = ov.querySelector('#shQ'), hits = ov.querySelector('#shHits'), selEl = ov.querySelector('#shSel'), go = ov.querySelector('#shGo');
+  ov.onclick = e => { if (e.target === ov) close(); }; ov.querySelector('#shCancel').onclick = close;
+  ov.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
+  const paintSel = () => { selEl.innerHTML = [...sel].map(([id, n]) => `<button class="tag on" data-un="${esc(id)}" title="Remove">${esc(n || 'Someone')} ×</button>`).join(''); go.disabled = !sel.size;
+    selEl.querySelectorAll('[data-un]').forEach(b => b.onclick = () => { sel.delete(b.dataset.un); paintSel(); }); };
+  let t = 0;
+  const search = () => { clearTimeout(t); t = setTimeout(async () => {
+    if (!Store.user || !Store.user.search) { hits.innerHTML = '<li class="note" style="padding:8px 12px">People search works when the library is open in claude.ai.</li>'; return; }
+    let list = []; try { list = await Store.user.search(q.value.trim()); } catch (e) {}
+    list = (list || []).filter(p => p.id && !p.isMe);
+    hits.innerHTML = list.length ? list.slice(0, 8).map(p => `<li><button class="row" data-pick="${esc(p.id)}"><span></span><span class="sub">${sel.has(p.id) ? 'Added' : 'Add'}</span></button></li>`).join('') : (q.value.trim() ? '<li class="note" style="padding:8px 12px">No one found.</li>' : '');
+    hits.querySelectorAll('[data-pick]').forEach((b, i) => { b.firstChild.textContent = list[i].name || 'Someone'; b.onclick = () => { sel.set(list[i].id, list[i].name); paintSel(); q.value = ''; hits.innerHTML = ''; q.focus(); }; });
+  }, 180); };
+  q.oninput = search; q.onfocus = search; setTimeout(() => q.focus(), 30);
+  go.onclick = async () => {
+    go.disabled = true;
+    const ok = await put('shares', uid(), { route, title, from: Store.me || 'me', to: [...sel.keys()], at: new Date().toISOString(), opened: [] });
+    if (!ok) { go.disabled = false; return; }
+    const copied = await copyText(LIB_URL);
+    close(); toast(copied ? `Shared. Library link copied: it opens on “${title}” for them.` : `Shared. Send them the library link: it opens on “${title}” for them.`);
+  };
+};
+// on arrival: open the newest page shared with this viewer that they haven't opened yet (within the first few seconds only)
+const LOADED_AT = Date.now();
+async function checkShares() {
+  if (checkShares.done || !Store.me || Date.now() - LOADED_AT > 20000) return;
+  const mine = Object.entries(Store.shares).filter(([, s]) => (s.to || []).includes(Store.me) && !(s.opened || []).includes(Store.me) && Date.now() - Date.parse(s.at || 0) < 30 * 864e5)
+    .sort((a, b) => (b[1].at || '').localeCompare(a[1].at || ''));
+  if (!mine.length) return;
+  checkShares.done = true;
+  const [, s] = mine[0];
+  for (const [sid, x] of mine) await put('shares', sid, Object.assign({}, x, { opened: [...(x.opened || []), Store.me] }));
+  location.hash = '#/' + s.route;
+  toast(`Opened “${s.title}”, shared with you by ${await nameOf(s.from)}`);
+}
 function moveSnippet(id) {
   const sp = SPEC[id], p = DECIDED.productive, e = DECIDED.expressive;
   const role = { gaps: 'move', staggers: 'enter', beat: 'enter', marks: 'enter', words: 'enter', cards: 'enter', lines: 'line', carry: 'line', longer: 'line', splits: 'move', units: 'enter' }[id];
@@ -1184,6 +1241,36 @@ function bindUploads() {
   document.querySelectorAll('[data-upload]').forEach(inp => inp.onchange = async () => {
     const f = inp.files[0]; if (!f) return; const r = await uploadFile(f); if (r && await put('media', inp.dataset.upload, r)) toast('Final animation added');
   });
+  // tests: any number of work-in-progress videos under one audit item, stored as media/<key>~<id>
+  document.querySelectorAll('[data-upload-test]').forEach(inp => inp.onchange = async () => {
+    const f = inp.files[0]; if (!f) return; const r = await uploadFile(f); if (!r) return;
+    const n = Object.keys(Store.media).filter(k => k.startsWith(inp.dataset.uploadTest)).length;
+    if (await put('media', inp.dataset.uploadTest + uid(), Object.assign(r, { title: f.name.replace(/\.[^.]+$/, ''), order: n + 1 }))) toast('Test added');
+  });
+  document.querySelectorAll('[data-deltest]').forEach(b => b.onclick = async () => { if (confirm('Remove this test video?')) { await del('media', b.dataset.deltest); toast('Test removed'); } });
+  // notes on a single test: anyone who can use the library adds one; saved in the shared feedback collection
+  document.querySelectorAll('[data-tnote]').forEach(b => {
+    const inp = b.parentElement.querySelector('[data-tnote-in]');
+    const send = async () => { const v = inp.value.trim(); if (!v) return; b.disabled = true;
+      if (await put('feedback', uid(), { page: b.dataset.tnote, text: v.slice(0, 2000), author: Store.me || 'me', at: new Date().toISOString() })) { inp.value = ''; inp.blur(); toast('Note saved'); changed(); }
+      b.disabled = false; };
+    b.onclick = send; inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); send(); } };
+  });
+}
+function testNotesHTML(key, title) {
+  const page = 'test/' + key, fbs = Object.entries(Store.feedback).filter(([, f]) => f.page === page).sort((a, b) => (a[1].at || '').localeCompare(b[1].at || ''));
+  return `<div style="margin-top:10px">${fbs.map(([fid, f]) => `<div class="fb" style="margin:6px 0 0;padding:8px 10px"><div><p style="margin:0;font-size:14px">${esc(f.text)}</p><div class="who"><span data-uid="${esc(f.author)}"></span>, ${fmtDate(f.at)}</div></div>${(Store.canEdit || f.author === Store.me) ? `<button class="btn small" data-delfb="${fid}">Delete</button>` : '<span></span>'}</div>`).join('')}` +
+    (Store.canWrite ? `<div style="display:flex;gap:6px;margin-top:8px"><input class="in" data-tnote-in placeholder="Add a note on this test" aria-label="Note on ${esc(title)}"><button class="btn small" data-tnote="${esc(page)}">Add</button></div>` : '') + '</div>';
+}
+/* tests: several videos per audit item, shown under its final animation */
+function testsHTML(id) {
+  const pre = 'audit-' + id + '~', up = Store.assets && Store.canWrite;
+  const tests = Object.entries(Store.media).filter(([k, m]) => k.startsWith(pre) && m && m.assetId).sort((a, b) => (a[1].order || 99) - (b[1].order || 99) || (a[1].title || '').localeCompare(b[1].title || ''));
+  if (!tests.length && !up) return '';
+  const view = m => /^image\//.test(m.type) ? `<img src="/_blob/${esc(m.assetId)}" alt="${esc(m.title || 'Test')}" style="width:100%;border-radius:10px">` : `<video src="/_blob/${esc(m.assetId)}" controls loop muted playsinline preload="metadata" style="width:100%;border-radius:10px;display:block"></video>`;
+  return `<h2>Versions tried</h2><p class="note">The record of how this was decided: ${tests.length} version${tests.length === 1 ? '' : 's'}. Add a note under any one: it is saved for everyone.</p>` +
+    (tests.length ? `<div class="pair">${tests.map(([k, m]) => `<div class="panel"><div class="ph"><span>${esc(m.title || m.name || 'Test')}</span>${m.moment ? modeChip(m.moment) : ''}</div>${view(m)}${m.notes ? `<p class="note" style="margin:10px 0 0">${esc(m.notes)}</p>` : ''}${testNotesHTML(k, m.title || m.name || 'Test')}${up ? `<div class="playrow"><button class="btn small" data-deltest="${esc(k)}">Remove video</button></div>` : ''}</div>`).join('')}</div>` : '<p class="empty">No tests yet.</p>') +
+    (up ? `<div class="playrow"><label class="btn small" style="cursor:pointer">Add a version (MP4, WebM, GIF)<input type="file" accept="video/mp4,video/webm,image/gif" data-upload-test="${esc(pre)}" hidden></label></div>` : '');
 }
 
 /* ---------- audit ---------- */
@@ -1201,7 +1288,7 @@ function auditIndex(params) {
   return `<div class="doc wide"><h1 class="title">Audit</h1><p class="lede">Every place Nscale moves: what it is, which moves it uses, and why. Each item is a page.</p>
     <div class="playrow">${sel('channel', CHANNELS, 'Channel')}${sel('moment', MOMENTS, 'Moment')}${sel('move', Object.values(MOVE_NAMES), 'Move')}${sel('status', STATUSES, 'Status')}<span>${rows.length} items</span></div>
     ${rows.length ? `<div class="scroll"><table class="t"><thead><tr><th>Element</th><th>Channel</th><th>Moment</th><th>Moves</th><th>Status</th></tr></thead><tbody>` +
-      rows.map(([id, a]) => `<tr><td><a href="#/audit/${id}">${esc(a.element)}</a>${a.example ? ' <span class="pill">example</span>' : ''}<div class="note">${esc(a.where || '')}</div></td><td>${esc(a.channel || '')}</td><td>${modeChip(a.moment)}</td><td>${(a.moves || []).map(m => NAME_TO_MOVE[m] ? `<a class="tag" href="#/move/${NAME_TO_MOVE[m]}">${esc(m)}</a>` : esc(m)).join(' ')}</td><td><span class="status ${stClass(a.status)}">${esc(a.status || '')}</span></td></tr>`).join('') + '</tbody></table></div>'
+      rows.map(([id, a]) => `<tr><td><a href="#/audit/${id}">${esc(a.element)}</a>${a.example ? ' <span class="pill">example</span>' : ''}<div class="note">${esc(a.where || '')}</div></td><td>${esc(a.channel || '')}</td><td>${modeChip(a.moment)}</td><td>${(a.moves || []).map(m => NAME_TO_MOVE[m] ? `<a class="tag" href="#/move/${NAME_TO_MOVE[m]}">${esc(m)}</a>` : esc(m)).join(' ')}${(a.behaviours || []).some(b => Store.behaviours[b]) ? `<div style="margin-top:4px">${behChips(a.behaviours)}</div>` : ''}</td><td><span class="status ${stClass(a.status)}">${esc(a.status || '')}</span></td></tr>`).join('') + '</tbody></table></div>'
       : `<p class="empty">${Object.keys(Store.audit).length ? 'Nothing matches these filters.' : 'The audit is empty. Add the first item, or ask Claude to import it from Notion.'}</p>`}
     ${knowledgeHTML('audit')}</div>`;
 }
@@ -1210,11 +1297,13 @@ function auditPage(id, params) {
   if (!a) { crumbs([['Audit', 'audit'], ['Not found']]); tools(''); return `<div class="doc"><h1 class="title">Not found</h1><p class="lede">This audit item was deleted or has not loaded yet.</p></div>`; }
   crumbs([['Audit', 'audit'], [a.channel || 'Unsorted', 'audit?channel=' + encodeURIComponent(a.channel || '')], [a.element]]);
   const editing = params.get('edit') === '1' && Store.canWrite;
-  const moveIds = (a.moves || []).map(m => NAME_TO_MOVE[m]).filter(m => m && m !== 'respond');
+  // no auto spec preview: it played the first listed move as if it were the item's animation (Lines on Latest News cards, Splits on 3D hero render)
+  const moveIds = [];
   const editTools = Store.canWrite ? (editing ? '' : `<button class="btn small" id="aEdit">Edit</button>`) + `<button class="btn small" id="aDel">Delete</button>` : '';
   if (moveIds.length && !editing) { demoTools(); $('#tools').insertAdjacentHTML('beforeend', editTools); } else tools(editTools);
   const view = `<dl class="props"><dt>Where</dt><dd>${esc(a.where || '')}</dd><dt>Channel</dt><dd>${esc(a.channel || '')}</dd><dt>Moment</dt><dd>${modeChip(a.moment)}</dd>
     <dt>Moves</dt><dd>${(a.moves || []).map(m => NAME_TO_MOVE[m] ? `<a class="tag" href="#/move/${NAME_TO_MOVE[m]}">${esc(m)}</a>` : esc(m)).join(' ') || '<span class="note">None</span>'}</dd>
+    <dt>Line behaviours</dt><dd>${behChips(a.behaviours) || '<span class="note">None</span>'}</dd>
     <dt>Motion</dt><dd>${esc(a.motion || '')}</dd><dt>Status</dt><dd><span class="status ${stClass(a.status)}">${esc(a.status || '')}</span></dd>
     <dt>Figma</dt><dd>${a.figma ? `<a href="${esc(a.figma)}" target="_blank" rel="noopener">Open in Figma</a>` : '<span class="note">No link</span>'}</dd><dt>Tags</dt><dd>${tagsHTML(a.tags)}</dd></dl>
     ${a.intention ? `<h2>Intention</h2><p>${esc(a.intention)}</p>` : ''}${a.notes ? `<h2>Notes</h2><div class="md">${md(a.notes)}</div>` : ''}`;
@@ -1225,6 +1314,7 @@ function auditPage(id, params) {
     <label for="fCh">Channel</label><select class="in" id="fCh">${opt(CHANNELS, a.channel)}</select>
     <label for="fMo">Moment</label><select class="in" id="fMo"><option value="">Not set</option>${opt(MOMENTS, a.moment)}</select>
     <label>Moves</label><div class="tags" id="fMv">${Object.values(MOVE_NAMES).map(m => `<button type="button" class="tag ${(a.moves || []).includes(m) ? 'on' : ''}" data-mv="${esc(m)}" aria-pressed="${(a.moves || []).includes(m)}">${esc(m)}</button>`).join('')}</div>
+    <label>Line behaviours</label><div class="tags">${behRows().map(([bid, b]) => `<button type="button" class="tag ${(a.behaviours || []).includes(bid) ? 'on' : ''}" data-bh="${esc(bid)}" aria-pressed="${(a.behaviours || []).includes(bid)}">${esc(b.name)} <span class="note">&nbsp;${esc(b.job || '')}</span></button>`).join('') || '<span class="note">No behaviours yet</span>'}</div>
     <label for="fMt">Motion</label><select class="in" id="fMt"><option value="">Not set</option>${opt(MOTIONS, a.motion)}</select>
     <label for="fSt">Status</label><select class="in" id="fSt">${opt(STATUSES, a.status)}</select>
     <label for="fIn">Intention</label><textarea class="in" id="fIn" rows="3">${esc(a.intention || '')}</textarea>
@@ -1236,12 +1326,14 @@ function auditPage(id, params) {
   setTimeout(() => {
     const e = $('#aEdit'); if (e) e.onclick = () => { location.hash = '#/audit/' + id + '?edit=1'; };
     const d = $('#aDel'); if (d) d.onclick = async () => { if (confirm('Delete "' + a.element + '" from the audit?')) { await del('audit', id); location.hash = '#/audit'; } };
-    document.querySelectorAll('[data-mv]').forEach(b => b.onclick = () => { b.classList.toggle('on'); b.setAttribute('aria-pressed', b.classList.contains('on')); });
+    document.querySelectorAll('[data-mv],[data-bh]').forEach(b => b.onclick = () => { b.classList.toggle('on'); b.setAttribute('aria-pressed', b.classList.contains('on')); });
     const s = $('#aSave'); if (s) s.onclick = async () => {
       const v = x => $(x).value.trim(), url = v('#fFi');
       const data = { element: v('#fEl') || 'Untitled', where: v('#fWh'), channel: v('#fCh'), moment: v('#fMo'), motion: v('#fMt'), status: v('#fSt'), intention: v('#fIn'), notes: v('#fNo'),
         figma: /^https:\/\//.test(url) ? url : '', tags: v('#fTg').split(',').map(t => t.trim().toLowerCase()).filter(Boolean), example: $('#fEx').checked,
-        moves: [...document.querySelectorAll('[data-mv].on')].map(b => b.dataset.mv) };
+        moves: [...document.querySelectorAll('[data-mv].on')].map(b => b.dataset.mv),
+        behaviours: [...document.querySelectorAll('[data-bh].on')].map(b => b.dataset.bh) };
+      Object.keys(a).forEach(k => { if (!(k in data) && !['updatedAt', 'updatedBy'].includes(k)) data[k] = a[k]; });
       if (await put('audit', id, data)) { toast('Saved'); location.hash = '#/audit/' + id; }
     };
     if (moveIds.length && !editing) mountPair('au', (m, t) => movePanelSVG(moveIds[0], m, t), () => moveLoop(moveIds[0]));
@@ -1249,8 +1341,126 @@ function auditPage(id, params) {
   return `<div class="doc wide"><h1 class="title">${esc(a.element)}</h1>${a.example ? '<p><span class="pill">Worked example</span></p>' : ''}
     ${editing ? edit : view}
     ${moveIds.length && !editing ? `<h2>Spec preview: ${esc(MOVE_NAMES[moveIds[0]])}</h2><p class="note">The token-exact version of its main move. Other moves: ${moveIds.slice(1).map(m => `<a href="#/move/${m}">${MOVE_NAMES[m]}</a>`).join(', ') || 'none'}.</p>${pairHTML('au')}` : ''}
-    ${editing ? '' : `<h2>Final animation</h2>${mediaSlot('audit-' + id, Store.media['audit-' + id])}`}
+    ${editing ? '' : `<h2>Final animation</h2>${mediaSlot('audit-' + id, Store.media['audit-' + id])}${testsHTML(id)}`}
     ${knowledgeHTML('audit/' + id)}</div>`;
+}
+
+
+/* ---------- How we move: the front door. One rule, one clip and one timing per thing people make.
+   Content lives in pages/how-we-move (sections → items), so it can change without a republish. ---------- */
+function howPage() {
+  crumbs([['How we move']]); tools('');
+  const h = Store.pages['how-we-move'] || {}, secs = h.sections || [];
+  const clip = it => it.assetId ? `<video src="/_blob/${esc(it.assetId)}" autoplay loop muted playsinline preload="metadata" style="width:100%;max-height:460px;object-fit:contain;border-radius:10px;display:block;background:#0F41F3"></video>` : '';
+  const more = ['marks', 'cards', 'staggers', 'units', 'splits'];
+  return `<div class="doc wide"><h1 class="title">${esc(h.title || 'How we move')}</h1><p class="lede">${esc(h.lede || '')}</p>
+    ${secs.map(sec => `<h2>${esc(sec.title)}</h2>${sec.intro ? `<p>${esc(sec.intro)}</p>` : ''}<div class="pair" style="grid-template-columns:repeat(auto-fill,minmax(min(100%,380px),1fr))">${(sec.items || []).map(it => `<div class="panel"><div class="ph"><span>${esc(it.name)}</span>${it.moment ? modeChip(it.moment) : ''}</div>${clip(it)}<p style="margin:12px 0 4px">${esc(it.rule || '')}</p>${it.timing ? `<p class="note mono" style="margin:0">${esc(it.timing)}</p>` : ''}${it.link ? `<p class="note" style="margin:6px 0 0"><a href="#/${esc(it.link)}">More detail</a></p>` : ''}</div>`).join('')}</div>`).join('') || '<p class="empty">Loading…</p>'}
+    <h2>Everything else</h2><p>These are decided in the motion language v1.0. Each page has the timing for both moments and the values to copy.</p>
+    <ul class="list">${more.map(m => `<li><a href="#/move/${m}"><span>${MOVE_NAMES[m]}<div class="sub">${esc(SPEC[m].what)}</div></span><span class="sub">${SPEC[m].step}</span></a></li>`).join('')}</ul>
+    <p class="note" style="margin-top:24px">How these were decided, with every version tried: <a href="#/audit/line-moves">Line moves</a> (Social) and <a href="#/audit/text-moves">Text moves</a> (Film).</p>
+    ${Store.canEdit ? `<div class="box"><b>Moving the library</b><p class="note" style="margin:4px 0 10px">Downloads everything the team has added (audit, behaviours, notes, feedback, pages, versions) as one file, to import into the standalone site.</p><button class="btn small" id="exportLib">Export library data</button></div>` : ''}
+    ${knowledgeHTML('how')}</div>`;
+}
+/* ---------- behaviours: named line behaviours, grouped by job ----------
+   Each behaviour answers the same per-behaviour questions, with its working. System-wide rules apply to every behaviour.
+   Audit items tag behaviours (like a CMS reference field); each behaviour page rolls up every item that uses it. */
+const JOBS = [
+  { name: 'Pathway', role: 'Carrier', what: 'The line carries information on top of it. Anything important is touched or nearly touched by a line, the line\'s movement leads movement on the page, and text appears only when the line appears.' },
+  { name: 'Structural guide', role: 'Participant', what: 'Controls what is held within and around it: a waypoint on a blank screen, the structure or grid of a page, a data centre or an information pathway.' },
+  { name: 'Coordinate', role: 'Observer', what: 'A point in space. Grounds the viewer to a location and adds context to what is already there, rather than being part of it.' }
+];
+const BEH_Q = [
+  ['appear', 'Appear', 'Draw, move, move + draw, extend from a node, tracer, unfold'],
+  ['origin', 'Origin', 'Own end, a mark, a parent line, the frame edge, off-frame, the element it relates to'],
+  ['travel', 'Travel', 'None, small, full (from off-frame)'],
+  ['sequence', 'Sequence', 'Together, staggered, chained, parent then children'],
+  ['junction', 'Junction', 'Clean meet, carry-through, mark on meeting'],
+  ['content', 'Order vs content', 'Before, with or after the content it relates to'],
+  ['exit', 'Exit', 'Retract, reverse the entry, persist'],
+  ['timing', 'Timing', 'Step, moment and curve']
+];
+const BEH_SYSTEM = [
+  ['Form', 'Weight, colour and geometry are fixed by the design system. A behaviour changes motion only.', 'Motion language thread, 29 Sep 2026'],
+  ['Opacity', 'Solid, 100% opacity. A line never fades in: it draws from something that exists.', 'Library › Principles (Precise) and Moves › Lines, not allowed'],
+  ['Overshoot', 'Only as carry-through past a meeting point, slowing to a stop. Nothing bounces or pulls back.', 'Library › Principles (Confident)'],
+  ['Rest', 'Static once arrived. Nothing loops on idle.', 'Library › Principles (Precise). Open: social posts that keep moving'],
+  ['Reduced motion', 'Shown drawn, in the final state.', 'Library › Moves › Lines']
+];
+const BEH_STATUS = ['Proposed', 'Agreed', 'Open question', 'Dropped'];
+function behRows(job) { return Object.entries(Store.behaviours).filter(([, b]) => !job || b.job === job).sort((a, b) => (a[1].name || '').localeCompare(b[1].name || '')); }
+function behUses(id) { return Object.entries(Store.audit).filter(([, a]) => (a.behaviours || []).includes(id)).sort((a, b) => (a[1].channel || '').localeCompare(b[1].channel || '') || (a[1].element || '').localeCompare(b[1].element || '')); }
+function behChips(ids) { return (ids || []).filter(id => Store.behaviours[id]).map(id => `<a class="tag" href="#/behaviour/${esc(id)}">${esc(Store.behaviours[id].name)}</a>`).join(' '); }
+function behAnswered(b) { const d = b.decisions || {}; return BEH_Q.filter(([k]) => d[k] && d[k].v).length; }
+function behUntagged() { return Object.entries(Store.audit).filter(([, a]) => a.channel !== 'Tests' && a.status !== 'Dropped' && (a.moves || []).some(m => ['Lines', 'Longer lines', 'Carry-through'].includes(m)) && !(a.behaviours || []).some(b => Store.behaviours[b])).sort((a, b) => (a[1].element || '').localeCompare(b[1].element || '')); }
+function behIndex(params) {
+  const job = params.get('job') || '';
+  crumbs(job ? [['Behaviours', 'behaviours'], [job]] : [['Behaviours']]);
+  tools(Store.canWrite ? `<button class="btn small solid" id="newBeh">New behaviour</button>` : '');
+  setTimeout(() => { const n = $('#newBeh'); if (n) n.onclick = async () => { const id = uid(); if (await put('behaviours', id, { name: 'New behaviour', family: 'Lines', job: job || 'Structural guide', status: 'Proposed', decisions: {}, evidence: [], tags: [] })) location.hash = '#/behaviour/' + id + '?edit=1'; }; });
+  const jobs = JOBS.filter(j => !job || j.name === job), untagged = behUntagged();
+  const table = rows => `<div class="scroll"><table class="t"><thead><tr><th>Behaviour</th><th>Appear</th><th>Used in</th><th>Answered</th><th>Status</th></tr></thead><tbody>${rows.map(([id, b]) => `<tr><td><a href="#/behaviour/${id}">${esc(b.name)}</a></td><td>${esc(((b.decisions || {}).appear || {}).v || '')}</td><td>${behUses(id).length}</td><td>${behAnswered(b)} of ${BEH_Q.length}</td><td><span class="status ${stClass(b.status)}">${esc(b.status || '')}</span></td></tr>`).join('')}</tbody></table></div>`;
+  return `<div class="doc wide"><h1 class="title">Behaviours${job ? ': ' + esc(job) : ''}</h1>
+    <p class="lede">Named line behaviours, grouped by the job a line does. Each one answers the same questions, with its working. Audit items tag the behaviours they use, and each behaviour lists everywhere it is used.</p>
+    ${job ? '' : `<h2>Decided for every line</h2><p class="note">These hold for every behaviour, so a behaviour never answers them.</p><div class="scroll"><table class="t"><thead><tr><th>Rule</th><th>Decision</th><th>Working</th></tr></thead><tbody>${BEH_SYSTEM.map(([k, v, w]) => `<tr><td>${esc(k)}</td><td>${esc(v)}</td><td class="wk">${esc(w)}</td></tr>`).join('')}</tbody></table></div>
+    <h2>Decided per behaviour</h2><dl class="props">${BEH_Q.map(([, l, h]) => `<dt>${l}</dt><dd>${h}</dd>`).join('')}</dl>`}
+    ${jobs.map(j => { const rows = behRows(j.name); return `<h2>${esc(j.name)} <span class="note">${esc(j.role)}</span></h2><p>${esc(j.what)}</p>${rows.length ? table(rows) : '<p class="empty">No behaviours for this job yet.</p>'}`; }).join('')}
+    ${job ? '' : `<h2>Line items without a behaviour</h2><p class="note">Audit items that use Lines, Longer lines or Carry-through but don't tag a behaviour yet. Tag them from the item's Edit form, or from a behaviour page.</p>${untagged.length ? `<ul class="list">${untagged.map(([id, a]) => `<li><a href="#/audit/${id}"><span>${esc(a.element)}</span><span class="sub">${esc(a.channel || '')} · ${(a.moves || []).map(esc).join(', ')}</span></a></li>`).join('')}</ul>` : '<p class="empty">Every line item is tagged.</p>'}`}
+    ${knowledgeHTML('behaviours')}</div>`;
+}
+function behEvidenceHTML(b) {
+  const items = (b.evidence || []).filter(e => Store.audit[e]);
+  if (!items.length) return '<p class="empty">No versions linked yet. Link an audit item with versions from Edit.</p>';
+  return items.map(e => { const pre = 'audit-' + e + '~', tests = Object.entries(Store.media).filter(([k, m]) => k.startsWith(pre) && m && m.assetId).sort((x, y) => (x[1].order || 99) - (y[1].order || 99));
+    return `<h3><a href="#/audit/${esc(e)}">${esc(Store.audit[e].element)}</a> <span class="note">${tests.length} tests</span></h3>` + (tests.length ? `<div class="pair">${tests.map(([k, m]) => `<div class="panel"><div class="ph"><span>${esc(m.title || m.name || 'Test')}</span>${m.moment ? modeChip(m.moment) : ''}</div><video src="/_blob/${esc(m.assetId)}" controls loop muted playsinline preload="metadata" style="width:100%;border-radius:10px;display:block"></video>${m.notes ? `<p class="note" style="margin:10px 0 0">${esc(m.notes)}</p>` : ''}${testNotesHTML(k, m.title || m.name || 'Test')}</div>`).join('')}</div>` : ''); }).join('');
+}
+function behPage(id, params) {
+  const b = Store.behaviours[id];
+  if (!b) { crumbs([['Behaviours', 'behaviours'], ['Not found']]); tools(''); return `<div class="doc"><h1 class="title">Not found</h1><p class="lede">This behaviour was deleted or has not loaded yet.</p></div>`; }
+  crumbs([['Behaviours', 'behaviours'], [b.job || 'No job', 'behaviours?job=' + encodeURIComponent(b.job || '')], [b.name]]);
+  const editing = params.get('edit') === '1' && Store.canWrite, d = b.decisions || {}, uses = behUses(id);
+  tools(Store.canWrite ? (editing ? '' : `<button class="btn small" id="bEdit">Edit</button>`) + `<button class="btn small" id="bDel">Delete</button>` : '');
+  const byCh = {}; uses.forEach(([, a]) => { byCh[a.channel || 'Unsorted'] = (byCh[a.channel || 'Unsorted'] || 0) + 1; });
+  const free = Object.entries(Store.audit).filter(([aid, a]) => a.channel !== 'Tests' && !(a.behaviours || []).includes(id)).sort((x, y) => (x[1].element || '').localeCompare(y[1].element || ''));
+  const job = JOBS.find(j => j.name === b.job);
+  const view = `<dl class="props"><dt>Family</dt><dd>${esc(b.family || 'Lines')}</dd><dt>Job</dt><dd>${b.job ? `<a href="#/behaviours?job=${encodeURIComponent(b.job)}">${esc(b.job)}</a>${job ? ` <span class="note">${esc(job.role)}</span>` : ''}` : ''}</dd>
+      <dt>Status</dt><dd><span class="status ${stClass(b.status)}">${esc(b.status || '')}</span> <span class="note">${behAnswered(b)} of ${BEH_Q.length} answered</span></dd>
+      <dt>Used in</dt><dd>${uses.length} audit item${uses.length === 1 ? '' : 's'}${uses.length ? ': ' + Object.entries(byCh).map(([c, n]) => `${esc(c)} ${n}`).join(', ') : ''}</dd><dt>Tags</dt><dd>${tagsHTML(b.tags)}</dd></dl>
+    ${b.summary ? `<p class="lede">${esc(b.summary)}</p>` : ''}
+    <h2>Decisions and working</h2><p class="note">Every line also follows the <a href="#/behaviours">rules decided for every line</a>.</p>
+    <div class="scroll"><table class="t"><thead><tr><th>Question</th><th>Decision</th><th>Working</th></tr></thead><tbody>${BEH_Q.map(([k, l]) => { const x = d[k] || {};
+      return `<tr><td>${l}</td><td>${x.v ? esc(x.v) : '<span class="status st-Open">Open</span>'}</td><td class="wk">${x.w ? esc(x.w) : (x.v ? '<span class="flag">No source: proposal</span>' : '')}</td></tr>`; }).join('')}</tbody></table></div>
+    <h2>Used in</h2>${uses.length ? `<div class="scroll"><table class="t"><thead><tr><th>Element</th><th>Channel</th><th>Moment</th><th>Status</th></tr></thead><tbody>${uses.map(([aid, a]) => `<tr><td><a href="#/audit/${aid}">${esc(a.element)}</a><div class="note">${esc(a.where || '')}</div></td><td>${esc(a.channel || '')}</td><td>${modeChip(a.moment)}</td><td><span class="status ${stClass(a.status)}">${esc(a.status || '')}</span></td></tr>`).join('')}</tbody></table></div>` : '<p class="empty">No audit item uses this behaviour yet.</p>'}
+    ${Store.canWrite ? `<div class="playrow"><select class="sel" id="bAddSel" aria-label="Audit item"><option value="">Tag an audit item with this behaviour…</option>${free.map(([aid, a]) => `<option value="${esc(aid)}">${esc(a.element)} · ${esc(a.channel || '')}</option>`).join('')}</select><button class="btn small" id="bAdd">Add</button></div>` : ''}
+    <h2>Evidence</h2>${behEvidenceHTML(b)}
+    ${b.notes ? `<h2>Notes</h2><div class="md">${md(b.notes)}</div>` : ''}`;
+  const opt = (arr, v) => arr.map(o => `<option ${o === v ? 'selected' : ''}>${esc(o)}</option>`).join('');
+  const testItems = Object.entries(Store.audit).filter(([aid]) => Object.keys(Store.media).some(k => k.startsWith('audit-' + aid + '~')));
+  const edit = `<div class="form">
+    <label for="bNa">Name</label><input class="in" id="bNa" value="${esc(b.name)}">
+    <label for="bJo">Job</label><select class="in" id="bJo">${opt(JOBS.map(j => j.name), b.job)}</select>
+    <label for="bSt">Status</label><select class="in" id="bSt">${opt(BEH_STATUS, b.status)}</select>
+    <label for="bSu">Summary</label><input class="in" id="bSu" value="${esc(b.summary || '')}" placeholder="One line: what this line does">
+    ${BEH_Q.map(([k, l, h]) => `<label for="bq-${k}">${l}</label><textarea class="in" id="bq-${k}" rows="2" placeholder="${esc(h)}">${esc((d[k] || {}).v || '')}</textarea>
+    <label for="bw-${k}" class="note">Working</label><textarea class="in" id="bw-${k}" rows="2" placeholder="Rule, test or source">${esc((d[k] || {}).w || '')}</textarea>`).join('')}
+    <label>Evidence</label><div class="tags">${testItems.map(([aid, a]) => `<button type="button" class="tag ${(b.evidence || []).includes(aid) ? 'on' : ''}" data-ev="${esc(aid)}" aria-pressed="${(b.evidence || []).includes(aid)}">${esc(a.element)}</button>`).join('') || '<span class="note">No audit items with versions yet</span>'}</div>
+    <label for="bNo">Notes</label><textarea class="in" id="bNo" rows="4">${esc(b.notes || '')}</textarea>
+    <label for="bTg">Tags</label><input class="in" id="bTg" value="${esc((b.tags || []).join(', '))}"></div>
+    <button class="btn solid" id="bSave">Save</button> <a class="btn" href="#/behaviour/${id}">Cancel</a>`;
+  setTimeout(() => {
+    const e = $('#bEdit'); if (e) e.onclick = () => { location.hash = '#/behaviour/' + id + '?edit=1'; };
+    const dl = $('#bDel'); if (dl) dl.onclick = async () => { if (confirm('Delete "' + b.name + '"? Audit items keep their other tags.')) { await del('behaviours', id); location.hash = '#/behaviours'; } };
+    document.querySelectorAll('[data-ev]').forEach(x => x.onclick = () => { x.classList.toggle('on'); x.setAttribute('aria-pressed', x.classList.contains('on')); });
+    const ad = $('#bAdd'); if (ad) ad.onclick = async () => { const aid = $('#bAddSel').value, a = Store.audit[aid]; if (!a) return;
+      if (await put('audit', aid, Object.assign({}, a, { behaviours: [...new Set([...(a.behaviours || []), id])] }))) toast('Tagged ' + a.element); };
+    const s = $('#bSave'); if (s) s.onclick = async () => {
+      const v = x => $(x).value.trim(), decisions = {};
+      BEH_Q.forEach(([k]) => { const a = v('#bq-' + k), w = v('#bw-' + k); if (a || w) decisions[k] = { v: a, w }; });
+      const data = Object.assign({}, b, { name: v('#bNa') || 'Untitled', job: v('#bJo'), status: v('#bSt'), summary: v('#bSu'), decisions, notes: v('#bNo'),
+        evidence: [...document.querySelectorAll('[data-ev].on')].map(x => x.dataset.ev), tags: v('#bTg').split(',').map(t => t.trim().toLowerCase()).filter(Boolean) });
+      if (await put('behaviours', id, data)) { toast('Saved'); location.hash = '#/behaviour/' + id; }
+    };
+  });
+  return `<div class="doc wide"><h1 class="title">${esc(b.name)}</h1>${editing ? edit : view}${knowledgeHTML('behaviour/' + id)}</div>`;
 }
 
 /* ---------- type behaviour audit ---------- */
@@ -1441,6 +1651,18 @@ function genText(id) {
   if (id === 'gen-ae') return `Nscale motion v1.0: After Effects\nKeyframe ease for a two-key move: influence %, speed as a multiple of the average speed.\n\n` + ['productive', 'expressive'].map(m => ROLES.map(r => { const c = CURVES[DECIDED[m].curves[r]], v = c.v; return `${DECIDED[m].name.padEnd(11)} ${r.padEnd(5)} ${c.name.padEnd(16)} out ${(v[0] * 100).toFixed(1)}% at ${v[0] ? (v[1] / v[0]).toFixed(2) : 0}x   in ${((1 - v[2]) * 100).toFixed(1)}% at ${v[2] < 1 ? ((1 - v[3]) / (1 - v[2])).toFixed(2) : 0}x`; }).join('\n')).join('\n') + `\n\nFrames at 60 fps\nProductive: ${STEPS.map(k => `${k} ${P.steps[k]}`).join(', ')}\nExpressive: ${STEPS.map(k => `${k} ${E.steps[k]}`).join(', ')}\n`;
   return '';
 }
+async function exportLibrary() {
+  const data = { format: 'nscale-motion-library', version: 1, exportedAt: new Date().toISOString(), collections: {}, people: {} };
+  COLS.forEach(c => { data.collections[c] = Store[c]; });
+  // names for every person id the data mentions, so authors still read correctly after the move
+  const ids = new Set(), walk = v => { if (Array.isArray(v)) v.forEach(walk); else if (v && typeof v === 'object') Object.values(v).forEach(walk); else if (typeof v === 'string' && /^u_[A-Za-z0-9]{22}$/.test(v)) ids.add(v); };
+  walk(data.collections);
+  for (const id of ids) data.people[id] = await nameOf(id);
+  // rows written by Claude for the owner carry 'me'; record whose they are
+  if (Store.me) data.people.me = await nameOf(Store.me);
+  await saveFile('nscale-motion-library-export.json', JSON.stringify(data, null, 1));
+}
+document.addEventListener('click', e => { if (e.target && e.target.id === 'exportLib') exportLibrary(); });
 async function saveFile(filename, data) {
   if (Store.downloads) { try { await Store.downloads.save({ filename, data }); toast('Saved'); } catch (e) { if (e && e.code !== 'declined') toast('Could not save the file.'); } return; }
   try { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([data])); a.download = filename; a.click(); } catch (e) { toast('Downloads are not available here. Use Copy.'); }
@@ -2174,7 +2396,7 @@ function mountLogoDoc() {
 /* ---------- router ---------- */
 let lastKey = '';
 function route(soft) {
-  const raw = location.hash.slice(2) || 'overview', [path, qs] = raw.split('?'), params = new URLSearchParams(qs || '');
+  const raw = location.hash.slice(2) || 'how', [path, qs] = raw.split('?'), params = new URLSearchParams(qs || '');
   // a soft re-render (data changed) never interrupts someone typing or playing
   if (soft) { const a = document.activeElement; if (a && (a.tagName === 'TEXTAREA' || (a.tagName === 'INPUT' && a.type !== 'range' && a.type !== 'checkbox') || a.tagName === 'SELECT') && $('#page').contains(a)) return;
     if ((path.startsWith('lab/') && LAB.id === path.slice(4) && LAB.doc) || (path === 'game' && GAME.round && !GAME.round.done) || (params.get('edit') === '1' && lastKey === raw)) { renderTree(); if (path === 'game') renderBoard(); return; } }
@@ -2182,6 +2404,8 @@ function route(soft) {
   if (PAGES[path]) html = PAGES[path]();
   else if (parts[0] === 'move' && SPEC[parts[1]]) html = movePage(parts[1]);
   else if (parts[0] === 'meet' && MEETS[parts[1]]) html = meetPage(parts[1]);
+  else if (path === 'behaviours') html = behIndex(params);
+  else if (parts[0] === 'behaviour') html = behPage(parts[1], params);
   else if (path === 'audit') html = auditIndex(params);
   else if (parts[0] === 'audit') html = auditPage(parts[1], params);
   else if (path === 'type') html = typeIndex(params);
@@ -2230,3 +2454,5 @@ initStore().then(() => { renderTree(); route(true); });
 </script>
 </body>
 </html>
+
+</body></html>

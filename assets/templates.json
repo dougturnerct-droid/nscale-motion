@@ -1,5 +1,5 @@
 {
-  "_about": "Templates offered in the After Effects panel's Templates tab. Each template is a comp in assets/templates.aep. Text fields fill the text layer of the same 'layer' name; number/slider/checkbox fields set the effect control of that name on the 'Theme - controls' layer. 'kind: event' uses the event pipeline (hero line split, glass clearance).",
+  "_about": "Templates offered in the After Effects panel's Templates tab. Each template is a comp in assets/templates.aep. Text fields fill the text layer of the same 'layer' name; number/slider/checkbox fields set the effect control of that name on the 'Theme - controls' layer. 'kind: event' uses the event pipeline (hero line split, glass clearance). 'title'/'sub' are the card labels in the Templates tab and 'thumb' its picture (assets/thumbs/<id>.png by default).",
   "folders": [
     {
       "id": "data-centres",
@@ -49,7 +49,10 @@
                   "default": true
                 }
               ],
-              "built": true
+              "built": true,
+              "title": "Cluster 01",
+              "sub": "stat card",
+              "thumb": "assets/thumbs/cluster-01.png"
             },
             {
               "id": "cluster-02",
@@ -107,7 +110,10 @@
                   "max": 2000,
                   "default": 60
                 }
-              ]
+              ],
+              "title": "Cluster 02",
+              "sub": "rack grid",
+              "thumb": "assets/thumbs/cluster-02.png"
             },
             {
               "id": "cluster-03",
@@ -191,7 +197,10 @@
                   "type": "text",
                   "placeholder": "Live"
                 }
-              ]
+              ],
+              "title": "Cluster 03",
+              "sub": "spec table",
+              "thumb": "assets/thumbs/cluster-03.png"
             },
             {
               "id": "cluster-04",
@@ -255,7 +264,10 @@
                   "placeholder": "Passed",
                   "hint": "shows \"Running\" until its test passes"
                 }
-              ]
+              ],
+              "title": "Cluster 04",
+              "sub": "test results",
+              "thumb": "assets/thumbs/cluster-04.png"
             },
             {
               "id": "cluster-05",
@@ -297,7 +309,10 @@
                   "default": false
                 }
               ],
-              "built": true
+              "built": true,
+              "title": "Cluster 05",
+              "sub": "handover",
+              "thumb": "assets/thumbs/cluster-05.png"
             }
           ]
         }
@@ -348,7 +363,10 @@
                   "hint": "blank hides it"
                 }
               ],
-              "built": true
+              "built": true,
+              "title": "Event post",
+              "sub": "sponsor card",
+              "thumb": "assets/thumbs/event-post.png"
             }
           ]
         }
@@ -370,7 +388,10 @@
               "size": "1x1",
               "dark": true,
               "built": true,
-              "fields": []
+              "fields": [],
+              "title": "End card",
+              "sub": "logo sign-off",
+              "thumb": "assets/thumbs/end-card.png"
             }
           ]
         }

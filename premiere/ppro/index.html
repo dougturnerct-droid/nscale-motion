@@ -13,6 +13,7 @@
   --mono:'DM Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   --base:#040E27; --s1:#081634; --s2:#0C1D44; --s3:#12285A; --line:#1E2D55; --line2:#2A3B68;
   --text:#FDFFF8; --muted:#C0C3C9; --dim:#828793; --signal:#0F41F3; --signal2:#3F68FF; --mint:#00DF99; --red:#F06B5B;
+  --b-idle:#12285A; --b-idle-line:#1E2D55; --b-hover:#0F41F3; --b-hover-line:#7391FF; --b-active:#3F68FF; --b-active-line:#00DF99; --b-sub:#C7D8FA; --b-r:4px;
   --hi:inset 0 1px 0 rgba(255,255,255,.06);
   color-scheme:dark;
 }
@@ -31,12 +32,19 @@ body{margin:0;background:var(--base);color:var(--text);font:13px var(--sans);ove
 .hint{text-transform:none;letter-spacing:0;font-weight:400;color:var(--dim)}
 .note{margin:8px 0 0;font-size:12px;color:var(--dim);line-height:1.5}
 .note .ok{color:var(--mint)}.note .no{color:var(--red)}
-.picks{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-@media (max-width:330px){.picks{grid-template-columns:1fr}}
-.pick{text-align:center;height:40px;padding:0 10px;border-radius:10px;border:1px solid var(--line);background:var(--base);color:var(--text);font:13px var(--sans);cursor:pointer;display:flex;align-items:center;justify-content:center}
-.pick b{font-weight:500}
-.pick small{color:var(--dim);font-size:11.5px;line-height:1.35}
-.pick[aria-pressed="true"]{border-color:var(--signal2);background:var(--s3);box-shadow:var(--hi)}
+/* folder buttons and template cards: idle / hover / active from the Figma btn component */
+.groups,.picks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.groups{margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--line)}
+@media (max-width:330px){.groups,.picks{grid-template-columns:1fr}}
+.groups button,.pick{border-radius:var(--b-r);border:1px solid var(--b-idle-line);background:var(--b-idle);color:var(--text);font:500 12.5px var(--sans);cursor:pointer;text-align:left;min-width:0;transition:background 133ms cubic-bezier(.2,.8,.3,1),border-color 133ms cubic-bezier(.2,.8,.3,1)}
+.groups button{min-height:36px;padding:8px 12px;line-height:1.2}
+.pick{padding:8px;display:flex;flex-direction:column;align-items:stretch;gap:6px}
+.pick img{display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:3px;background:var(--base)}
+.pick img.none{display:none}
+.pick b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pick small{color:var(--b-sub);opacity:.8;font-size:10px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.groups button:hover,.pick:hover{background:var(--b-hover);border-color:var(--b-hover-line)}
+.groups button[aria-pressed="true"],.pick[aria-pressed="true"]{background:var(--b-active);border-color:var(--b-active-line);box-shadow:inset 0 0 0 1px var(--b-active-line)}
 .pick:focus-visible,.btn:focus-visible,.seg button:focus-visible{outline:2px solid var(--signal2);outline-offset:1px}
 .field{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
 .field label{font-size:12px;color:var(--muted);display:flex;justify-content:space-between}
@@ -85,6 +93,7 @@ body{margin:0;background:var(--base);color:var(--text);font:13px var(--sans);ove
   <div class="body">
     <div class="card">
       <div class="label">Template</div>
+      <div class="groups" id="groups" role="group" aria-label="Folder"></div>
       <div class="picks" id="picks"></div>
     </div>
 
@@ -164,7 +173,12 @@ function has(t, f) { return !S.state.found || S.state.found[t + '/' + f] !== fal
 function render() {
   const st = S.state, t = tpl(); S.tpl = t.id;
   $('#seq').textContent = st.sequence ? `${st.sequence.w} × ${st.sequence.h}` : 'No sequence open';
-  $('#picks').innerHTML = st.templates.map(x => `<button type="button" class="pick" data-tpl="${esc(x.id)}" aria-pressed="${x.id === t.id}"><b>${esc(x.name)}</b></button>`).join('');
+  // folders (from 'folder' in templates.json), then the templates in the chosen one
+  const groups = []; st.templates.forEach(x => { const g = x.folder || 'Templates'; if (groups.indexOf(g) < 0) groups.push(g); });
+  const curG = t.folder || 'Templates';
+  $('#groups').innerHTML = groups.length > 1 ? groups.map(g => `<button type="button" data-g="${esc(g)}" aria-pressed="${g === curG}">${esc(g)}</button>`).join('') : '';
+  $$('#groups [data-g]').forEach(b => b.onclick = () => { keep(); const first = st.templates.find(x => (x.folder || 'Templates') === b.dataset.g); if (first) { S.tpl = first.id; store.set('tpl', S.tpl); render(); } });
+  $('#picks').innerHTML = st.templates.filter(x => (x.folder || 'Templates') === curG).map(x => `<button type="button" class="pick" data-tpl="${esc(x.id)}" aria-pressed="${x.id === t.id}">${x.thumb ? `<img src="../${esc(x.thumb)}" alt="" onerror="this.className='none'">` : ''}<b>${esc(x.title || x.name)}</b><small>${esc(x.sub || '')}</small></button>`).join('');
   $$('#picks [data-tpl]').forEach(b => b.onclick = () => { keep(); S.tpl = b.dataset.tpl; store.set('tpl', S.tpl); render(); });
   $('#tplName').textContent = t.name; $('#tplUse').textContent = '';
   if (S.shown !== t.id) {   // only rebuild the text boxes when the template changes, so typing is never interrupted

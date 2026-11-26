@@ -1,5 +1,5 @@
 {
-  "_note": "The panel first uses the Mogrts folder shipped next to this file. mogrtFolders are fallbacks on Google Drive.",
+  "_note": "The panel first uses the Mogrts folder shipped next to this file. mogrtFolders are fallbacks on Google Drive. 'folder' groups templates in the panel; 'title'/'sub' are the card labels; 'thumb' is a picture relative to the premiere folder.",
   "mogrtFolders": [
     "~/Library/CloudStorage/GoogleDrive-*/My Drive/Motion/Nscale Motion plugins/Mogrts",
     "~/Library/CloudStorage/GoogleDrive-*/Shared drives/*/Motion/Nscale Motion plugins/Mogrts"
@@ -74,7 +74,10 @@
           "type": "checkbox",
           "default": false
         }
-      ]
+      ],
+      "folder": "Titles",
+      "title": "Lower third",
+      "sub": "name and role"
     },
     {
       "id": "title",
@@ -94,7 +97,10 @@
           "placeholder": "superintelligence",
           "optional": true
         }
-      ]
+      ],
+      "folder": "Titles",
+      "title": "Title",
+      "sub": "one line"
     },
     {
       "id": "cluster-01",
@@ -138,7 +144,11 @@
           "type": "checkbox",
           "default": true
         }
-      ]
+      ],
+      "folder": "Cluster handover",
+      "title": "Cluster 01",
+      "sub": "stat card",
+      "thumb": "thumbs/cluster-01.png"
     },
     {
       "id": "cluster-02",
@@ -199,7 +209,11 @@
           "type": "checkbox",
           "default": true
         }
-      ]
+      ],
+      "folder": "Cluster handover",
+      "title": "Cluster 02",
+      "sub": "rack grid",
+      "thumb": "thumbs/cluster-02.png"
     },
     {
       "id": "cluster-03",
@@ -278,7 +292,11 @@
           "type": "checkbox",
           "default": true
         }
-      ]
+      ],
+      "folder": "Cluster handover",
+      "title": "Cluster 03",
+      "sub": "spec table",
+      "thumb": "thumbs/cluster-03.png"
     },
     {
       "id": "cluster-04",
@@ -337,7 +355,11 @@
           "type": "checkbox",
           "default": true
         }
-      ]
+      ],
+      "folder": "Cluster handover",
+      "title": "Cluster 04",
+      "sub": "test results",
+      "thumb": "thumbs/cluster-04.png"
     },
     {
       "id": "cluster-05",
@@ -381,7 +403,11 @@
           "type": "checkbox",
           "default": true
         }
-      ]
+      ],
+      "folder": "Cluster handover",
+      "title": "Cluster 05",
+      "sub": "handover",
+      "thumb": "thumbs/cluster-05.png"
     },
     {
       "id": "end-card",
@@ -399,7 +425,11 @@
           "type": "checkbox",
           "default": true
         }
-      ]
+      ],
+      "folder": "Brand / Sign-off",
+      "title": "End card",
+      "sub": "logo sign-off",
+      "thumb": "thumbs/end-card.png"
     },
     {
       "id": "text-word",
@@ -419,7 +449,10 @@
           "placeholder": "Your headline here",
           "multiline": true
         }
-      ]
+      ],
+      "folder": "Text moves",
+      "title": "Slide in by word",
+      "sub": "headline"
     },
     {
       "id": "text-line",
@@ -439,7 +472,10 @@
           "placeholder": "Your headline here",
           "multiline": true
         }
-      ]
+      ],
+      "folder": "Text moves",
+      "title": "Rise by line",
+      "sub": "headline + body"
     },
     {
       "id": "text-rise",
@@ -459,7 +495,10 @@
           "placeholder": "Your headline here",
           "multiline": true
         }
-      ]
+      ],
+      "folder": "Text moves",
+      "title": "Rise by word",
+      "sub": "headline"
     },
     {
       "id": "text-type",
@@ -479,7 +518,10 @@
           "placeholder": "Your headline here",
           "multiline": true
         }
-      ]
+      ],
+      "folder": "Text moves",
+      "title": "Type",
+      "sub": "with cursor"
     }
   ],
   "_fields": "Field types: text (default), slider (min/max/default) and checkbox (default). param must match the Essential Graphics name exactly.",
