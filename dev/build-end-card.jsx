@@ -1,7 +1,9 @@
 // Builds the "End card (generic sign-off)" card from the Figma layout as a 1080x1080 comp.
 // Run in After Effects: File > Scripts > Run Script File...
 // Figma: Design-work, node 15187:75456. Coordinates are the Figma frame's minus 1px (frame is 1082, comp is 1080).
-// Static layout only. Motion comes next. Layer names are the future mogrt field names.
+// Motion (Expressive, logo moment): the logo rises 24 px and fades in as one unit over l (55f), holds, and leaves
+// the same way reversed. Enter keys are labelled green (9), exit keys red (1), so the mogrt export can protect them.
+// Run once in assets/templates.aep (File > Scripts > Run Script File), then save the project.
 
 (function () {
     var W = 1080, H = 1080, FPS = 60, DUR = 6;
@@ -87,6 +89,38 @@
         shapeRect("Corner \u00b7 bottom right", C.white, 5, 5, 1044, 1044)
     ];
     for (var fi = 0; fi < fr.length; fi++) { fr[fi].label = 9; fr[fi].moveToBeginning(); }
+
+    // ---- 5. motion: logo in (Expressive l, enter curve), hold, out (exit curve = enter reversed)
+    (function () {
+        var L = comp.layer("Logo"); if (!L) return;
+        var T = 55 / FPS, RISE = 24, ENTER = [0.3, 0.3, 0.15, 1], EXIT = [0.85, 0, 0.7, 0.7];
+        var P = L.property("ADBE Transform Group").property("ADBE Position"), O = L.property("ADBE Transform Group").property("ADBE Opacity");
+        var p0 = P.value, LBL_IN = 9, LBL_OUT = 1;
+        function ease(prop, k1, k2, bz, delta) {   // cubic-bezier -> AE speed/influence on keys k1 (out) and k2 (in)
+            var dt = prop.keyTime(k2) - prop.keyTime(k1);
+            var oi = Math.max(0.1, Math.min(100, bz[0] * 100)), os = bz[0] > 0 ? (bz[1] / bz[0]) * delta / dt : 0;
+            var ii = Math.max(0.1, Math.min(100, (1 - bz[2]) * 100)), is = bz[2] < 1 ? ((1 - bz[3]) / (1 - bz[2])) * delta / dt : 0;
+            prop.setInterpolationTypeAtKey(k1, KeyframeInterpolationType.BEZIER, KeyframeInterpolationType.BEZIER);
+            prop.setInterpolationTypeAtKey(k2, KeyframeInterpolationType.BEZIER, KeyframeInterpolationType.BEZIER);
+            try { prop.setTemporalAutoBezierAtKey(k1, false); prop.setTemporalContinuousAtKey(k1, false); prop.setTemporalAutoBezierAtKey(k2, false); prop.setTemporalContinuousAtKey(k2, false); } catch (e) {}
+            prop.setTemporalEaseAtKey(k1, [new KeyframeEase(0, 0.1)], [new KeyframeEase(os, oi)]);
+            prop.setTemporalEaseAtKey(k2, [new KeyframeEase(is, ii)], [new KeyframeEase(0, 0.1)]);
+        }
+        function label(prop, k, v) { try { prop.setLabelAtKey(k, v); } catch (e) {} }
+        // enter
+        P.setValueAtTime(0, [p0[0], p0[1] + RISE]); P.setValueAtTime(T, p0);
+        O.setValueAtTime(0, 0); O.setValueAtTime(T, 100);
+        ease(P, 1, 2, ENTER, RISE); ease(O, 1, 2, ENTER, 100);
+        label(P, 1, LBL_IN); label(P, 2, LBL_IN); label(O, 1, LBL_IN); label(O, 2, LBL_IN);
+        // exit, mirrored at the end of the comp
+        var e0 = DUR - T, e1 = DUR - 1 / FPS;
+        P.setValueAtTime(e0, p0); P.setValueAtTime(e1, [p0[0], p0[1] + RISE]);
+        O.setValueAtTime(e0, 100); O.setValueAtTime(e1, 0);
+        ease(P, 3, 4, EXIT, RISE); ease(O, 3, 4, EXIT, 100);
+        label(P, 3, LBL_OUT); label(P, 4, LBL_OUT); label(O, 3, LBL_OUT); label(O, 4, LBL_OUT);
+        try { for (var k = 1; k <= 4; k++) P.setSpatialTangentsAtKey(k, [0, 0], [0, 0]); } catch (e2) {}
+        comp.workAreaStart = 0; comp.workAreaDuration = DUR;
+    })();
 
     comp.openInViewer();
     app.endUndoGroup();
