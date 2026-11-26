@@ -3,6 +3,22 @@
 Newest first. Each heading is the After Effects panel version, which is also the release tag;
 the Premiere panel version is noted where it changed. Install or update with the line in the README.
 
+## 2.7.0 — 26 Nov 2026
+
+After Effects panel 2.7.0 · Premiere panel 1.5.0
+
+- Buttons follow the Figma panel design: idle, hover and active states on the curve,
+  timing and template buttons (radius 4, blue hover, mint outline when active). Hovering
+  a curve sends a dot along it on that curve's own easing.
+- Tabs reordered: Home, Timing, Text, Templates, Send, Library, Notes, Render.
+- Templates tab: folders are buttons instead of a dropdown, and each template is a card
+  with a thumbnail. Add `title`, `sub` and `thumb` to a template in assets/templates.json
+  to label it; thumbnails live in assets/thumbs.
+- Premiere 1.5.0: templates grouped into folders (Titles, Cluster handover, Text moves,
+  Brand / Sign-off) with the same button states and thumbnail cards. `folder` in
+  premiere/templates.json sets the group.
+- Library tab refreshed from the motion library, including "How we move" and behaviours.
+
 ## 2.6.0 — 25 Nov 2026
 
 After Effects panel 2.6.0 · Premiere panel 1.4.0
