@@ -31,8 +31,11 @@ fi
 # before tagging, so the tag and the file agree.
 OWNER_REPO="$(gh repo view --json nameWithOwner --jq .nameWithOwner)"
 printf '{\n  "ae": "%s",\n  "ppro": "%s",\n  "install": "curl -fsSL https://raw.githubusercontent.com/%s/main/install.sh | sh",\n  "notes": "https://github.com/%s/blob/main/CHANGELOG.md"\n}\n' "$VERSION" "$PPRO_VERSION" "$OWNER_REPO" "$OWNER_REPO" > version.json
-if [[ -n "$(git status --porcelain version.json)" ]]; then
-  git add version.json && git commit -q -m "version.json for $TAG" && git push -q
+# Stamp the BUILT fallback in the source too, so dev installs that symlink the repo report the right version.
+sed -i '' "s/var BUILT = '[^']*';/var BUILT = '$VERSION';/" index.html
+sed -i '' "s/var BUILT = '[^']*';/var BUILT = '$PPRO_VERSION';/" premiere/ppro/index.html
+if [[ -n "$(git status --porcelain version.json index.html premiere/ppro/index.html)" ]]; then
+  git add version.json index.html premiere/ppro/index.html && git commit -q -m "version.json and BUILT stamps for $TAG" && git push -q
 fi
 
 # Release notes: the "## $VERSION" section of CHANGELOG.md, if there is one.

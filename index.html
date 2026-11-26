@@ -1486,7 +1486,7 @@ renderSocial();
 (function () {
   var REPO = 'dougturnerct-droid/nscale-motion', KEY = 'ae', EXT = 'com.nscale.motion.panel';
   var URL = 'https://raw.githubusercontent.com/' + REPO + '/main/version.json?t=' + Date.now();
-  var BUILT = '2.6.0';   // written by build/sign.sh from the manifest
+  var BUILT = '2.7.0';   // written by build/release.sh from the manifest
   function mine() { try { var l = JSON.parse(window.__adobe_cep__.getExtensions(JSON.stringify([EXT]))); return (l && l[0] && l[0].version) || BUILT; } catch (e) { return BUILT; } }
   function newer(a, b) { var x = String(a).split('.').map(Number), y = String(b).split('.').map(Number); for (var i = 0; i < 3; i++) { if ((x[i] || 0) > (y[i] || 0)) return true; if ((x[i] || 0) < (y[i] || 0)) return false; } return false; }
   var cur = mine(); if (!window.fetch) { console.log('update check: no fetch'); return; }
